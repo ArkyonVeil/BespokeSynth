@@ -236,6 +236,7 @@ protected:
    std::string mDebugDisplayText;
    float mWidth{ 200 };
    float mHeight{ 20 };
+   static const int mTitleBarHeight = 12;
 
 private:
    virtual void PreDrawModuleUnclipped() {}
@@ -254,7 +255,6 @@ private:
    std::vector<IDrawableModule*> mChildren;
    std::vector<FloatSlider*> mFloatSliders;
    std::vector<UIGrid*> mUIGrids;
-   static const int mTitleBarHeight = 12;
    std::string mTypeName;
    static const int sResizeCornerSize = 8;
    ModuleContainer* mOwningContainer{ nullptr };

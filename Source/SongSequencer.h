@@ -1,0 +1,276 @@
+﻿/**
+    bespoke synth, a software modular synthesizer
+    Copyright (C) 2021 Ryan Challinor (contact: awwbees@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+//
+//  SongSequencer.h
+//  Bespoke
+//
+//  Module assembled by ArkyonVeil on April/24.
+//
+//
+
+#ifndef __Bespoke__SongSequencer__
+#define __Bespoke__SongSequencer__
+
+#include "Transport.h"
+#include "Checkbox.h"
+#include "Canvas.h"
+#include "CanvasScrollbar.h"
+#include "Slider.h"
+#include "ClickButton.h"
+#include "DropdownList.h"
+#include "ISignalListener.h"
+#include "SongSequencerCanvas.h"
+#include "TextEntry.h"
+#include "UIFlowGrid.h"
+
+
+class SongSequencerCanvasElement;
+class SongSequencerRackElement;
+class SongSequencer :
+public IDrawableModule,
+public ICanvasListener,
+public ITextEntryListener,
+public IFloatSliderListener,
+public IButtonListener,
+public IDropdownListener,
+public IAudioPoller,
+public ISignalListener,
+public ITimeListener
+{
+public:
+   SongSequencer();
+   ~SongSequencer();
+   static IDrawableModule* Create() { return new SongSequencer(); }
+   static bool AcceptsAudio() { return false; }
+   static bool AcceptsNotes() { return false; }
+   static bool AcceptsPulses() { return false; }
+
+   void CreateUIControls() override;
+
+   void SetEnabled(bool enabled) override { mEnabled = enabled; }
+   bool IsResizable() const override { return true; }
+   void Resize(float w, float h) override;
+   void Init() override;
+
+   virtual void LoadLayout(const ofxJSONElement& moduleInfo) override;
+   virtual void SetUpFromSaveData() override;
+   virtual void SaveLayout(ofxJSONElement& moduleInfo) override;
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
+
+   bool IsEnabled() const override { return mEnabled; }
+   void CanvasUpdated(Canvas* canvas) override;
+   void ResizeWorkspace(float diff);
+   ofColor GetRowColor(int row) const;
+   void TextEntryComplete(TextEntry* entry) override;
+   void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
+   void ButtonClicked(ClickButton* button, double time) override;
+   bool MouseMoved(float x, float y) override;
+   void OnClicked(float x, float y, bool right) override;
+   void MouseReleased() override;
+   void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
+   void SetNewRackDropdownContext(SongSequencerRackElement* element);
+   void SetSelectedRackElement(SongSequencerRackElement* element);
+   void SetupCanvasElement(SongSequencerCanvasElement* element);
+   TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox;}
+   void DeleteRackElement(SongSequencerRackElement* element) const;
+   std::vector<SongSequencerRackElement*> GetAllRackElements() const; //It's not cached
+   std::vector<SongSequencerCanvasElement*> GetAllCanvasElementsOfRack(const SongSequencerRackElement* element) const;
+   SongSequencerRackElement* GetRackElementWithID(int id);
+
+   void IncrementInternalRackId(){mInternalRackIDCounter++;}
+   int GetInternalRackId() const { return mInternalRackIDCounter;}
+   void OnTransportAdvanced(float amount) override;
+   void ReceiveSignal(SignalId signalID) override;
+   void ReceiveSignal(SignalGeneric signalComplex) override {}
+   void DisposeElement(IClickable* element);
+   
+   DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown;}
+
+   void OnTimeEvent(double time) override;
+   int GetModuleSaveStateRev() const override {return 1;};
+private:
+   struct TuneSequencerLayer
+   {
+      ofColor baseColor;
+      float offset;
+      bool enabled;
+      std::string layerName;
+   };
+   //IDrawableModule
+   void DrawModule() override;
+   void GetModuleDimensions(float& width, float& height) override;
+   bool IsCanvasElementActive(SongSequencerCanvasElement* element) const;
+
+   Canvas* mCanvas{ nullptr };
+   FloatSlider* mTransportSlider{ nullptr };
+   TextEntry* mTransportTextBox{};
+   std::vector<ofColor> mRowColors{};
+   ClickButton* mResetButton;
+   ClickButton* mPlayPauseButton;
+   CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
+   TextEntry* mRackRenameTextBox;
+   std::string mRackRenameString;
+      
+   TransportListenerInfo* mTransportListenerInfo{ nullptr };
+   
+   UIFlowGrid* mModGrid;
+
+   static const int maxLayers = 100;
+   float mTime{ 0 };
+   double mCanvasRelativeTime{ 0 };
+   
+   static const int MinRowSize = 12;
+   static const int StandardRowSize = 32;
+   static const int mStandardMeasureSize = 48;
+   static const int mDefaultMeasureSpawnAmount = 12;
+
+   static const int OffsetFromTopSpacing = 38;
+   static const int LayersListHSize = 150;
+   static const int AdvancedConfigHSize = 100;
+   static const int FlowGridRowHeightSize = 32;
+
+   int GetModGridStartYOffset() const
+   {
+      return OffsetFromTopSpacing + mCanvas->GetHeight() + 16;
+   }
+
+   int mInternalRackIDCounter = 0;
+   int mExtraColumns;
+   int mFlowGridRows = 2;
+   int mPartNameCount = 4;
+
+   int GetCanvasStartXOffset() const
+   {
+      if (expertPanelEnabled)
+         return LayersListHSize + AdvancedConfigHSize;
+      return LayersListHSize;
+   }
+   
+  
+
+   //Chunkifies a large canvas into chunks in order to speed up part detection.
+   std::vector<SongSequencerCanvasElement*> mCanvasChunkList[1001];
+   int mChunkAmount = 50;
+
+   std::vector<SongSequencerCanvasElement*> mActiveElements;
+   
+   std::array<TextEntry*, maxLayers> mLayerNameTextbox{};
+
+   std::array<Checkbox*, maxLayers> mLayerEnableCheckbox{};
+
+   std::vector<TuneSequencerLayer> seqLayers;
+
+   ClickButton* mRackAddNewButton;
+
+   DropdownList* mRackAddNewDropdown;
+
+   DropdownList* mRackElementRightClickDropdown;
+
+   SongSequencerRackElement* mRightClickDropdownElementContext;
+   SongSequencerRackElement* mSelectedRackElement;
+   
+   enum RackElementRightClickOptions
+   {
+      enumNothing,
+      enumRename,
+      enumDelete,
+   };
+   RackElementRightClickOptions mRackElementRightClickIndex;
+   
+   enum RackAddNewElementOptions
+   {
+      enumEnabler = 0,
+      enumPulser = 1,
+      enumModulator = 2,
+      enumSample = 3,
+      enumOnePulse = 4,
+   };
+   RackAddNewElementOptions mRackAddNewElementIndex;
+   
+  
+   
+   //Expert variables
+   bool expertPanelEnabled = false;
+   float loopStart = -1;
+   float loopEnd = -1;
+};
+
+enum class SongSequencerElementVariant
+{
+   Enabler = 0,
+   Pulser = 1,
+   LFO = 2,
+   Sampler = 3,
+   OnePulse = 4,
+};
+
+class PatchCableSource;
+//Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
+class SongSequencerRackElement : public UIFlowGridElement, public ITimeListener
+{
+public:
+   SongSequencerRackElement(float preferredWidth, SongSequencerElementVariant variantType, std::string name, SongSequencer* owner, const ofColor& overrideColor = ofColor::white);
+   void Draw() override;
+   void CreateUIControls(SongSequencer* owner);
+   void OnMouseClick(bool rightClick) override;
+   void SetName(std::string newName) const;
+   void Excite(float excitePower){if (mExcitePower<excitePower)mExcitePower = excitePower;}//Make it dance
+   void SetExciteConstant(float excitePower){mExciteConstant = excitePower;}//Make it do a base level of dancing, handy for long events.
+   void OnEnter();
+   void OnProcess();
+   void OnExit();
+   void SetActive(bool newState){mActive = newState;}
+   bool IsActive(){return mActive;}
+   NoteInterval GetInterval() {return mPulserInterval;}
+   void SetInterval(NoteInterval interval) {mPulserInterval = interval;}
+   
+   std::string* GetName(){return mElementName;}
+   void SetRenameState(bool newState){mRenameActive = newState;}
+   ~SongSequencerRackElement();
+   void OnTimeEvent(double time) override;
+   PatchCableSource* GetEnablerCable() {return mEnablerCable;}
+   PatchCableSource* GetPulserCable() {return mPulserCable;}
+   int mInternalRackID;
+   
+   DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector;}
+
+   SongSequencerElementVariant mVariantType;
+
+private:
+   PatchCableSource* mEnablerCable;
+   PatchCableSource* mPulserCable;
+   std::string* mElementName;
+   SongSequencer* mSSParent;
+   DropdownList* mIntervalSelector{ nullptr };
+   NoteInterval mPulserInterval = kInterval_8n;
+   TransportListenerInfo* mTransportListenerInfo{ nullptr };
+
+   bool mActive {false};
+   bool mRenameActive = false;
+   float mExcitePower {0};
+   float mExciteConstant{0};
+   float mExciteDrag {0};
+   float mVariantExtraWidth {0};
+
+   int mInternalID {0};
+   TextEntry* mElementRenameTextBox;
+};
+
+
+#endif /* defined(__Bespoke__TuneSequencer__) */

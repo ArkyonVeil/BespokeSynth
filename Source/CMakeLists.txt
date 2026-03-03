@@ -239,6 +239,8 @@ target_sources(BespokeSynth PRIVATE
     GroupControl.h
     HelpDisplay.cpp
     HelpDisplay.h
+    HoverSelectModule.cpp
+    HoverSelectModule.h
     IAudioEffect.h
     IAudioPoller.h
     IAudioProcessor.cpp
@@ -249,6 +251,7 @@ target_sources(BespokeSynth PRIVATE
     IAudioSource.h
     IClickable.cpp
     IClickable.h
+	ISignalListener.h
     IControlVisualizer.h
     IDrawableModule.cpp
     IDrawableModule.h
@@ -680,6 +683,10 @@ target_sources(BespokeSynth PRIVATE
     Snapshots.h
     SongBuilder.cpp
     SongBuilder.h
+	SongSequencer.cpp
+	SongSequencer.h
+	SongSequencerCanvas.cpp
+	SongSequencerCanvas.h
     SpaceMouseControl.cpp
     SpaceMouseControl.h
     SpectralDisplay.cpp
@@ -725,6 +732,9 @@ target_sources(BespokeSynth PRIVATE
     UIControlMacros.h
     UIGrid.cpp
     UIGrid.h
+	UIFlowGrid.cpp
+	UIFlowGrid.h
+	UIFlowGridElement.cpp
     UnstableModWheel.cpp
     UnstableModWheel.h
     UnstablePitch.cpp

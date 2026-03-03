@@ -77,6 +77,7 @@ public:
    void SetMinValueDisplay(std::string display) { mMinValueDisplay = display; }
    void SetLFO(FloatSliderLFOControl* lfo);
    void SetShowName(bool show) { mShowName = show; }
+   void SetTextAlpha(int newAlpha) { mTextAlpha = newAlpha;}//0-255
    void SetDimensions(int w, int h)
    {
       mWidth = w;
@@ -164,6 +165,7 @@ private:
    int mFineRefX{ -999 };
    int mRefY{ -999 };
    int mShowDigits;
+   int mTextAlpha {255};
    IFloatSliderListener* mOwner{ nullptr };
    FloatSliderLFOControl* mLFOControl{ nullptr };
    IModulator* mModulator{ nullptr };

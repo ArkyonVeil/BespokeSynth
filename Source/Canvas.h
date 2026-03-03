@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include <iostream>
 #include "IUIControl.h"
 #include "CanvasElement.h"
 
@@ -125,6 +126,7 @@ public:
    void SetRowColor(int row, ofColor color);
    juce::MouseCursor GetMouseCursorType();
    ofVec2f RescaleForZoom(float x, float y) const;
+   ICanvasListener* GetListener(){return mListener;}
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}

@@ -142,6 +142,7 @@ public:
    void AddSeparator(int index) { mSeparators.push_back(index); }
    void ClearSeparators() { mSeparators.clear(); }
    void CopyContentsTo(DropdownList* list) const;
+   void OnClicked(float x, float y, bool right) override;
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
@@ -170,7 +171,6 @@ protected:
    ~DropdownList(); //protected so that it can't be created on the stack
 
 private:
-   void OnClicked(float x, float y, bool right) override;
    void CalcSliderVal();
    int FindItemIndex(float val) const;
    void CalculateWidth();

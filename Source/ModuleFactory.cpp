@@ -283,6 +283,10 @@
 #include <juce_core/juce_core.h>
 
 #include "PulseRouter.h"
+#include "SongSequencer.h"
+
+#include <juce_core/juce_core.h>
+
 
 #define REGISTER(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, false, false, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());
 #define REGISTER_HIDDEN(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, true, false, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());
@@ -513,6 +517,8 @@ ModuleFactory::ModuleFactory()
    REGISTER(ModulatorBinaryValue, binaryvalue, kModuleCategory_Modulator);
    REGISTER(VelocityToDuration, velocitytoduration, kModuleCategory_Note);
    REGISTER(TapTempo, taptempo, kModuleCategory_Other);
+   REGISTER(SongSequencer, songcanvas-beta, kModuleCategory_Other);
+
 
    //REGISTER_EXPERIMENTAL(MidiPlayer, midiplayer, kModuleCategory_Instrument);
    REGISTER_HIDDEN(Autotalent, autotalent, kModuleCategory_Audio);
@@ -588,7 +594,6 @@ std::vector<ModuleFactory::Spawnable> ModuleFactory::GetSpawnableModules(ModuleC
       }
    }
 
-   // Put effect modules at the end of the Audio category
    if (moduleCategory == kModuleCategory_Audio)
    {
       std::vector<std::string> effects = TheSynth->GetEffectFactory()->GetSpawnableEffects();

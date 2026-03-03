@@ -72,6 +72,7 @@ private:
    void DrawModule() override;
    void GetModuleDimensions(float& width, float& height) override;
 
+   float mWidth{ 200 };
    Canvas* mCanvas{ nullptr };
    CanvasElement* mSelectedElement{ nullptr };
    ClickButton* mRemoveElementButton{ nullptr };
