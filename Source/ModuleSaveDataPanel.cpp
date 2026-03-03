@@ -279,9 +279,9 @@ void ModuleSaveDataPanel::UpdatePosition()
    }
 
    if (mShowing)
-      mAppearAmount = ofClamp(mAppearAmount + ofGetTimeDelta() * 5, 0, 1);
+      mAppearAmount = ofClamp(mAppearAmount + ofGetLastFrameTime() * 5, 0, 1);
    else
-      mAppearAmount = ofClamp(mAppearAmount - ofGetTimeDelta() * 5, 0, 1);
+      mAppearAmount = ofClamp(mAppearAmount - ofGetLastFrameTime() * 5, 0, 1);
 }
 
 void ModuleSaveDataPanel::ApplyChanges()

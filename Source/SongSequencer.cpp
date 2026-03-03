@@ -1091,13 +1091,13 @@ void SongSequencerRackElement::Draw()
    ofSetColor(ofColor::white);
    if (mExciteConstant > 0) //Make the outline bounce for extra visual satisfaction.
    {
-      float excConst = mExciteConstant + sin(ofGetGlobalTime() * 20) * 0.1F;
+      float excConst = mExciteConstant + sin(ofGetSystemTimeNanos() * 20) * 0.1F;
       if (mExcitePower < excConst)
          mExcitePower = excConst;
-      TheSynth->LogEvent(std::to_string(ofGetGlobalTime()), kLogEventType_Verbose);
+      TheSynth->LogEvent(std::to_string(ofGetSystemTimeNanos()), kLogEventType_Verbose);
    }
-   mExcitePower = MAX(0, mExcitePower - ofGetTimeDelta() * 4);
-   mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetTimeDelta() * 60);
+   mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime() * 4);
+   mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 60);
    mOutlineThickness = 0.8F + mExciteDrag;
 
    auto rPos = GetRelativePosition();

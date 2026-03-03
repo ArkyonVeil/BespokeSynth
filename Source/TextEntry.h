@@ -131,4 +131,6 @@ private:
    bool mHovered{ false };
    bool mRequireEnterToAccept{ false };
    float mOverrideWidth{ 0 };
+   int mDecimalCount{ 1 };
+
 };
