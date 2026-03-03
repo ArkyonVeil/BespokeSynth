@@ -1,18 +1,18 @@
-﻿#include "SongSequencerCanvas.h"
+﻿#include "SongCanvas_CanvasElement.h"
 #include "CanvasControls.h"
 #include "CanvasElement.h"
-#include "SongSequencer.h"
+#include "SongCanvas.h"
 
-SongSequencerCanvasElement::SongSequencerCanvasElement(Canvas* canvas, int col, int row, float offset, float length)
+SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length)
 : CanvasElement(canvas, col, row, offset, length)
 {
    //canvas->SetZoomSpeed(10);
    mLength *= 4;
-   SongSequencer* seq = static_cast<SongSequencer*>(canvas->GetListener());
+   SongCanvas* seq = static_cast<SongCanvas*>(canvas->GetListener());
    seq->SetupCanvasElement(this);
 }
 
-void SongSequencerCanvasElement::Setup(SongSequencerRackElement* templateElement)
+void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
 {
    mElementVariant = templateElement->mVariantType;
    mName = templateElement->GetName();
@@ -21,7 +21,7 @@ void SongSequencerCanvasElement::Setup(SongSequencerRackElement* templateElement
    mRackParentID = mRackParent->mInternalRackID;
    switch (templateElement->mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
       {
          mCurrentColor = mEnablerColor;
          mCurrentColorGrad = ofColor(
@@ -30,7 +30,7 @@ void SongSequencerCanvasElement::Setup(SongSequencerRackElement* templateElement
          MAX(0, mCurrentColor.b - 30));
       }
       break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
       {
          mCurrentColor = mPulserColor;
          mCurrentColorGrad = ofColor(
@@ -39,17 +39,17 @@ void SongSequencerCanvasElement::Setup(SongSequencerRackElement* templateElement
          MAX(0, mCurrentColor.b - 90));
       }
       break;
-      case SongSequencerElementVariant::LFO:
+      case SongCanvasElementVariant::LFO:
       {
          mCurrentColor = mLFOColor;
       }
       break;
-      case SongSequencerElementVariant::Sampler:
+      case SongCanvasElementVariant::Sampler:
       {
          mCurrentColor = mSamplerColor;
       }
       break;
-      case SongSequencerElementVariant::OnePulse:
+      case SongCanvasElementVariant::OnePulse:
       {
          mCurrentColor = mOnePulseColor;
          mTextDrawXOffset = 4;
@@ -63,16 +63,16 @@ void SongSequencerCanvasElement::Setup(SongSequencerRackElement* templateElement
    }
 }
 
-CanvasElement* SongSequencerCanvasElement::CreateDuplicate() const
+CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const
 {
 
-   SongSequencerCanvasElement* element = new SongSequencerCanvasElement(mCanvas, mCol, mRow, mOffset, mLength / 4);
+   SongCanvas_CanvasElement* element = new SongCanvas_CanvasElement(mCanvas, mCol, mRow, mOffset, mLength / 4);
    //element->mVelocity = mVelocity;
    //element->mVoiceIdx = mVoiceIdx;
    return element;
 }
 
-void SongSequencerCanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
+void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 {
    ofPushStyle();
    ofFill();
@@ -89,23 +89,23 @@ void SongSequencerCanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f 
 
       switch (mElementVariant)
       {
-         case SongSequencerElementVariant::Enabler:
+         case SongCanvasElementVariant::Enabler:
          {
          }
          break;
-         case SongSequencerElementVariant::Pulser:
+         case SongCanvasElementVariant::Pulser:
          {
          }
          break;
-         case SongSequencerElementVariant::LFO:
+         case SongCanvasElementVariant::LFO:
          {
          }
          break;
-         case SongSequencerElementVariant::Sampler:
+         case SongCanvasElementVariant::Sampler:
          {
          }
          break;
-         case SongSequencerElementVariant::OnePulse:
+         case SongCanvasElementVariant::OnePulse:
             ofRectangle seamRect = rect;
             seamRect.width = MIN(rect.x, 3);
             ofSetColor(ofColor(180, 180, 0)); //Draw a seam.
@@ -170,7 +170,7 @@ namespace
    const int kNCESaveStateRev = 0;
 }
 
-void SongSequencerCanvasElement::SaveState(FileStreamOut& out)
+void SongCanvas_CanvasElement::SaveState(FileStreamOut& out)
 {
    CanvasElement::SaveState(out);
 
@@ -179,7 +179,7 @@ void SongSequencerCanvasElement::SaveState(FileStreamOut& out)
    //out << mVelocity;
 }
 
-void SongSequencerCanvasElement::LoadState(FileStreamIn& in)
+void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
 {
    CanvasElement::LoadState(in);
 

@@ -283,7 +283,7 @@
 #include <juce_core/juce_core.h>
 
 #include "PulseRouter.h"
-#include "SongSequencer.h"
+#include "SongCanvas.h"
 
 #include <juce_core/juce_core.h>
 
@@ -517,7 +517,7 @@ ModuleFactory::ModuleFactory()
    REGISTER(ModulatorBinaryValue, binaryvalue, kModuleCategory_Modulator);
    REGISTER(VelocityToDuration, velocitytoduration, kModuleCategory_Note);
    REGISTER(TapTempo, taptempo, kModuleCategory_Other);
-   REGISTER(SongSequencer, songcanvas-beta, kModuleCategory_Other);
+   REGISTER(SongCanvas, songcanvas-beta, kModuleCategory_Other);
 
 
    //REGISTER_EXPERIMENTAL(MidiPlayer, midiplayer, kModuleCategory_Instrument);

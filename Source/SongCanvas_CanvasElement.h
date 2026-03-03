@@ -2,32 +2,32 @@
 #include "CanvasElement.h"
 
 
-enum class SongSequencerElementVariant;
-class SongSequencerRackElement;
-class SongSequencerCanvasElement : public CanvasElement
+enum class SongCanvasElementVariant;
+class SongCanvasRackElement;
+class SongCanvas_CanvasElement : public CanvasElement
 {
 public:
-   SongSequencerCanvasElement(Canvas* canvas, int col, int row, float offset, float length);
-   void Setup(SongSequencerRackElement* templateElement);
-   static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongSequencerCanvasElement(canvas, col, row, 0, 1); }
+   SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length);
+   void Setup(SongCanvasRackElement* templateElement);
+   static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvas_CanvasElement(canvas, col, row, 0, 1); }
    
    CanvasElement* CreateDuplicate() const override;
 
-   SongSequencerRackElement*  GetRackElement() {return mRackParent;}
+   SongCanvasRackElement*  GetRackElement() {return mRackParent;}
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
 
    int GetRackElementId() const { return mRackParentID;}
    //float GetMinLength() override { return 0.25f; }
 
-   SongSequencerElementVariant GetVariantType(){return mElementVariant;}
+   SongCanvasElementVariant GetVariantType(){return mElementVariant;}
    
 private:
    void DrawContents(bool clamp, bool wrapped, ofVec2f offset) override;
    
-   SongSequencerElementVariant mElementVariant;
+   SongCanvasElementVariant mElementVariant;
 
-   SongSequencerRackElement* mRackParent;
+   SongCanvasRackElement* mRackParent;
    int mRackParentID;
    std::string* mName;
    std::string mNameCache;

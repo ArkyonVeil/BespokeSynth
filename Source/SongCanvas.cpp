@@ -16,10 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 //
-//  SongSequencer.cpp
+//
 //  Bespoke
+//  Aka the Song Canvas
 //
-//  Module assembled by ArkyonVeil on April/24 - June/24.
+//  Module assembled by ArkyonVeil on April/24 - June/24. Reheated in March/26
 //
 //         ██
 //         ▓▓
@@ -33,13 +34,14 @@
 //         ██
 //
 
-#include "SongSequencer.h"
-
+#include "SongCanvas.h"
+#include "SongCanvas.h"
+#include "SongCanvas.h"
 #include "ModularSynth.h"
-#include "SongSequencerCanvas.h"
+#include "SongCanvas_CanvasElement.h"
 
 #include <cstring>
-SongSequencer::SongSequencer()
+SongCanvas::SongCanvas()
 {
    mRowColors.push_back(ofColor::black);
    mTransportPriority = kTransportPriorityVeryEarly;
@@ -58,14 +60,14 @@ SongSequencer::SongSequencer()
    }
 }
 
-SongSequencer::~SongSequencer()
+SongCanvas::~SongCanvas()
 {
    mCanvas->SetListener(nullptr);
    TheTransport->RemoveAudioPoller(this);
 }
 
 
-void SongSequencer::CreateUIControls()
+void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
 
@@ -76,7 +78,7 @@ void SongSequencer::CreateUIControls()
       startCanvasOffset = LayersListHSize;
 
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
-   mCanvas = new Canvas(this, startCanvasOffset, OffsetFromTopSpacing, cSize, seqLayers.size() * StandardRowSize, 1, 5, 12 * 4, &SongSequencerCanvasElement::Create);
+   mCanvas = new Canvas(this, startCanvasOffset, OffsetFromTopSpacing, cSize, seqLayers.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
    mCanvas->SetListener(this);
 
@@ -105,8 +107,8 @@ void SongSequencer::CreateUIControls()
 
 
    /*
-   mModGrid->AddElement(new SongSequencerRackElement(90, ofColor::white, "Part 1", this));
-   mModGrid->AddElement(new SongSequencerRackElement(90, ofColor::white, "Part 2", this));
+   mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 1", this));
+   mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 2", this));
 */
 
 
@@ -157,7 +159,7 @@ void SongSequencer::CreateUIControls()
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mModGrid->AddElement(new SongSequencerRackElement(90, SongSequencerElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
+      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }
@@ -165,14 +167,14 @@ void SongSequencer::CreateUIControls()
 
    //mLayerName[0]->SetNoHover(false);
 }
-void SongSequencer::Init()
+void SongCanvas::Init()
 {
    IDrawableModule::Init();
    mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
    TheTransport->AddAudioPoller(this);
 }
 
-void SongSequencer::DrawModule()
+void SongCanvas::DrawModule()
 {
    mTime = TheTransport->GetMeasureTime(gTime);
 
@@ -240,7 +242,6 @@ void SongSequencer::DrawModule()
 
    mCanvas->Draw();
    //mCanvas->RescaleForZoom()
-   //mCanvas->
 
    ofColor softLineColor = ofColor{ 255, 255, 255, 20 };
    ofColor hardLineColor = ofColor{ 255, 255, 255, 50 };
@@ -346,12 +347,12 @@ void SongSequencer::DrawModule()
    DrawTextNormal(dText, 4, 8);*/
 }
 
-void SongSequencer::GetModuleDimensions(float& width, float& height)
+void SongCanvas::GetModuleDimensions(float& width, float& height)
 {
    width = LayersListHSize + mCanvas->GetWidth();
    height = mCanvas->GetHeight() + OffsetFromTopSpacing + 32 + mFlowGridRows * FlowGridRowHeightSize;
 }
-bool SongSequencer::IsCanvasElementActive(SongSequencerCanvasElement* element) const
+bool SongCanvas::IsCanvasElementActive(SongCanvas_CanvasElement* element) const
 {
    for (int i = 0; i < mActiveElements.size(); ++i)
    {
@@ -361,7 +362,7 @@ bool SongSequencer::IsCanvasElementActive(SongSequencerCanvasElement* element) c
    return false;
 }
 
-void SongSequencer::CanvasUpdated(Canvas* canvas)
+void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
    if (mCanvas == canvas)
    {
@@ -394,7 +395,7 @@ void SongSequencer::CanvasUpdated(Canvas* canvas)
 
          for (int y = cStart; y <= cEnd; ++y)
          {
-            mCanvasChunkList[y].push_back(dynamic_cast<SongSequencerCanvasElement*>(elms[i]));
+            mCanvasChunkList[y].push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
          }
 
          //Workspace view resize check
@@ -407,7 +408,7 @@ void SongSequencer::CanvasUpdated(Canvas* canvas)
    }
 }
 
-void SongSequencer::ResizeWorkspace(float diff)
+void SongCanvas::ResizeWorkspace(float diff)
 {
    //Todo, allow downsizing.
    /*
@@ -432,12 +433,12 @@ void SongSequencer::ResizeWorkspace(float diff)
    //TheSynth->LogEvent(std::to_string(mCanvas->GetNumCols()),kLogEventType_Verbose);
 }
 
-ofColor SongSequencer::GetRowColor(int row) const
+ofColor SongCanvas::GetRowColor(int row) const
 {
    return mRowColors[row % mRowColors.size()];
 }
 
-void SongSequencer::TextEntryComplete(TextEntry* entry)
+void SongCanvas::TextEntryComplete(TextEntry* entry)
 {
    if (entry == mRackRenameTextBox)
    {
@@ -449,14 +450,14 @@ void SongSequencer::TextEntryComplete(TextEntry* entry)
    }
 }
 
-void SongSequencer::FloatSliderUpdated(FloatSlider* slider, float oldVal, double time)
+void SongCanvas::FloatSliderUpdated(FloatSlider* slider, float oldVal, double time)
 {
    if (slider == mTransportSlider)
    {
       TheTransport->SetMeasureTime(mTime);
    }
 }
-void SongSequencer::ButtonClicked(ClickButton* button, double time)
+void SongCanvas::ButtonClicked(ClickButton* button, double time)
 {
    if (button == mPlayPauseButton)
    {
@@ -475,24 +476,24 @@ void SongSequencer::ButtonClicked(ClickButton* button, double time)
       //DropdownClicked(mRackAddNewDropdown);
    }
 }
-bool SongSequencer::MouseMoved(float x, float y)
+bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
    mModGrid->MouseMoved(x, y);
    return false;
 }
-void SongSequencer::OnClicked(float x, float y, bool right)
+void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
    mModGrid->OnClicked(x - mModGrid->GetPosition().x, y - mModGrid->GetPosition().y, right);
 }
 
-void SongSequencer::MouseReleased()
+void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
    mModGrid->MouseReleased();
 }
-void SongSequencer::DropdownUpdated(DropdownList* list, int oldVal, double time)
+void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
 {
    if (list == mRackAddNewDropdown)
    {
@@ -501,15 +502,15 @@ void SongSequencer::DropdownUpdated(DropdownList* list, int oldVal, double time)
       switch (mRackAddNewElementIndex)
       {
          case enumEnabler:
-            mModGrid->AddElement(new SongSequencerRackElement(90, SongSequencerElementVariant::Enabler, newPartName, this));
+            mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
             break;
          case enumPulser:
-            mModGrid->AddElement(new SongSequencerRackElement(140, SongSequencerElementVariant::Pulser, newPartName, this));
+            mModGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
             break;
          case enumModulator: break;
          case enumSample: break;
          case enumOnePulse:
-            mModGrid->AddElement(new SongSequencerRackElement(90, SongSequencerElementVariant::OnePulse, newPartName, this));
+            mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
             break;
          default:;
       }
@@ -542,10 +543,10 @@ void SongSequencer::DropdownUpdated(DropdownList* list, int oldVal, double time)
    }
    for (int i = 0; i < mModGrid->GetAllElements().size(); ++i)
    {
-      auto e = dynamic_cast<SongSequencerRackElement*>(mModGrid->GetAllElements()[i]);
+      auto e = dynamic_cast<SongCanvasRackElement*>(mModGrid->GetAllElements()[i]);
       switch (e->mVariantType)
       {
-         case SongSequencerElementVariant::Pulser:
+         case SongCanvasElementVariant::Pulser:
             if (list == e->GetPulserIntervalDropdown())
             {
                TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(e);
@@ -560,21 +561,21 @@ void SongSequencer::DropdownUpdated(DropdownList* list, int oldVal, double time)
       }
    }
 }
-void SongSequencer::SetNewRackDropdownContext(SongSequencerRackElement* element)
+void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 {
    mRightClickDropdownElementContext = element;
 }
-void SongSequencer::SetSelectedRackElement(SongSequencerRackElement* element)
+void SongCanvas::SetSelectedRackElement(SongCanvasRackElement* element)
 {
    mSelectedRackElement = element;
    //mCanvas->SetAllowSpawnElements(true);
 }
-void SongSequencer::SetupCanvasElement(SongSequencerCanvasElement* element)
+void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
    element->Setup(mSelectedRackElement);
 }
 
-void SongSequencer::DeleteRackElement(SongSequencerRackElement* element) const
+void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
 {
    auto res = GetAllCanvasElementsOfRack(element);
    for (auto re : res)
@@ -583,30 +584,30 @@ void SongSequencer::DeleteRackElement(SongSequencerRackElement* element) const
    }
    mModGrid->RemoveElement(element);
 }
-std::vector<SongSequencerRackElement*> SongSequencer::GetAllRackElements() const
+std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {
-   std::vector<SongSequencerRackElement*> output;
+   std::vector<SongCanvasRackElement*> output;
    auto elms = mModGrid->GetAllElements();
    for (int i = 0; i < elms.size(); ++i)
    {
-      auto relm = dynamic_cast<SongSequencerRackElement*>(elms[i]);
+      auto relm = dynamic_cast<SongCanvasRackElement*>(elms[i]);
       output.push_back(relm);
    }
    return output;
 }
-std::vector<SongSequencerCanvasElement*> SongSequencer::GetAllCanvasElementsOfRack(const SongSequencerRackElement* element) const
+std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
 {
    auto elms = mCanvas->GetElements();
-   std::vector<SongSequencerCanvasElement*> output;
+   std::vector<SongCanvas_CanvasElement*> output;
    for (int i = 0; i < elms.size(); ++i)
    {
-      auto celm = dynamic_cast<SongSequencerCanvasElement*>(elms[i]);
+      auto celm = dynamic_cast<SongCanvas_CanvasElement*>(elms[i]);
       if (celm->GetRackElement() == element)
          output.push_back(celm);
    }
    return output;
 }
-SongSequencerRackElement* SongSequencer::GetRackElementWithID(int id)
+SongCanvasRackElement* SongCanvas::GetRackElementWithID(int id)
 {
    auto RE = GetAllRackElements();
    for (int i = 0; i < RE.size(); ++i)
@@ -619,13 +620,13 @@ SongSequencerRackElement* SongSequencer::GetRackElementWithID(int id)
    return nullptr;
 }
 
-void SongSequencer::OnTransportAdvanced(float amount)
+void SongCanvas::OnTransportAdvanced(float amount)
 {
    //RESERVED, might get used later, depending on future module support.
 }
 
 
-void SongSequencer::ReceiveSignal(SignalId signalID)
+void SongCanvas::ReceiveSignal(SignalId signalID)
 {
    if (signalID == SignalId::ResizeRequest)
    {
@@ -638,13 +639,13 @@ void SongSequencer::ReceiveSignal(SignalId signalID)
       mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
    }
 }
-void SongSequencer::DisposeElement(IClickable* element)
+void SongCanvas::DisposeElement(IClickable* element)
 {
    RemoveUIControl(static_cast<IUIControl*>(element));
 }
 
 //Called on a 64n interval, which is very fast.
-void SongSequencer::OnTimeEvent(double time)
+void SongCanvas::OnTimeEvent(double time)
 {
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably. 
    mCanvasRelativeTime = (mTime+0.02f) / ((double)mCanvas->GetNumCols() / 4);
@@ -698,7 +699,7 @@ void SongSequencer::OnTimeEvent(double time)
    {
       auto elm = mActiveElements[i];
 
-      if (elm->GetVariantType() == SongSequencerElementVariant::Pulser)
+      if (elm->GetVariantType() == SongCanvasElementVariant::Pulser)
       {
          auto rck = elm->GetRackElement();
 
@@ -711,7 +712,7 @@ void SongSequencer::OnTimeEvent(double time)
 }
 
 
-void SongSequencer::Resize(float w, float h)
+void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w - GetCanvasStartXOffset(), 350);
    h = MAX(h - OffsetFromTopSpacing, 100);
@@ -731,17 +732,17 @@ void SongSequencer::Resize(float w, float h)
    mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
 }
 
-void SongSequencer::LoadLayout(const ofxJSONElement& moduleInfo)
+void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 {
 }
 
-void SongSequencer::SetUpFromSaveData()
+void SongCanvas::SetUpFromSaveData()
 {
 }
-void SongSequencer::SaveLayout(ofxJSONElement& moduleInfo)
+void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
 }
-void SongSequencer::SaveState(FileStreamOut& out)
+void SongCanvas::SaveState(FileStreamOut& out)
 {
    out << GetModuleSaveStateRev();
 
@@ -769,20 +770,20 @@ void SongSequencer::SaveState(FileStreamOut& out)
       out << rack->mInternalRackID;
       switch (rack->mVariantType)
       {
-         case SongSequencerElementVariant::Enabler:
+         case SongCanvasElementVariant::Enabler:
             rack->GetEnablerCable()->SaveState(out);
             break;
-         case SongSequencerElementVariant::Pulser:
+         case SongCanvasElementVariant::Pulser:
             out << rack->GetInterval();
             rack->GetPulserCable()->SaveState(out);
 
             //out << rack->GetInterval();
             break;
-         case SongSequencerElementVariant::LFO:
+         case SongCanvasElementVariant::LFO:
             break;
-         case SongSequencerElementVariant::Sampler:
+         case SongCanvasElementVariant::Sampler:
             break;
-         case SongSequencerElementVariant::OnePulse:
+         case SongCanvasElementVariant::OnePulse:
             rack->GetPulserCable()->SaveState(out);
             break;
       }
@@ -801,7 +802,7 @@ void SongSequencer::SaveState(FileStreamOut& out)
    out << (int)cvs.size();
    for (int i = 0; i < cvs.size(); ++i)
    {
-      auto ce = static_cast<SongSequencerCanvasElement*>(cvs[i]);
+      auto ce = static_cast<SongCanvas_CanvasElement*>(cvs[i]);
       out << ce->mRow;
       out << ce->mCol;
       out << ce->mLength;
@@ -818,7 +819,7 @@ void SongSequencer::SaveState(FileStreamOut& out)
    out << IsEnabled();
    //IDrawableModule::SaveState(out);
 }
-void SongSequencer::LoadState(FileStreamIn& in, int rev)
+void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
    int canvasLayerCount;
 
@@ -853,30 +854,30 @@ void SongSequencer::LoadState(FileStreamIn& in, int rev)
       in >> ePrefSize;
       in >> eRackId;
 
-      auto nrm = new SongSequencerRackElement(
+      auto nrm = new SongCanvasRackElement(
       ePrefSize,
-      static_cast<SongSequencerElementVariant>(eVariantType),
+      static_cast<SongCanvasElementVariant>(eVariantType),
       eName,
       this);
       mModGrid->AddElement(nrm);
       nrm->mInternalRackID = eRackId;
 
-      switch ((SongSequencerElementVariant)eVariantType)
+      switch ((SongCanvasElementVariant)eVariantType)
       {
-         case SongSequencerElementVariant::Enabler:
+         case SongCanvasElementVariant::Enabler:
             nrm->GetEnablerCable()->LoadState(in);
             break;
-         case SongSequencerElementVariant::Pulser:
+         case SongCanvasElementVariant::Pulser:
             int n;
             in >> n;
             nrm->SetInterval(static_cast<NoteInterval>(n));
             nrm->GetPulserCable()->LoadState(in);
             break;
-         case SongSequencerElementVariant::LFO:
+         case SongCanvasElementVariant::LFO:
             break;
-         case SongSequencerElementVariant::Sampler:
+         case SongCanvasElementVariant::Sampler:
             break;
-         case SongSequencerElementVariant::OnePulse:
+         case SongCanvasElementVariant::OnePulse:
             nrm->GetPulserCable()->LoadState(in);
             break;
          
@@ -909,7 +910,7 @@ void SongSequencer::LoadState(FileStreamIn& in, int rev)
    mRackAddNewButton->SetPosition(mgp.x + mModGrid->GetWidth(), mgp.y);
    //IDrawableModule::LoadState(in, rev); <-- Meanie :(
 
-   std::vector<SongSequencerCanvasElement*> celms;
+   std::vector<SongCanvas_CanvasElement*> celms;
    in >> i1;
    for (int i = 0; i < i1; ++i)
    {
@@ -927,7 +928,7 @@ void SongSequencer::LoadState(FileStreamIn& in, int rev)
       in >> eEnd;
       in >> rackId;
       mSelectedRackElement = GetRackElementWithID(rackId);
-      SongSequencerCanvasElement* celm = new SongSequencerCanvasElement(mCanvas, col, row, 0, length);
+      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas, col, row, 0, length);
       celm->SetStart(eStart, true);
       celm->SetEnd(eEnd);
       mCanvas->AddElement(celm);
@@ -944,7 +945,7 @@ void SongSequencer::LoadState(FileStreamIn& in, int rev)
 }
 
 ///////////////////////////////
-///SongSequencerRackElements///
+///SongCanvasRackElements///
 ///////////////////////////////
 
 
@@ -979,7 +980,7 @@ std::string RemoveNonNumericalChars(const std::string& input)
    return result;
 }
 
-SongSequencerRackElement::SongSequencerRackElement(float preferredWidth, SongSequencerElementVariant variantType, std::string name, SongSequencer* owner, const ofColor& overrideColor)
+SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor)
 : UIFlowGridElement(preferredWidth, overrideColor)
 {
    mElementName = new std::string(name);
@@ -988,21 +989,21 @@ SongSequencerRackElement::SongSequencerRackElement(float preferredWidth, SongSeq
    mInternalRackID = mSSParent->GetInternalRackId();
    switch (variantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          SetColor(ofColor::white);
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
          SetColor(ofColor::yellow);
          mVariantExtraWidth = 50;
          mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
          break;
-      case SongSequencerElementVariant::LFO:
+      case SongCanvasElementVariant::LFO:
 
          break;
-      case SongSequencerElementVariant::Sampler:
+      case SongCanvasElementVariant::Sampler:
 
          break;
-      case SongSequencerElementVariant::OnePulse:
+      case SongCanvasElementVariant::OnePulse:
          SetColor(ofColor(150,150,0));
          break;
    }
@@ -1010,39 +1011,39 @@ SongSequencerRackElement::SongSequencerRackElement(float preferredWidth, SongSeq
    mHighlightOutlineColor = ofColor(0, 150, 255);
 }
 
-SongSequencerRackElement::~SongSequencerRackElement()
+SongCanvasRackElement::~SongCanvasRackElement()
 {
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          mSSParent->RemovePatchCableSource(mEnablerCable);
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
          mSSParent->RemovePatchCableSource(mPulserCable);
          TheTransport->RemoveListener(this);
          mSSParent->DisposeElement(mIntervalSelector);
          mIntervalSelector->Delete();
          break;
-      case SongSequencerElementVariant::LFO:
+      case SongCanvasElementVariant::LFO:
          break;
-      case SongSequencerElementVariant::Sampler: break;
-      case SongSequencerElementVariant::OnePulse: 
+      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::OnePulse:
          mSSParent->RemovePatchCableSource(mPulserCable);
       break;
       default:;
    }
 }
 
-void SongSequencerRackElement::CreateUIControls(SongSequencer* owner)
+void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
 {
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          mEnablerCable = new PatchCableSource(owner, kConnectionType_UIControl);
          owner->AddPatchCableSource(mEnablerCable);
          mEnablerCable->SetAllowMultipleTargets(true);
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
          mPulserCable = new PatchCableSource(owner, kConnectionType_Pulse);
          owner->AddPatchCableSource(mPulserCable);
          mPulserCable->SetAllowMultipleTargets(true);
@@ -1067,9 +1068,9 @@ void SongSequencerRackElement::CreateUIControls(SongSequencer* owner)
          mIntervalSelector->AddLabel("none", kInterval_None);
          mIntervalSelector->AddLabel("div", kInterval_CustomDivisor);
          break;
-      case SongSequencerElementVariant::LFO: break;
-      case SongSequencerElementVariant::Sampler: break;
-      case SongSequencerElementVariant::OnePulse:
+      case SongCanvasElementVariant::LFO: break;
+      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::OnePulse:
          mPulserCable = new PatchCableSource(owner, kConnectionType_Pulse);
          owner->AddPatchCableSource(mPulserCable);
          mPulserCable->SetAllowMultipleTargets(true);
@@ -1083,7 +1084,7 @@ void SongSequencerRackElement::CreateUIControls(SongSequencer* owner)
    //mTransportTextBox = new TextEntry{ this, "", startCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
 }
 
-void SongSequencerRackElement::Draw()
+void SongCanvasRackElement::Draw()
 {
    UIFlowGridElement::Draw();
 
@@ -1109,10 +1110,10 @@ void SongSequencerRackElement::Draw()
    }
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          mEnablerCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
          mPulserCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
          ofPushMatrix();
          ofTranslate(-pos.x, -pos.y);
@@ -1121,11 +1122,11 @@ void SongSequencerRackElement::Draw()
          ofPopMatrix();
 
          break;
-      case SongSequencerElementVariant::LFO:
+      case SongCanvasElementVariant::LFO:
          break;
-      case SongSequencerElementVariant::Sampler:
+      case SongCanvasElementVariant::Sampler:
          break;
-      case SongSequencerElementVariant::OnePulse:
+      case SongCanvasElementVariant::OnePulse:
          mPulserCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
          break;
    }
@@ -1170,7 +1171,7 @@ void SongSequencerRackElement::Draw()
    ofPopStyle();
 }
 
-void SongSequencerRackElement::OnMouseClick(bool rightClick)
+void SongCanvasRackElement::OnMouseClick(bool rightClick)
 {
    if (rightClick)
    {
@@ -1186,18 +1187,18 @@ void SongSequencerRackElement::OnMouseClick(bool rightClick)
    }
    //mElementName = "Clicked!";
 }
-void SongSequencerRackElement::SetName(std::string newName) const
+void SongCanvasRackElement::SetName(std::string newName) const
 {
    *mElementName = newName;
 }
 
-void SongSequencerRackElement::OnEnter()
+void SongCanvasRackElement::OnEnter()
 {
    mActive = true;
    double time = NextBufferTime(mSSParent);
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
 
          mEnablerCable->AddHistoryEvent(time, true, 0);
          Excite(1);
@@ -1212,14 +1213,14 @@ void SongSequencerRackElement::OnEnter()
          }
 
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
 
          break;
 
 
-      case SongSequencerElementVariant::LFO: break;
-      case SongSequencerElementVariant::Sampler: break;
-      case SongSequencerElementVariant::OnePulse:
+      case SongCanvasElementVariant::LFO: break;
+      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::OnePulse:
          const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
          mPulserCable->AddHistoryEvent(time, true, 0);
          mPulserCable->AddHistoryEvent(time + 15, false);
@@ -1229,28 +1230,28 @@ void SongSequencerRackElement::OnEnter()
          break;
    }
 }
-void SongSequencerRackElement::OnProcess()
+void SongCanvasRackElement::OnProcess()
 {
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          break;
-      case SongSequencerElementVariant::Pulser:
+      case SongCanvasElementVariant::Pulser:
          break;
-      case SongSequencerElementVariant::LFO:
+      case SongCanvasElementVariant::LFO:
          break;
-      case SongSequencerElementVariant::Sampler:
+      case SongCanvasElementVariant::Sampler:
          break;
-      case SongSequencerElementVariant::OnePulse: break;
+      case SongCanvasElementVariant::OnePulse: break;
       default:;
    }
 }
-void SongSequencerRackElement::OnExit()
+void SongCanvasRackElement::OnExit()
 {
    mActive = false;
    switch (mVariantType)
    {
-      case SongSequencerElementVariant::Enabler:
+      case SongCanvasElementVariant::Enabler:
          mEnablerCable->AddHistoryEvent(NextBufferTime(mSSParent), false, 0);
          SetExciteConstant(0);
 
@@ -1263,15 +1264,15 @@ void SongSequencerRackElement::OnExit()
             }
          }
          break;
-      case SongSequencerElementVariant::Pulser: break;
-      case SongSequencerElementVariant::LFO: break;
-      case SongSequencerElementVariant::Sampler: break;
-      case SongSequencerElementVariant::OnePulse: break;
+      case SongCanvasElementVariant::Pulser: break;
+      case SongCanvasElementVariant::LFO: break;
+      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::OnePulse: break;
       default:;
    }
 }
 
-void SongSequencerRackElement::OnTimeEvent(double time)
+void SongCanvasRackElement::OnTimeEvent(double time)
 {
    if (IsActive() && mSSParent->IsEnabled())
    {

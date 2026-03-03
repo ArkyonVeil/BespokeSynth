@@ -34,14 +34,14 @@
 #include "ClickButton.h"
 #include "DropdownList.h"
 #include "ISignalListener.h"
-#include "SongSequencerCanvas.h"
+#include "SongCanvas_CanvasElement.h"
 #include "TextEntry.h"
 #include "UIFlowGrid.h"
 
 
-class SongSequencerCanvasElement;
-class SongSequencerRackElement;
-class SongSequencer :
+class SongCanvas_CanvasElement;
+class SongCanvasRackElement;
+class SongCanvas :
 public IDrawableModule,
 public ICanvasListener,
 public ITextEntryListener,
@@ -53,9 +53,9 @@ public ISignalListener,
 public ITimeListener
 {
 public:
-   SongSequencer();
-   ~SongSequencer();
-   static IDrawableModule* Create() { return new SongSequencer(); }
+   SongCanvas();
+   ~SongCanvas();
+   static IDrawableModule* Create() { return new SongCanvas(); }
    static bool AcceptsAudio() { return false; }
    static bool AcceptsNotes() { return false; }
    static bool AcceptsPulses() { return false; }
@@ -84,14 +84,14 @@ public:
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
-   void SetNewRackDropdownContext(SongSequencerRackElement* element);
-   void SetSelectedRackElement(SongSequencerRackElement* element);
-   void SetupCanvasElement(SongSequencerCanvasElement* element);
+   void SetNewRackDropdownContext(SongCanvasRackElement* element);
+   void SetSelectedRackElement(SongCanvasRackElement* element);
+   void SetupCanvasElement(SongCanvas_CanvasElement* element);
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox;}
-   void DeleteRackElement(SongSequencerRackElement* element) const;
-   std::vector<SongSequencerRackElement*> GetAllRackElements() const; //It's not cached
-   std::vector<SongSequencerCanvasElement*> GetAllCanvasElementsOfRack(const SongSequencerRackElement* element) const;
-   SongSequencerRackElement* GetRackElementWithID(int id);
+   void DeleteRackElement(SongCanvasRackElement* element) const;
+   std::vector<SongCanvasRackElement*> GetAllRackElements() const; //It's not cached
+   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
+   SongCanvasRackElement* GetRackElementWithID(int id);
 
    void IncrementInternalRackId(){mInternalRackIDCounter++;}
    int GetInternalRackId() const { return mInternalRackIDCounter;}
@@ -115,7 +115,7 @@ private:
    //IDrawableModule
    void DrawModule() override;
    void GetModuleDimensions(float& width, float& height) override;
-   bool IsCanvasElementActive(SongSequencerCanvasElement* element) const;
+   bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mTransportSlider{ nullptr };
@@ -165,10 +165,10 @@ private:
   
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongSequencerCanvasElement*> mCanvasChunkList[1001];
+   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[1001];
    int mChunkAmount = 50;
 
-   std::vector<SongSequencerCanvasElement*> mActiveElements;
+   std::vector<SongCanvas_CanvasElement*> mActiveElements;
    
    std::array<TextEntry*, maxLayers> mLayerNameTextbox{};
 
@@ -182,8 +182,8 @@ private:
 
    DropdownList* mRackElementRightClickDropdown;
 
-   SongSequencerRackElement* mRightClickDropdownElementContext;
-   SongSequencerRackElement* mSelectedRackElement;
+   SongCanvasRackElement* mRightClickDropdownElementContext;
+   SongCanvasRackElement* mSelectedRackElement;
    
    enum RackElementRightClickOptions
    {
@@ -211,7 +211,7 @@ private:
    float loopEnd = -1;
 };
 
-enum class SongSequencerElementVariant
+enum class SongCanvasElementVariant
 {
    Enabler = 0,
    Pulser = 1,
@@ -222,12 +222,12 @@ enum class SongSequencerElementVariant
 
 class PatchCableSource;
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
-class SongSequencerRackElement : public UIFlowGridElement, public ITimeListener
+class SongCanvasRackElement : public UIFlowGridElement, public ITimeListener
 {
 public:
-   SongSequencerRackElement(float preferredWidth, SongSequencerElementVariant variantType, std::string name, SongSequencer* owner, const ofColor& overrideColor = ofColor::white);
+   SongCanvasRackElement(float preferredWidth, SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor = ofColor::white);
    void Draw() override;
-   void CreateUIControls(SongSequencer* owner);
+   void CreateUIControls(SongCanvas* owner);
    void OnMouseClick(bool rightClick) override;
    void SetName(std::string newName) const;
    void Excite(float excitePower){if (mExcitePower<excitePower)mExcitePower = excitePower;}//Make it dance
@@ -242,7 +242,7 @@ public:
    
    std::string* GetName(){return mElementName;}
    void SetRenameState(bool newState){mRenameActive = newState;}
-   ~SongSequencerRackElement();
+   ~SongCanvasRackElement();
    void OnTimeEvent(double time) override;
    PatchCableSource* GetEnablerCable() {return mEnablerCable;}
    PatchCableSource* GetPulserCable() {return mPulserCable;}
@@ -250,13 +250,13 @@ public:
    
    DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector;}
 
-   SongSequencerElementVariant mVariantType;
+   SongCanvasElementVariant mVariantType;
 
 private:
    PatchCableSource* mEnablerCable;
    PatchCableSource* mPulserCable;
    std::string* mElementName;
-   SongSequencer* mSSParent;
+   SongCanvas* mSSParent;
    DropdownList* mIntervalSelector{ nullptr };
    NoteInterval mPulserInterval = kInterval_8n;
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
