@@ -53,6 +53,18 @@ enum class ButtonDisplayStyle
    kMinus,
    kHamburger
 };
+enum class ButtonIconAlignment
+{
+   kTopLeft,
+   kTopRight,
+   kTopMiddle,
+   kCenterLeft,
+   kCenterRight,
+   kCenter,
+   kBottomLeft,
+   kBottomMid,
+   kBottomRight
+};
 
 class ClickButton : public IUIControl, public IPulseReceiver
 {
@@ -66,6 +78,8 @@ public:
    bool MouseMoved(float x, float y) override;
    void SetDisplayText(bool display) { mDisplayStyle = ButtonDisplayStyle::kNoLabel; }
    void SetDisplayStyle(ButtonDisplayStyle style) { mDisplayStyle = style; }
+   void SetIconAlignment(ButtonIconAlignment alignment);
+
    void SetDimensions(float width, float height)
    {
       mWidth = width;
@@ -105,6 +119,10 @@ private:
 
    void OnClicked(float x, float y, bool right) override;
    float mWidth{ 20 };
+   float mIconOffsetMulX {0};
+   float mIconOffsetMulY {0};
+   float mIconOffsetX {0};
+   float mIconOffsetY {0};
    float mHeight{ 15 };
    double mClickTime{ -9999 };
    IButtonListener* mOwner{ nullptr };

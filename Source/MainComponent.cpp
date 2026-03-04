@@ -457,7 +457,10 @@ public:
       mSynth.LockRender(false);
 
       ++mFrameCountAccum;
+
       int64 time = Time::currentTimeMillis();
+      mSynth.IncrementGlobalTime((time-mLastFrameTime)/1000.0f);
+      mLastFrameTime = time;
 
       const int64 kCalcFpsIntervalMs = 1000;
       if (time - mLastFpsUpdateTime >= kCalcFpsIntervalMs)
@@ -645,6 +648,7 @@ private:
    ModularSynth mSynth;
 
    int64 mLastFpsUpdateTime;
+   int64 mLastFrameTime;
    int mFrameCountAccum;
    std::list<int> mPressedKeys;
    double mPixelRatio;

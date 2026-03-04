@@ -467,6 +467,11 @@ float ofGetFrameRate()
    return TheSynth->GetFrameRate();
 }
 
+double ofGetGlobalTime()
+{
+   return TheSynth->GetGlobalTime();
+}
+
 float ofLerp(float start, float stop, float amt)
 {
    return start + (stop - start) * amt;

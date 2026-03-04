@@ -105,12 +105,10 @@ void SongCanvas::CreateUIControls()
    mRackRenameTextBox->SetRequireEnter(true);
    mRackRenameTextBox->SetFlexibleWidth(true);
 
-
    /*
    mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 1", this));
    mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 2", this));
 */
-
 
    auto mgp = mModGrid->GetPosition(true);
 
@@ -120,6 +118,7 @@ void SongCanvas::CreateUIControls()
    mRackAddNewButton->GetDimensions(bWidth, bHeight);
    mRackAddNewButton->SetPosition(mgp.x + mModGrid->GetWidth() - bWidth * 1.5, mgp.y);
    mRackAddNewButton->SetDimensions(bWidth * 1.5, mModGrid->GetHeight());
+   mRackAddNewButton->SetIconAlignment(ButtonIconAlignment::kCenter);
 
    mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
 
@@ -315,7 +314,6 @@ void SongCanvas::DrawModule()
 
    mMainScrollbarHorizontal->Draw();
    ofPopStyle();
-
 
    int s = seqLayers.size();
    float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(s);
@@ -1092,14 +1090,13 @@ void SongCanvasRackElement::Draw()
    ofSetColor(ofColor::white);
    if (mExciteConstant > 0) //Make the outline bounce for extra visual satisfaction.
    {
-      float excConst = mExciteConstant + sin(ofGetSystemTimeNanos() * 20) * 0.1F;
+      float excConst = mExciteConstant + sin(ofGetGlobalTime()*12) * 0.2F;
       if (mExcitePower < excConst)
          mExcitePower = excConst;
-      TheSynth->LogEvent(std::to_string(ofGetSystemTimeNanos()), kLogEventType_Verbose);
    }
-   mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime() * 4);
-   mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 60);
-   mOutlineThickness = 0.8F + mExciteDrag;
+   mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime()*2);
+   mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 12);
+   mOutlineThickness = 0.8F + mExciteDrag*1.2;
 
    auto rPos = GetRelativePosition();
    auto pos = GetFlowGrid()->GetPosition(true);
@@ -1184,7 +1181,7 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
    else
    {
       mSSParent->SetSelectedRackElement(this);
-   }
+   }//Todo, double click to rename
    //mElementName = "Clicked!";
 }
 void SongCanvasRackElement::SetName(std::string newName) const
@@ -1242,7 +1239,8 @@ void SongCanvasRackElement::OnProcess()
          break;
       case SongCanvasElementVariant::Sampler:
          break;
-      case SongCanvasElementVariant::OnePulse: break;
+      case SongCanvasElementVariant::OnePulse:
+         break;
       default:;
    }
 }

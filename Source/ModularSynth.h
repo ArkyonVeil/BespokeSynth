@@ -238,7 +238,7 @@ public:
    void UpdateFrameRate(float fps) { mFrameRate = fps; }
    void IncrementGlobalTime(double lastFrameTime)
    {
-      mApplicationTime += lastFrameTime; if (mApplicationTime>1000000)mApplicationTime = 0;
+      mApplicationTime += lastFrameTime; if (mApplicationTime>2592000)mApplicationTime = 0;
    }
    float GetFrameRate() const { return mFrameRate; }
    double GetGlobalTime() const { return mApplicationTime;}

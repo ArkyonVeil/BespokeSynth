@@ -277,6 +277,7 @@ unsigned long long ofGetSystemTimeNanos();
 float ofGetWidth();
 float ofGetHeight();
 float ofGetFrameRate();
+double ofGetGlobalTime();
 float ofLerp(float start, float stop, float amt);
 float ofDistSquared(float x1, float y1, float x2, float y2);
 std::vector<std::string> ofSplitString(std::string str, std::string splitter, bool ignoreEmpty = false, bool trim = false);
