@@ -94,7 +94,7 @@ void SongCanvas::CreateUIControls()
 
    //mCanvas->SetAllowSpawnElements(false);
 
-   mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
+   mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
 
    mTransportSlider = new FloatSlider(this, "measure", startCanvasOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
@@ -142,7 +142,7 @@ void SongCanvas::CreateUIControls()
 
 
    mResetButton = new ClickButton{ this, "reset", static_cast<int>(mTransportTextBox->GetPosition().x) - 34, 22, ButtonDisplayStyle::kText };
-   mPlayPauseButton = new ClickButton{ this, "", static_cast<int>(mResetButton->GetPosition().x) - 22, 22, ButtonDisplayStyle::kPlay };
+   mPlayPauseButton = new ClickButton{ this, "play/pause", static_cast<int>(mResetButton->GetPosition().x) - 22, 22, ButtonDisplayStyle::kPlay };
 
    //std::to_string(32).c_str()
    int s = seqLayers.size();
@@ -150,15 +150,15 @@ void SongCanvas::CreateUIControls()
    float midCentering = layerPosSpacing / 4;
    for (int i = 0; i < s; i++)
    {
-      mLayerNameTextbox[i] = new TextEntry(this, "", 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
-      mLayerEnableCheckbox[i] = new Checkbox(this, "", startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
+      mLayerNameTextbox[i] = new TextEntry(this, "layer", 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
+      mLayerEnableCheckbox[i] = new Checkbox(this, "togglelayer", startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
       //mCanvas->SetRowColor(i,ofColor::clear)
    }
 
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
+      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Pattern " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }

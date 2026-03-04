@@ -2188,3 +2188,9 @@ binaryvalue~convert modulated value to binary and send each bit to separate modu
 
 velocitytoduration~use a note's velocity to set its duration
 ~max duration~duration (in measures) corresponding to the maximum velocity value
+
+songcanvas-beta~DAW style, traditional pattern sequencer. activate/deactivate modules, trigger pulses and more in a timeline canvas.
+~canvas~select a pattern in the rack and shift-click to place. racks will activate on the pattern timing.
+~reset~sets the time to the canvas's first measure
+~add~add a new pattern to the rack
+~interval~set the rack pattern's interval
