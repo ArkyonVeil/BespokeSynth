@@ -65,7 +65,6 @@ void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
 
 CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const
 {
-
    SongCanvas_CanvasElement* element = new SongCanvas_CanvasElement(mCanvas, mCol, mRow, mOffset, mLength / 4);
    //element->mVelocity = mVelocity;
    //element->mVoiceIdx = mVoiceIdx;

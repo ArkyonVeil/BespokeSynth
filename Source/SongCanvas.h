@@ -16,15 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 //
-//  SongSequencer.h
+//  SongCanvas.h
 //  Bespoke
 //
 //  Module assembled by ArkyonVeil on April/24.
 //
 //
 
-#ifndef __Bespoke__SongSequencer__
-#define __Bespoke__SongSequencer__
+#pragma once
 
 #include "Transport.h"
 #include "Checkbox.h"
@@ -116,6 +115,7 @@ private:
    void DrawModule() override;
    void GetModuleDimensions(float& width, float& height) override;
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
+   void ElementRemoved(CanvasElement* element) override;
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mTransportSlider{ nullptr };
@@ -134,6 +134,7 @@ private:
    static const int maxLayers = 100;
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
+   bool mCanvasDirty{false};//If true, the Canvas will regenerate next tick.
    
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
@@ -165,8 +166,8 @@ private:
   
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[1001];
-   int mChunkAmount = 50;
+   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[101];
+   int mChunkAmount = 10;
 
    std::vector<SongCanvas_CanvasElement*> mActiveElements;
    
@@ -271,6 +272,3 @@ private:
    int mInternalID {0};
    TextEntry* mElementRenameTextBox;
 };
-
-
-#endif /* defined(__Bespoke__TuneSequencer__) */

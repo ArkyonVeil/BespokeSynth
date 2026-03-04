@@ -1014,9 +1014,12 @@ void ModularSynth::DrawConsole()
       ofPopStyle();
    }*/
 
+   bool consoleActive = IKeyboardFocusListener::GetActiveKeyboardFocus() == mConsoleEntry;
+   //consoleActive = true;
+
    float consoleY = TheTitleBar->GetRect().height + 15;
 
-   if (IKeyboardFocusListener::GetActiveKeyboardFocus() == mConsoleEntry)
+   if (consoleActive)
    {
       mConsoleEntry->SetPosition(0, consoleY - 15);
       mConsoleEntry->Draw();
@@ -1042,10 +1045,10 @@ void ModularSynth::DrawConsole()
       ofPopStyle();
    }
 
-   if (IKeyboardFocusListener::GetActiveKeyboardFocus() == mConsoleEntry)
+   if (consoleActive)
    {
       int outputLines = (int)mEvents.size();
-      if (IKeyboardFocusListener::GetActiveKeyboardFocus() == mConsoleEntry)
+      if (consoleActive)
          outputLines += mErrors.size();
       if (outputLines > 0)
       {

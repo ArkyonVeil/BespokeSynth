@@ -364,7 +364,6 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
    if (mCanvas == canvas)
    {
-      //TheSynth->LogEvent("Beat",kLogEventType_Verbose);
       auto elms = mCanvas->GetElements();
 
       //How many chunks should we have?
@@ -375,7 +374,7 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
       //Regenerate the canvas list.
       for (int i = 0; i < mChunkAmount; ++i)
       {
-         mCanvasChunkList->clear();
+         mCanvasChunkList[i].clear();
       }
 
       for (int i = 0; i < elms.size(); i++)
@@ -397,12 +396,15 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
          }
 
          //Workspace view resize check
+         //Disabled, to enforce a more controlled format.
+         /*
          if (elms[i]->GetEnd() > 0.8)
          {
             ResizeWorkspace(1.0 - elms[i]->GetEnd());
             break;
-         }
+         }*/
       }
+      //TheSynth->LogEvent("SongCanvas Regenerated",LogEventType::kLogEventType_Verbose);
    }
 }
 
@@ -572,6 +574,22 @@ void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
    element->Setup(mSelectedRackElement);
 }
+//Incoming event from a note bring removed from the base Canvas
+void SongCanvas::ElementRemoved(CanvasElement* element)
+{
+   SongCanvas_CanvasElement* sElement = dynamic_cast<SongCanvas_CanvasElement*>(element);
+   //If any of them are playing, we send notes off.
+   for (int i = 0; i < mActiveElements.size(); ++i)
+   {
+      if (mActiveElements[i] == sElement)
+      {
+         sElement->GetRackElement()->OnExit();
+         mActiveElements.erase(mActiveElements.begin() + i);
+      }
+   }
+   mCanvasDirty = true;
+   //Then we flag the Canvas as dirty, so we don't stress the DAW too much with pointless regenerations.
+}
 
 void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
 {
@@ -593,6 +611,8 @@ std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
    }
    return output;
 }
+
+//Gets all the canvas elements which have said rack as a parent.
 std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
 {
    auto elms = mCanvas->GetElements();
@@ -645,6 +665,13 @@ void SongCanvas::DisposeElement(IClickable* element)
 //Called on a 64n interval, which is very fast.
 void SongCanvas::OnTimeEvent(double time)
 {
+   //First check if we have any cleanup to do.
+   if (mCanvasDirty)
+   {
+      CanvasUpdated(mCanvas);
+      mCanvasDirty = false;
+   }
+
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably. 
    mCanvasRelativeTime = (mTime+0.02f) / ((double)mCanvas->GetNumCols() / 4);
    if (IsEnabled())
@@ -654,18 +681,18 @@ void SongCanvas::OnTimeEvent(double time)
          int readChunkNum = floor(mCanvasRelativeTime * mChunkAmount);
          if (readChunkNum < 0)
             readChunkNum = 0;
-         auto& c = mCanvasChunkList[readChunkNum];
+         auto& cL = mCanvasChunkList[readChunkNum];
 
-         for (int i = 0; i < c.size(); ++i)
+         for (int i = 0; i < cL.size(); ++i)
          {
-            if (c[i]->GetStart() < mCanvasRelativeTime && c[i]->GetEnd() > mCanvasRelativeTime)
+            if (cL[i]->GetStart() < mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
             {
-               if (!IsCanvasElementActive(c[i]))
+               if (!IsCanvasElementActive(cL[i]))
                {
-                  mActiveElements.push_back(c[i]);
-                  c[i]->GetRackElement()->OnEnter();
+                  mActiveElements.push_back(cL[i]);
+                  cL[i]->GetRackElement()->OnEnter();
                }
-               c[i]->GetRackElement()->OnProcess();
+               cL[i]->GetRackElement()->OnProcess();
             }
          }
 
