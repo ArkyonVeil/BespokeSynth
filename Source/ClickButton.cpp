@@ -96,26 +96,26 @@ void ClickButton::Render()
    if (mDisplayStyle == ButtonDisplayStyle::kText)
    {
       ofSetColor(textColor);
-      DrawTextNormal(GetDisplayName(), mX + 2, mY + 12);
+      DrawTextNormal(GetDisplayName(), iX + 2, iY + 12);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kPlay)
    {
       ofSetColor(textColor);
       ofFill();
-      ofTriangle(mX + 5, mY + 2, mX + 5, mY + 12, mX + 15, mY + 7);
+      ofTriangle(iX + 5, iY + 2, iX + 5, iY + 12, iX + 15, iY + 7);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kPause)
    {
       ofSetColor(textColor);
       ofFill();
-      ofRect(mX + 5, mY + 2, 4, 10, 0);
-      ofRect(mX + 11, mY + 2, 4, 10, 0);
+      ofRect(iX + 5, iY + 2, 4, 10, 0);
+      ofRect(iX + 11, iY + 2, 4, 10, 0);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kStop)
    {
       ofSetColor(textColor);
       ofFill();
-      ofRect(mX + 5, mY + 2, 10, 10, 0);
+      ofRect(iX + 5, iY + 2, 10, 10, 0);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kGrabSample)
    {
@@ -123,8 +123,8 @@ void ClickButton::Render()
       for (int i = 0; i < 5; ++i)
       {
          float height = (i % 2 == 0) ? 6 : 10;
-         float x = mX + 4 + i * 3;
-         ofLine(x, mY + 7 - height / 2, x, mY + 7 + height / 2);
+         float x = iX + 4 + i * 3;
+         ofLine(x, iY + 7 - height / 2, x, iY + 7 + height / 2);
       }
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kSampleIcon)
@@ -133,30 +133,30 @@ void ClickButton::Render()
       for (int i = 0; i < 5; ++i)
       {
          float height = (i % 2 == 0) ? 6 : 10;
-         float x = mX + 4 + i * 3;
-         ofLine(x, mY + 7 - height / 2, x, mY + 7 + height / 2);
+         float x = iX + 4 + i * 3;
+         ofLine(x, iY + 7 - height / 2, x, iY + 7 + height / 2);
       }
-      DrawTextNormal(GetDisplayName(), mX + 22, mY + 12);
+      DrawTextNormal(GetDisplayName(), iX + 22, iY + 12);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kFolderIcon)
    {
       ofSetColor(textColor);
       ofFill();
-      ofRect(mX + 2, mY + 2, 7, 5, 2);
-      ofRect(mX + 2, mY + 4, 16, 9, 2);
-      DrawTextNormal(GetDisplayName(), mX + 22, mY + 12);
+      ofRect(iX + 2, iY + 2, 7, 5, 2);
+      ofRect(iX + 2, iY + 4, 16, 9, 2);
+      DrawTextNormal(GetDisplayName(), iX + 22, iY + 12);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kArrowRight)
    {
       ofSetColor(textColor);
-      ofLine(mX + 6, mY + 3, mX + 14, mY + 7);
-      ofLine(mX + 6, mY + 11, mX + 14, mY + 7);
+      ofLine(iX + 6, iY + 3, iX + 14, iY + 7);
+      ofLine(iX + 6, iY + 11, iX + 14, iY + 7);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kArrowLeft)
    {
       ofSetColor(textColor);
-      ofLine(mX + 14, mY + 3, mX + 6, mY + 7);
-      ofLine(mX + 14, mY + 11, mX + 6, mY + 7);
+      ofLine(iX + 14, iY + 3, iX + 6, iY + 7);
+      ofLine(iX + 14, iY + 11, iX + 6, iY + 7);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kPlus)
    {
@@ -169,15 +169,15 @@ void ClickButton::Render()
    {
       ofSetColor(textColor);
       ofSetLineWidth(1.5f);
-      ofLine(mX + 6, mY + 7.5f, mX + 14, mY + 7.5f);
+      ofLine(iX + 6, iY + 7.5f, iX + 14, iY + 7.5f);
    }
    else if (mDisplayStyle == ButtonDisplayStyle::kHamburger)
    {
       ofSetColor(textColor);
       ofSetLineWidth(1.0f);
-      ofLine(mX + 6, mY + 4.5f, mX + 14, mY + 4.5f);
-      ofLine(mX + 6, mY + 7.5f, mX + 14, mY + 7.5f);
-      ofLine(mX + 6, mY + 10.5f, mX + 14, mY + 10.5f);
+      ofLine(iX + 6, iY + 4.5f, iX + 14, iY + 4.5f);
+      ofLine(iX + 6, iY + 7.5f, iX + 14, iY + 7.5f);
+      ofLine(iX + 6, iY + 10.5f, iX + 14, iY + 10.5f);
    }
 
    ofPopStyle();
