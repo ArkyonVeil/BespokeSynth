@@ -950,6 +950,16 @@ void SongCanvas::SaveState(FileStreamOut& out)
    //More misc stuff
    out << mPartNameCount;
    out << IsEnabled();
+
+   //Reserved variables SEC-1
+   out << mGlobalMode;
+   out << mStartMeasure;
+   out << mEndMeasure;
+   out << mAutoEndMeasure;
+   out << mLoopOnEnd;
+   out << mRedLoopEnd;
+   out << mRedLoopStart;
+   //End reserved variables SEC-1
    //IDrawableModule::SaveState(out);
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
@@ -1073,6 +1083,15 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mPartNameCount;
    bool enableState;
    in >> enableState;
+   //Reserved variables SEC-1
+   in >> mGlobalMode;
+   in >> mStartMeasure;
+   in >> mEndMeasure;
+   in >> mAutoEndMeasure;
+   in >> mLoopOnEnd;
+   in >> mRedLoopEnd;
+   in >> mRedLoopStart;
+   //End reserved variables SEC-1
    SetEnabled(enableState);
 }
 

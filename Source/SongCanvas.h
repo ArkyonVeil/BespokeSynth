@@ -150,6 +150,14 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
+   bool mGlobalMode {true}; //If false, runs on local timing.
+   int mStartMeasure {0};
+   int mEndMeasure {0};
+   bool mAutoEndMeasure {true};
+   bool mLoopOnEnd {false};
+   int mRedLoopStart{0};
+   int mRedLoopEnd{0};
+
    int GetModGridStartYOffset() const
    {
       return OffsetFromTopSpacing + mCanvas->GetHeight() + 16;
