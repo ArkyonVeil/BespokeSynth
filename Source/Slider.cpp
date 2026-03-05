@@ -126,7 +126,7 @@ void FloatSlider::Render()
    ofColor color;
    ofColor textColor;
    IUIControl::GetColors(color, textColor);
-
+   textColor.a = mTextAlpha;
    ofFill();
    ofSetColor(0, 0, 0, gModuleDrawAlpha * .5f);
    ofRect(mX + 1, mY + 1, mWidth, mHeight);

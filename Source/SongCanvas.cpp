@@ -35,8 +35,6 @@
 //
 
 #include "SongCanvas.h"
-#include "SongCanvas.h"
-#include "SongCanvas.h"
 #include "ModularSynth.h"
 #include "SongCanvas_CanvasElement.h"
 
@@ -45,18 +43,14 @@ SongCanvas::SongCanvas()
 {
    mRowColors.push_back(ofColor::black);
    mTransportPriority = kTransportPriorityVeryEarly;
-   for (int i = 0; i < maxLayers; ++i)
-   {
-      mLayerNameTextbox[i] = nullptr;
-   }
-
    for (int i = 0; i < 5; i++)
    {
-      seqLayers.push_back(TuneSequencerLayer{
+      seqLayers.push_back(SongCanvasLayer{
       ofColor::white,
       0,
       true,
       "layer" + ofToString(i) });
+      mLayerCount++;
    }
 }
 
@@ -94,10 +88,13 @@ void SongCanvas::CreateUIControls()
 
    //mCanvas->SetAllowSpawnElements(false);
 
-   mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "", CanvasScrollbar::Style::kHorizontal);
+   mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
 
    mTransportSlider = new FloatSlider(this, "measure", startCanvasOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
+   mTransportSlider->SetNoHover(true);
+   mTransportSlider->SetCableTargetable(false);
+   mTransportSlider->SetTextAlpha(0);
 
    mModGrid = new UIFlowGrid("playrack", 8, GetModGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
 
@@ -105,10 +102,6 @@ void SongCanvas::CreateUIControls()
    mRackRenameTextBox->SetRequireEnter(true);
    mRackRenameTextBox->SetFlexibleWidth(true);
 
-   /*
-   mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 1", this));
-   mModGrid->AddElement(new SongCanvasRackElement(90, ofColor::white, "Part 2", this));
-*/
 
    auto mgp = mModGrid->GetPosition(true);
 
@@ -124,37 +117,37 @@ void SongCanvas::CreateUIControls()
 
    //HACK, but this is just to avoid having to do further changes to the dropdown element.
    //TL DR: Don't draw it, but send over the events with the button.
-   mRackAddNewDropdown = new DropdownList(this, "nameSome", mgp.x + mModGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
+   mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mModGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
    mRackAddNewDropdown->AddLabel("Enabler", RackAddNewElementOptions::enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", RackAddNewElementOptions::enumPulser);
    mRackAddNewDropdown->AddLabel("OnePulse", RackAddNewElementOptions::enumOnePulse);
 
-   mRackElementRightClickDropdown = new DropdownList(this, "nameSome2", 0, 0, (int*)&mRackElementRightClickIndex);
+   mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
    mRackElementRightClickDropdown->AddLabel("Delete", RackElementRightClickOptions::enumDelete);
    mRackElementRightClickDropdown->AddLabel("Rename", RackElementRightClickOptions::enumRename);
 
-   mTransportSlider->SetNoHover(true);
-   mTransportSlider->SetCableTargetable(false);
-   mTransportSlider->SetTextAlpha(0);
+   mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
-   mTransportTextBox = new TextEntry{ this, "", startCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
+   mTransportTextBox = new TextEntry{ this, "transport", startCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
    //mTransportTextBox->SetFloatDecimalCount(2);
 
 
    mResetButton = new ClickButton{ this, "reset", static_cast<int>(mTransportTextBox->GetPosition().x) - 34, 22, ButtonDisplayStyle::kText };
    mPlayPauseButton = new ClickButton{ this, "play/pause", static_cast<int>(mResetButton->GetPosition().x) - 22, 22, ButtonDisplayStyle::kPlay };
 
-   //std::to_string(32).c_str()
+   //Layers
    int s = seqLayers.size();
    float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(s);
    float midCentering = layerPosSpacing / 4;
    for (int i = 0; i < s; i++)
    {
-      mLayerNameTextbox[i] = new TextEntry(this, "layer", 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
-      mLayerEnableCheckbox[i] = new Checkbox(this, "togglelayer", startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
+      mLayerNameTextbox[i] = new TextEntry(this, ("layer" + std::to_string(i)).c_str(), 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
+      mLayerEnableCheckbox[i] = new Checkbox(this, ("checkbox" + std::to_string(i)).c_str(), startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
+      mLayerSettingsButton[i] = new ClickButton(this, ("setting" + std::to_string(i)).c_str(), startCanvasOffset - 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, ButtonDisplayStyle::kHamburger);
       //mCanvas->SetRowColor(i,ofColor::clear)
    }
 
+   //Patterns
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
@@ -326,6 +319,9 @@ void SongCanvas::DrawModule()
 
       mLayerEnableCheckbox[i]->SetPosition(startCanvasOffset - 13, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerEnableCheckbox[i]->Draw();
+
+      mLayerSettingsButton[i]->SetPosition(4, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerSettingsButton[i]->Draw();
    }
    mModGrid->SetPosition(8, GetModGridStartYOffset());
    mModGrid->Draw();
@@ -414,7 +410,7 @@ void SongCanvas::ResizeWorkspace(float diff)
    /*
    auto elms = mCanvas->GetElements();
    std::vector<float> pos(2 * elms.size());
-   
+
    for (int i = 0; i < elms.size(); i++)
    {
       pos[i*2] = elms[i]->GetStart();
@@ -462,10 +458,12 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
    if (button == mPlayPauseButton)
    {
       TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
+      return;
    }
    else if (button == mResetButton)
    {
       TheTransport->SetMeasureTime(0);
+      return;
    }
    else if (button == mRackAddNewButton)
    {
@@ -474,6 +472,30 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
       mRackAddNewDropdown->OnClicked(1, 1, false);
       mRackAddNewDropdown->SetPosition(-2000, -2000);
       //DropdownClicked(mRackAddNewDropdown);
+      return;
+   }
+   for (int i = 0; i < mLayerCount; ++i)
+   {
+      if (button == mLayerSettingsButton[i])
+      {
+         mLayerDropdownOptionButtonIndex = i;
+         mListDropdownOptions->Clear();
+         if (i > 0)
+            mListDropdownOptions->AddLabel("Move up", LayerDropDownOptions::enumLDPMoveUp);
+         if (i + 1 < mLayerCount)
+            mListDropdownOptions->AddLabel("Move down", LayerDropDownOptions::enumLDPMoveDown);
+         if (i > 0)
+            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
+
+         if (mLayerCount + 1 >= MaxLayers)
+            mListDropdownOptions->AddLabel("Add new layer", LayerDropDownOptions::enumLDPAddNewLayerBelow);
+
+         auto rp = mLayerSettingsButton[i]->GetPosition(true);
+         mListDropdownOptions->SetPosition(rp.x, rp.y);
+         mListDropdownOptions->OnClicked(1, 1, false);
+         mListDropdownOptions->SetPosition(-2000, -2000);
+         return;
+      }
    }
 }
 bool SongCanvas::MouseMoved(float x, float y)
@@ -540,6 +562,63 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
          break;
       }
       return;
+   }
+   if (list == mListDropdownOptions)
+   {
+      int idx = mLayerDropdownOptionButtonIndex;
+      if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveUp)
+      {
+            auto oL = GetAllCanvasElementsOfLayer(idx - 1);
+            auto cL = GetAllCanvasElementsOfLayer(idx);
+
+            for (int i = 0; i < oL.size(); ++i)
+            {
+               oL[i]->mRow = idx;
+            }
+
+            for (int i = 0; i < cL.size(); ++i)
+            {
+               cL[i]->mRow = idx-1;
+            }
+
+         auto oA = seqLayers[idx - 1];
+         auto cA = seqLayers[idx];
+
+         seqLayers[idx -1].layerName = cA.layerName;
+         seqLayers[idx].layerName = oA.layerName;
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveDown)
+      {
+         auto oL = GetAllCanvasElementsOfLayer(idx+1);
+         auto cL = GetAllCanvasElementsOfLayer(idx);
+
+         for (int i = 0; i < oL.size(); ++i)
+         {
+            oL[i]->mRow = idx;
+         }
+
+         for (int i = 0; i < cL.size(); ++i)
+         {
+            cL[i]->mRow = idx+1;
+         }
+
+         auto oA = seqLayers[idx + 1];
+         auto cA = seqLayers[idx];
+
+         seqLayers[idx +1] = cA;
+         seqLayers[idx] = oA;
+
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPDelete)
+      {
+
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPAddNewLayerBelow)
+      {
+
+      }
+
+
    }
    for (int i = 0; i < mModGrid->GetAllElements().size(); ++i)
    {
@@ -625,6 +704,21 @@ std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(co
    }
    return output;
 }
+std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfLayer(const int layerIndex) const
+{
+   auto elms = mCanvas->GetElements();
+   std::vector<SongCanvas_CanvasElement*> output;
+   for (int i = 0; i < elms.size(); ++i)
+   {
+      if (elms[i]->mRow == layerIndex)
+      {
+         output.push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
+      }
+   }
+   return output;
+}
+
+
 SongCanvasRackElement* SongCanvas::GetRackElementWithID(int id)
 {
    auto RE = GetAllRackElements();
@@ -672,8 +766,8 @@ void SongCanvas::OnTimeEvent(double time)
       mCanvasDirty = false;
    }
 
-   //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably. 
-   mCanvasRelativeTime = (mTime+0.02f) / ((double)mCanvas->GetNumCols() / 4);
+   //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
+   mCanvasRelativeTime = (mTime + 0.02f) / ((double)mCanvas->GetNumCols() / 4);
    if (IsEnabled())
    {
       if (mCanvasRelativeTime <= 1)
@@ -729,10 +823,10 @@ void SongCanvas::OnTimeEvent(double time)
          auto rck = elm->GetRackElement();
 
          auto interv = rck->GetInterval();
-         
-         
+
+
       }
-      
+
    }*/
 }
 
@@ -905,7 +999,6 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
          case SongCanvasElementVariant::OnePulse:
             nrm->GetPulserCable()->LoadState(in);
             break;
-         
       }
    }
    //Step 3: time to set up our Canvas and scaling now
@@ -1029,7 +1122,7 @@ SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasEle
 
          break;
       case SongCanvasElementVariant::OnePulse:
-         SetColor(ofColor(150,150,0));
+         SetColor(ofColor(150, 150, 0));
          break;
    }
    CreateUIControls(owner);
@@ -1054,7 +1147,7 @@ SongCanvasRackElement::~SongCanvasRackElement()
       case SongCanvasElementVariant::Sampler: break;
       case SongCanvasElementVariant::OnePulse:
          mSSParent->RemovePatchCableSource(mPulserCable);
-      break;
+         break;
       default:;
    }
 }
@@ -1117,13 +1210,13 @@ void SongCanvasRackElement::Draw()
    ofSetColor(ofColor::white);
    if (mExciteConstant > 0) //Make the outline bounce for extra visual satisfaction.
    {
-      float excConst = mExciteConstant + sin(ofGetGlobalTime()*12) * 0.2F;
+      float excConst = mExciteConstant + sin(ofGetGlobalTime() * 12) * 0.2F;
       if (mExcitePower < excConst)
          mExcitePower = excConst;
    }
-   mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime()*2);
+   mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime() * 2);
    mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 12);
-   mOutlineThickness = 0.8F + mExciteDrag*1.2;
+   mOutlineThickness = 0.8F + mExciteDrag * 1.2;
 
    auto rPos = GetRelativePosition();
    auto pos = GetFlowGrid()->GetPosition(true);
@@ -1208,7 +1301,7 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
    else
    {
       mSSParent->SetSelectedRackElement(this);
-   }//Todo, double click to rename
+   } //Todo, double click to rename
    //mElementName = "Clicked!";
 }
 void SongCanvasRackElement::SetName(std::string newName) const

@@ -88,8 +88,9 @@ public:
    void SetupCanvasElement(SongCanvas_CanvasElement* element);
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox;}
    void DeleteRackElement(SongCanvasRackElement* element) const;
-   std::vector<SongCanvasRackElement*> GetAllRackElements() const; //It's not cached
+   std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
+   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackElementWithID(int id);
 
    void IncrementInternalRackId(){mInternalRackIDCounter++;}
@@ -104,7 +105,7 @@ public:
    void OnTimeEvent(double time) override;
    int GetModuleSaveStateRev() const override {return 1;};
 private:
-   struct TuneSequencerLayer
+   struct SongCanvasLayer
    {
       ofColor baseColor;
       float offset;
@@ -131,7 +132,8 @@ private:
    
    UIFlowGrid* mModGrid;
 
-   static const int maxLayers = 100;
+   static const int MaxLayers = 51;
+   int mLayerCount{0};
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mCanvasDirty{false};//If true, the Canvas will regenerate next tick.
@@ -170,22 +172,29 @@ private:
    int mChunkAmount = 10;
 
    std::vector<SongCanvas_CanvasElement*> mActiveElements;
-   
-   std::array<TextEntry*, maxLayers> mLayerNameTextbox{};
 
-   std::array<Checkbox*, maxLayers> mLayerEnableCheckbox{};
+   std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
+   std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
+   std::array<ClickButton*, MaxLayers> mLayerSettingsButton = {};
+/*
+   ClickButton* mLayerSettingsButton1;
+   ClickButton* mLayerSettingsButton2;
+   ClickButton* mLayerSettingsButton3;
+   ClickButton* mLayerSettingsButton4;
+   ClickButton* mLayerSettingsButton5;*/
 
-   std::vector<TuneSequencerLayer> seqLayers;
+   std::vector<SongCanvasLayer> seqLayers;
 
    ClickButton* mRackAddNewButton;
 
    DropdownList* mRackAddNewDropdown;
-
    DropdownList* mRackElementRightClickDropdown;
+   DropdownList* mListDropdownOptions;
 
    SongCanvasRackElement* mRightClickDropdownElementContext;
    SongCanvasRackElement* mSelectedRackElement;
-   
+
+
    enum RackElementRightClickOptions
    {
       enumNothing,
@@ -204,7 +213,16 @@ private:
    };
    RackAddNewElementOptions mRackAddNewElementIndex;
    
-  
+   enum LayerDropDownOptions
+   {
+      enumLDPNothing,
+      enumLDPMoveUp,
+      enumLDPMoveDown,
+      enumLDPAddNewLayerBelow,
+      enumLDPDelete,
+   };
+   LayerDropDownOptions mLayerDropDownOptions;
+   int mLayerDropdownOptionButtonIndex;
    
    //Expert variables
    bool expertPanelEnabled = false;
