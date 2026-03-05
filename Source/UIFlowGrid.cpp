@@ -27,7 +27,7 @@ void UIFlowGrid::Render()
       ofSetColor(255, 255, 0);
    }*/
 
-   ofSetColor(0, 0, 0, 75);
+   ofSetColor(mBackgroundColor);
    ofFill();
    ofRect(0, 0, mWidth, mHeight);
 

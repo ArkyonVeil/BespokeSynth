@@ -244,12 +244,19 @@ void Canvas::OnClicked(float x, float y, bool right)
 
          if (GetKeyModifiers() & kModifier_Shift)
          {
+            if (mAllowElementPlacement)
+            {
             CanvasCoord coord = GetCoordAt(x, y);
             CanvasElement* element = CreateElement(coord.col, coord.row);
             AddElement(element);
             SelectElement(element);
             mHasDuplicatedThisDrag = true; //to prevent a duplicate from being made
             mClickedElementStartMousePos.set(TheSynth->GetRawMouseX(), TheSynth->GetRawMouseY());
+            }
+            else
+            {
+               mListener->ElementAdditionSuppressed(x,y);
+            }
          }
          else if (GetKeyModifiers() & kModifier_Alt)
          {

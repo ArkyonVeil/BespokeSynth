@@ -22,6 +22,7 @@ public:
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
+   void SetBackgroundColour(float r, float g, float b, float a){ mBackgroundColor.set(r, g, b, a); }
    void SetValue(float value, double time, bool forceUpdate) override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, bool shouldSetValue) override;
@@ -71,6 +72,7 @@ private:
    float mElementSpacing = {4}; //The amount of space between each element.
    float mRowXBorderOffset = 2;
    float mRowYBorderOffset = 2;
+   ofColor mBackgroundColor = {0,0,0,75};
 
    int mSnapDragIndex;
    int mSnapDragRow;

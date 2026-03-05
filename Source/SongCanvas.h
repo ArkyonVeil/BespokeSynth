@@ -86,6 +86,7 @@ public:
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetSelectedRackElement(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element);
+   void ElementAdditionSuppressed(float posX, float posY) override;
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox;}
    void DeleteRackElement(SongCanvasRackElement* element) const;
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
@@ -137,7 +138,8 @@ private:
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mCanvasDirty{false};//If true, the Canvas will regenerate next tick.
-   
+   double mFlashRackStartTime{0};
+
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
    static const int mStandardMeasureSize = 48;

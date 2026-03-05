@@ -84,9 +84,8 @@ void SongCanvas::CreateUIControls()
 
    //mCanvas->SetMajorColumnLineLength(1.0f);
    //mCanvas->SetMinorColumnLineLength(0.75f);
-   //mCanvas->SetInvertDragSnapBehavior(true);
-
-   //mCanvas->SetAllowSpawnElements(false);
+   mCanvas->SetInvertDragSnapBehavior(true);
+   mCanvas->SetAllowElementPlacement(false);
 
    mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
@@ -143,6 +142,7 @@ void SongCanvas::CreateUIControls()
    {
       mLayerNameTextbox[i] = new TextEntry(this, ("layer" + std::to_string(i)).c_str(), 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
       mLayerEnableCheckbox[i] = new Checkbox(this, ("checkbox" + std::to_string(i)).c_str(), startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
+      mLayerEnableCheckbox[i]->SetDisplayText(false);
       mLayerSettingsButton[i] = new ClickButton(this, ("setting" + std::to_string(i)).c_str(), startCanvasOffset - 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, ButtonDisplayStyle::kHamburger);
       //mCanvas->SetRowColor(i,ofColor::clear)
    }
@@ -323,7 +323,17 @@ void SongCanvas::DrawModule()
       mLayerSettingsButton[i]->SetPosition(4, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerSettingsButton[i]->Draw();
    }
+   //Draw the rack
    mModGrid->SetPosition(8, GetModGridStartYOffset());
+   if (mFlashRackStartTime > 0)
+   {
+      mModGrid->SetBackgroundColour(255,255,255,CLAMP(40+sin(ofGetGlobalTime()*10)*30,0,255));
+      if (mFlashRackStartTime+1 < ofGetGlobalTime())
+      {
+         mFlashRackStartTime = 0;
+         mModGrid->SetBackgroundColour(0,0,0,75);
+      }
+   }
    mModGrid->Draw();
    auto mgp = mModGrid->GetPosition(true);
    //Normally I'd put the following in something like a resize/setup method, but the Y coordinate
@@ -647,11 +657,15 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 void SongCanvas::SetSelectedRackElement(SongCanvasRackElement* element)
 {
    mSelectedRackElement = element;
-   //mCanvas->SetAllowSpawnElements(true);
+   mCanvas->SetAllowElementPlacement(true);
 }
 void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
    element->Setup(mSelectedRackElement);
+}
+void SongCanvas::ElementAdditionSuppressed(float posX, float posY)
+{
+   mFlashRackStartTime = ofGetGlobalTime();
 }
 //Incoming event from a note bring removed from the base Canvas
 void SongCanvas::ElementRemoved(CanvasElement* element)
