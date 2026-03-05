@@ -299,6 +299,8 @@ bool Canvas::MouseMoved(float x, float y)
    CheckHover(x, y);
 
    bool quantize = GetKeyModifiers() & kModifier_Command;
+   if (mInvertDragSnapBehavior)
+      quantize = !quantize;
 
    if (mDragEnd != kHighlightEnd_None)
    {
