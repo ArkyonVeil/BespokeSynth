@@ -791,16 +791,29 @@ void SongCanvas::OnTimeEvent(double time)
             readChunkNum = 0;
          auto& cL = mCanvasChunkList[readChunkNum];
 
+         //Process the chunk, activating/processing as needed.
          for (int i = 0; i < cL.size(); ++i)
          {
             if (cL[i]->GetStart() < mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
             {
-               if (!IsCanvasElementActive(cL[i]))
+               if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled)
                {
                   mActiveElements.push_back(cL[i]);
                   cL[i]->GetRackElement()->OnEnter();
                }
-               cL[i]->GetRackElement()->OnProcess();
+               if (seqLayers[cL[i]->mRow].enabled)
+                  cL[i]->GetRackElement()->OnProcess();
+               else
+               {
+                  cL[i]->GetRackElement()->OnExit();
+                  for (int mAE = 0; mAE < mActiveElements.size(); ++mAE)
+                  {
+                     if (mActiveElements[mAE] == cL[i])
+                     {
+                        mActiveElements.erase(mActiveElements.begin() + mAE);
+                     }
+                  }
+               }
             }
          }
 
@@ -877,7 +890,8 @@ void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 }
 void SongCanvas::SaveState(FileStreamOut& out)
 {
-   out << GetModuleSaveStateRev();
+   out << GetModuleSaveStateRev();//Updating to newer versions? Check this handy variable!
+   //SEC-1 format 05/03/2026
 
 
    out << (int)seqLayers.size();
@@ -960,14 +974,13 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mRedLoopEnd;
    out << mRedLoopStart;
    //End reserved variables SEC-1
-   //IDrawableModule::SaveState(out);
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
    int canvasLayerCount;
 
    //Step 1, restore our canvas
-   in >> canvasLayerCount; //TODO only 5 layers supported.
+   in >> canvasLayerCount;
    for (int i = 0; i < canvasLayerCount; ++i)
    {
       in >> seqLayers[i].enabled;
