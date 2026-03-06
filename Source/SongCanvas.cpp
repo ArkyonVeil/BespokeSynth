@@ -676,7 +676,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
                               ofColor::white,
                               0,
                               true,
-                              "layer" + ofToString(seqLayers.size() + 1) });
+                              "layer" + ofToString(seqLayers.size())});
          //FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
       }
    }
