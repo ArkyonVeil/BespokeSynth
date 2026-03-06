@@ -40,16 +40,15 @@
 
 class SongCanvas_CanvasElement;
 class SongCanvasRackElement;
-class SongCanvas :
-public IDrawableModule,
-public ICanvasListener,
-public ITextEntryListener,
-public IFloatSliderListener,
-public IButtonListener,
-public IDropdownListener,
-public IAudioPoller,
-public ISignalListener,
-public ITimeListener
+class SongCanvas : public IDrawableModule,
+                   public ICanvasListener,
+                   public ITextEntryListener,
+                   public IFloatSliderListener,
+                   public IButtonListener,
+                   public IDropdownListener,
+                   public IAudioPoller,
+                   public ISignalListener,
+                   public ITimeListener
 {
 public:
    SongCanvas();
@@ -87,25 +86,26 @@ public:
    void SetSelectedRackElement(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element);
    void ElementAdditionSuppressed(float posX, float posY) override;
-   TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox;}
+   TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element) const;
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackElementWithID(int id);
 
-   void IncrementInternalRackId(){mInternalRackIDCounter++;}
-   int GetInternalRackId() const { return mInternalRackIDCounter;}
+   void IncrementInternalRackId() { mInternalRackIDCounter++; }
+   int GetInternalRackId() const { return mInternalRackIDCounter; }
    void OnTransportAdvanced(float amount) override;
    void ReceiveSignal(SignalId signalID) override;
    void ReceiveSignal(SignalGeneric signalComplex) override {}
    void DisposeElement(IClickable* element);
-   
-   DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown;}
+
+   DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override {return 1;};
+   int GetModuleSaveStateRev() const override { return 1; };
+
 private:
    struct SongCanvasLayer
    {
@@ -133,18 +133,18 @@ private:
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
    TextEntry* mRackRenameTextBox;
    std::string mRackRenameString;
-      
+
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
-   
+
    UIFlowGrid* mModGrid;
 
    static constexpr int MaxLayers = 51;
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
-   bool mPartCanvasDirty{false};//If true, the Canvas will regenerate next tick.
-   double mFlashRackStartTime{0};
+   bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
+   double mFlashRackStartTime{ 0 };
 
-   int mStartCanvasOffset{0};
+   int mStartCanvasOffset{ 0 };
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
    static const int mStandardMeasureSize = 48;
@@ -155,13 +155,13 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
-   bool mGlobalMode {true}; //If false, runs on local timing.
-   int mStartMeasure {0};
-   int mEndMeasure {0};
-   bool mAutoEndMeasure {true};
-   bool mLoopOnEnd {false};
-   int mRedLoopStart{0};
-   int mRedLoopEnd{0};
+   bool mGlobalMode{ true }; //If false, runs on local timing.
+   int mStartMeasure{ 0 };
+   int mEndMeasure{ 0 };
+   bool mAutoEndMeasure{ true };
+   bool mLoopOnEnd{ false };
+   int mRedLoopStart{ 0 };
+   int mRedLoopEnd{ 0 };
 
    int GetModGridStartYOffset() const
    {
@@ -179,27 +179,26 @@ private:
          return LayersListHSize + AdvancedConfigHSize;
       return LayersListHSize;
    }
-   
-  
+
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
    std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[101];
    int mChunkAmount = 10;
 
-   std::vector<SongCanvas_CanvasElement*> mActiveElements {};
+   std::vector<SongCanvas_CanvasElement*> mActiveElements{};
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
    std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
    std::array<ClickButton*, MaxLayers> mLayerSettingsButton = {};
-/*
+   /*
    ClickButton* mLayerSettingsButton1;
    ClickButton* mLayerSettingsButton2;
    ClickButton* mLayerSettingsButton3;
    ClickButton* mLayerSettingsButton4;
    ClickButton* mLayerSettingsButton5;*/
 
-   std::vector<SongCanvasLayer> seqLayers {};
-   std::vector<SongCanvasLayer> layerBuffer {};//The reason for this is clumsy <>3
+   std::vector<SongCanvasLayer> seqLayers{};
+   std::vector<SongCanvasLayer> layerBuffer{}; //The reason for this is clumsy <>3
 
    ClickButton* mRackAddNewButton;
 
@@ -218,7 +217,7 @@ private:
       enumDelete,
    };
    RackElementRightClickOptions mRackElementRightClickIndex;
-   
+
    enum RackAddNewElementOptions
    {
       enumEnabler = 0,
@@ -228,7 +227,7 @@ private:
       enumOnePulse = 4,
    };
    RackAddNewElementOptions mRackAddNewElementIndex;
-   
+
    enum LayerDropDownOptions
    {
       enumLDPNothing,
@@ -239,7 +238,7 @@ private:
    };
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
-   
+
    //Expert variables
    bool expertPanelEnabled = false;
 };
@@ -263,25 +262,29 @@ public:
    void CreateUIControls(SongCanvas* owner);
    void OnMouseClick(bool rightClick) override;
    void SetName(std::string newName) const;
-   void Excite(float excitePower){if (mExcitePower<excitePower)mExcitePower = excitePower;}//Make it dance
-   void SetExciteConstant(float excitePower){mExciteConstant = excitePower;}//Make it do a base level of dancing, handy for long events.
+   void Excite(float excitePower)
+   {
+      if (mExcitePower < excitePower)
+         mExcitePower = excitePower;
+   } //Make it dance
+   void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; } //Make it do a base level of dancing, handy for long events.
    void OnEnter();
    void OnProcess();
    void OnExit();
-   void SetActive(bool newState){mActive = newState;}
-   bool IsActive(){return mActive;}
-   NoteInterval GetInterval() {return mPulserInterval;}
-   void SetInterval(NoteInterval interval) {mPulserInterval = interval;}
-   
-   std::string* GetName(){return mElementName;}
-   void SetRenameState(bool newState){mRenameActive = newState;}
+   void SetActive(bool newState) { mActive = newState; }
+   bool IsActive() { return mActive; }
+   NoteInterval GetInterval() { return mPulserInterval; }
+   void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
+
+   std::string* GetName() { return mElementName; }
+   void SetRenameState(bool newState) { mRenameActive = newState; }
    ~SongCanvasRackElement();
    void OnTimeEvent(double time) override;
-   PatchCableSource* GetEnablerCable() {return mEnablerCable;}
-   PatchCableSource* GetPulserCable() {return mPulserCable;}
+   PatchCableSource* GetEnablerCable() { return mEnablerCable; }
+   PatchCableSource* GetPulserCable() { return mPulserCable; }
    int mInternalRackID;
-   
-   DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector;}
+
+   DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector; }
 
    SongCanvasElementVariant mVariantType;
 
@@ -294,13 +297,13 @@ private:
    NoteInterval mPulserInterval = kInterval_8n;
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
-   bool mActive {false};
+   bool mActive{ false };
    bool mRenameActive = false;
-   float mExcitePower {0};
-   float mExciteConstant{0};
-   float mExciteDrag {0};
-   float mVariantExtraWidth {0};
+   float mExcitePower{ 0 };
+   float mExciteConstant{ 0 };
+   float mExciteDrag{ 0 };
+   float mVariantExtraWidth{ 0 };
 
-   int mInternalID {0};
+   int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
 };

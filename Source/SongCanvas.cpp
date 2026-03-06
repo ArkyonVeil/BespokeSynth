@@ -42,7 +42,7 @@
 SongCanvas::SongCanvas()
 {
    mRowColors.push_back(ofColor::black);
-   seqLayers.reserve(MaxLayers+1);
+   seqLayers.reserve(MaxLayers + 1);
    mTransportPriority = kTransportPriorityVeryEarly;
    for (int i = 0; i < 5; i++)
    {
@@ -356,15 +356,15 @@ void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
    float midCentering = layerPosSpacing / 4;
 
    mLayerNameTextbox[lIndex] = new TextEntry(this, ("layer" + std::to_string(lIndex)).c_str(), 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, 12, &seqLayers[lIndex].layerName);
-   mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 8, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing,  &seqLayers[lIndex].enabled);
+   mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 8, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, &seqLayers[lIndex].enabled);
    mLayerEnableCheckbox[lIndex]->SetDisplayText(false);
    mLayerSettingsButton[lIndex] = new ClickButton(this, ("setting" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, ButtonDisplayStyle::kHamburger);
-      //mCanvas->SetRowColor(i,ofColor::clear)
-   MoveLayerTo(lIndex,index);
+   //mCanvas->SetRowColor(i,ofColor::clear)
+   MoveLayerTo(lIndex, index);
 }
 void SongCanvas::DeleteLayer(int index)
 {
-   int lIdx = seqLayers.size()-1;
+   int lIdx = seqLayers.size() - 1;
    MoveLayerTo(index, lIdx);
 
    mLayerNameTextbox[lIdx]->Delete();
@@ -425,7 +425,6 @@ void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
          seqLayers[idx] = oA;
          idx++;
       }
-
    }
 }
 
@@ -578,7 +577,7 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
 
          if (seqLayers.size() > 1)
          {
-            mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing);//Spacer, makes it a little harder to butter finger deleting a layer full of content.
+            mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing); //Spacer, makes it a little harder to butter finger deleting a layer full of content.
             mListDropdownOptions->AddLabel("Delete WIP", LayerDropDownOptions::enumLDPDelete);
          }
 
@@ -673,11 +672,11 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       }
       else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPAddNewLayerBelow)
       {
-         AddNewLayer(idx+1, SongCanvasLayer{
-                          ofColor::white,
-                          0,
-                          true,
-                          "layer" + ofToString(seqLayers.size() + 1) });
+         AddNewLayer(idx + 1, SongCanvasLayer{
+                              ofColor::white,
+                              0,
+                              true,
+                              "layer" + ofToString(seqLayers.size() + 1) });
          //FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
       }
    }
@@ -913,13 +912,13 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 {
    float h = mCanvas->GetHeight();
    float w = mCanvas->GetWidth();
-   Resize(w+extraW,h+extraH);
+   Resize(w + extraW, h + extraH);
 }
 
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w - GetCanvasStartXOffset(), 350);
-   h = MAX(h - mOffsetFromTopSpacing, 100+seqLayers.size()*MinRowSize);
+   h = MAX(h - mOffsetFromTopSpacing, 100 + seqLayers.size() * MinRowSize);
 
    int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
 
@@ -1052,7 +1051,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       in >> lD1;
       in >> lD2;
 
-      AddNewLayer(i,SongCanvasLayer{ofColor::white,0,lD1,lD2});
+      AddNewLayer(i, SongCanvasLayer{ ofColor::white, 0, lD1, lD2 });
    }
 
    auto re = GetAllRackElements();

@@ -45,7 +45,7 @@ public:
    virtual ~ICanvasListener() {}
    virtual void CanvasUpdated(Canvas* canvas) = 0;
    virtual void ElementRemoved(CanvasElement* element) {}
-   virtual void ElementAdditionSuppressed(float posX, float posY) {};
+   virtual void ElementAdditionSuppressed(float posX, float posY){};
 };
 
 struct CanvasCoord
@@ -127,9 +127,9 @@ public:
    void SetRowColor(int row, ofColor color);
    juce::MouseCursor GetMouseCursorType();
    ofVec2f RescaleForZoom(float x, float y) const;
-   ICanvasListener* GetListener(){return mListener;}
-   void SetInvertDragSnapBehavior(bool invert) {mInvertDragSnapBehavior = invert;};
-   void SetAllowElementPlacement(bool allow){mAllowElementPlacement = allow;};
+   ICanvasListener* GetListener() { return mListener; }
+   void SetInvertDragSnapBehavior(bool invert) { mInvertDragSnapBehavior = invert; };
+   void SetAllowElementPlacement(bool allow) { mAllowElementPlacement = allow; };
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -185,7 +185,7 @@ private:
    int mMajorColumnInterval{ -1 };
    bool mHasDuplicatedThisDrag{ false };
    bool mInvertDragSnapBehavior{ false };
-   bool mAllowElementPlacement{true};
+   bool mAllowElementPlacement{ true };
    float mScrollVerticalPartial{ 0 };
    std::array<ofColor, 128> mRowColors;
 

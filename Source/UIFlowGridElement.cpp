@@ -3,7 +3,7 @@
 
 UIFlowGridElement::UIFlowGridElement(float preferredWidth, ofColor baseColor)
 {
-   mPreferredWidth = preferredWidth;  
+   mPreferredWidth = preferredWidth;
    mWidth = preferredWidth;
    SetColor(baseColor);
 }
@@ -20,7 +20,7 @@ void UIFlowGridElement::SetColor(ofColor color)
 
    mHighlightColor = color;
    mHighlightColor.a = 50;
-   
+
    mOutlineColor = color;
    mOutlineColor.a = 100;
 
@@ -43,7 +43,6 @@ ofVec2f UIFlowGridElement::GetRelativePosition()
 }
 void UIFlowGridElement::MouseMove(float x, float y)
 {
-   
 }
 
 void UIFlowGridElement::Draw()
@@ -66,9 +65,9 @@ void UIFlowGridElement::Draw()
    if (!mHighlighted)
       ofSetLineWidth(mOutlineThickness);
    else
-      ofSetLineWidth(mOutlineThickness+0.4F);
+      ofSetLineWidth(mOutlineThickness + 0.4F);
    ofNoFill();
-   
+
    if (!mHovered && !mHighlighted)
       ofSetColor(mOutlineColor);
    else if (!mHovered && mHighlighted)

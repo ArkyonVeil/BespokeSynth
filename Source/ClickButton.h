@@ -119,10 +119,10 @@ private:
 
    void OnClicked(float x, float y, bool right) override;
    float mWidth{ 20 };
-   float mIconOffsetMulX {0};
-   float mIconOffsetMulY {0};
-   float mIconOffsetX {0};
-   float mIconOffsetY {0};
+   float mIconOffsetMulX{ 0 };
+   float mIconOffsetMulY{ 0 };
+   float mIconOffsetX{ 0 };
+   float mIconOffsetY{ 0 };
    float mHeight{ 15 };
    double mClickTime{ -9999 };
    IButtonListener* mOwner{ nullptr };

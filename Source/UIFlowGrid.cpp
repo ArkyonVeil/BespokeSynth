@@ -58,7 +58,7 @@ void UIFlowGrid::OnClicked(float x, float y, bool right)
       mSelectedElement = mLastHoveredElement;
       mSelectedElement->SetHighlight(true);
       mLastHoveredElement->OnMouseClick(right);
-      mStartDragMouse = ofVec2f(x+GetPosition().x, y+GetPosition().y);
+      mStartDragMouse = ofVec2f(x + GetPosition().x, y + GetPosition().y);
       mStartDragElementPos = mSelectedElement->GetRelativePosition();
       if (mSelectedElement->GetHovered())
          mDragToken = true;
@@ -68,18 +68,18 @@ void UIFlowGrid::OnClicked(float x, float y, bool right)
 
 void UIFlowGrid::MouseReleased()
 {
-   mDragToken = false; 
+   mDragToken = false;
    mPressed = false;
    if (mDragging)
    {
       //Time for the swaparoo.
-      auto &outRow = mRows[mDragElementRow];
-      auto &inRow = mRows[mSnapDragRow];
+      auto& outRow = mRows[mDragElementRow];
+      auto& inRow = mRows[mSnapDragRow];
 
       auto r = std::find(outRow.begin(), outRow.end(), mSelectedElement);
       int idx = std::distance(outRow.begin(), r);
-      
-      
+
+
       if (mDragElementRow == mSnapDragRow && idx < mSnapDragIndex)
       {
          mSnapDragIndex -= 1;
@@ -87,7 +87,7 @@ void UIFlowGrid::MouseReleased()
       outRow.erase(r);
       if (mSnapDragIndex < 0)
          mSnapDragIndex = 0;
-      
+
       inRow.insert(inRow.begin() + mSnapDragIndex, mSelectedElement);
 
       RecalculateElements();
@@ -145,45 +145,45 @@ bool UIFlowGrid::MouseMoved(float x, float y)
 
 
       float offset = mRowXBorderOffset;
-      int tRow = CLAMP(std::floor(y/mHeight*GetRowCount()),0,GetRowCount()-1); 
+      int tRow = CLAMP(std::floor(y / mHeight * GetRowCount()), 0, GetRowCount() - 1);
       auto row = mRows[tRow];
-      
-      mSnapDragRow = tRow;
-      if (row.size()>0)
-      for (int i = 0; i < row.size(); ++i)
-      {
-         float rowSizeMul = mRowScalingSize[tRow];
-         
-         offset += row[i]->GetPreferredWidth()*rowSizeMul / 2.0;
 
-         //Do the check here.
-         if (offset > x)
+      mSnapDragRow = tRow;
+      if (row.size() > 0)
+         for (int i = 0; i < row.size(); ++i)
          {
-            offset -= row[i]->GetWidth() / 2;
-            if (offset > 8)
+            float rowSizeMul = mRowScalingSize[tRow];
+
+            offset += row[i]->GetPreferredWidth() * rowSizeMul / 2.0;
+
+            //Do the check here.
+            if (offset > x)
+            {
+               offset -= row[i]->GetWidth() / 2;
+               if (offset > 8)
+               {
+                  offset -= mElementSpacing / 2 * rowSizeMul;
+               }
+               mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize * tRow);
+               mSnapDragIndex = i;
+               break;
+            }
+
+            offset += row[i]->GetPreferredWidth() * rowSizeMul / 2.0;
+
+            offset += mElementSpacing * rowSizeMul;
+
+            if (i + 1 == row.size())
             {
                offset -= mElementSpacing / 2 * rowSizeMul;
+               mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize * tRow);
+               mSnapDragIndex = row.size();
+               break;
             }
-            mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize*tRow);
-            mSnapDragIndex = i;
-            break;
          }
-
-         offset += row[i]->GetPreferredWidth()*rowSizeMul / 2.0;
-
-         offset += mElementSpacing  * rowSizeMul;
-
-         if (i + 1 == row.size())
-         {
-            offset -= mElementSpacing / 2 * rowSizeMul;
-            mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize*tRow);
-            mSnapDragIndex = row.size();
-            break;
-         }
-      }
       else
       {
-         mDragSnapIndicatorPos = ofVec2f(0, mRowYSize*tRow);
+         mDragSnapIndicatorPos = ofVec2f(0, mRowYSize * tRow);
          mSnapDragIndex = 0;
       }
    }
@@ -205,7 +205,7 @@ bool UIFlowGrid::MouseMoved(float x, float y)
       for (int i = 0; i < mRows[hRow].size(); ++i)
       {
          float rowSizeMul = mRowScalingSize[hRow];
-         offsetRange += mRows[hRow][i]->GetPreferredWidth()*rowSizeMul + mElementSpacing*rowSizeMul;
+         offsetRange += mRows[hRow][i]->GetPreferredWidth() * rowSizeMul + mElementSpacing * rowSizeMul;
          if (x < offsetRange && !select)
          {
             select = true;
@@ -281,7 +281,7 @@ void UIFlowGrid::AddElement(UIFlowGridElement* newElement, int row)
       RecalculateElements();
       return;
    }
-   
+
    float maxSpace = mWidth;
    //Verify if there's room in any Row
    for (int x = 0; x < mRows.size(); ++x)
@@ -317,13 +317,13 @@ void UIFlowGrid::RecalculateElements()
    float maxRowWidth = mWidth;
    float YOffsetPerRow = mHeight / GetRowCount() - 4;
    float rowYOffset = mRowYBorderOffset;
-   
+
    for (int x = 0; x < mRows.size(); ++x)
    {
       float rowXOffset = mRowXBorderOffset;
 
       float spaceOccupied = 4;
-      
+
       //Add the occupied space, so that we sort if we must.
       for (size_t y = 0; y < mRows[x].size(); y++)
       {
@@ -333,20 +333,20 @@ void UIFlowGrid::RecalculateElements()
       }
       if (spaceOccupied < 0)
          spaceOccupied = 1;
-      float sizeMul = MIN(maxRowWidth / spaceOccupied ,1);
-      
+      float sizeMul = MIN(maxRowWidth / spaceOccupied, 1);
+
       mRowScalingSize[x] = sizeMul;
-      
+
       for (size_t y = 0; y < mRows[x].size(); ++y)
       {
          auto row = mRows[x];
-      
-         row[y]->SetPosition(rowXOffset, rowYOffset);
-         row[y]->SetSize(row[y]->GetPreferredWidth()*sizeMul, YOffsetPerRow);
 
-         rowXOffset += row[y]->GetPreferredWidth()*sizeMul + mElementSpacing*sizeMul;
+         row[y]->SetPosition(rowXOffset, rowYOffset);
+         row[y]->SetSize(row[y]->GetPreferredWidth() * sizeMul, YOffsetPerRow);
+
+         rowXOffset += row[y]->GetPreferredWidth() * sizeMul + mElementSpacing * sizeMul;
       }
-      rowYOffset += mHeight/ GetRowCount();
+      rowYOffset += mHeight / GetRowCount();
    }
 }
 void UIFlowGrid::RemoveElement(UIFlowGridElement* element)
@@ -365,7 +365,7 @@ void UIFlowGrid::AddRow()
    //mRows.push_back(std::vector<UIFlowGridElement*>());
    mRows.emplace_back();
 
-   SetDimensions(mWidth, mRows.size()*mRowYSize);
+   SetDimensions(mWidth, mRows.size() * mRowYSize);
    mListener->ReceiveSignal(SignalId::ResizeRequest);
 }
 
@@ -373,9 +373,8 @@ void UIFlowGrid::AddRowSilent()
 {
    mRows.emplace_back();
 
-   SetDimensions(mWidth, mRows.size()*mRowYSize);
+   SetDimensions(mWidth, mRows.size() * mRowYSize);
 }
 void UIFlowGrid::RemoveRow(int row)
 {
-   
 }

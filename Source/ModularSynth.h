@@ -238,10 +238,12 @@ public:
    void UpdateFrameRate(float fps) { mFrameRate = fps; }
    void IncrementGlobalTime(double lastFrameTime)
    {
-      mApplicationTime += lastFrameTime; if (mApplicationTime>2592000)mApplicationTime = 0;
+      mApplicationTime += lastFrameTime;
+      if (mApplicationTime > 2592000)
+         mApplicationTime = 0;
    }
    float GetFrameRate() const { return mFrameRate; }
-   double GetGlobalTime() const { return mApplicationTime;}
+   double GetGlobalTime() const { return mApplicationTime; }
    std::recursive_mutex& GetRenderLock() { return mRenderLock; }
    NamedMutex* GetAudioMutex() { return &mAudioThreadMutex; }
    static std::thread::id GetMainThreadID() { return sMainThreadId; }
@@ -449,7 +451,7 @@ private:
 
    std::recursive_mutex mRenderLock;
    float mFrameRate{ 0 };
-   double mApplicationTime { 0 };
+   double mApplicationTime{ 0 };
    long mFrameCount{ 0 };
 
    ModuleContainer mModuleContainer;

@@ -17,7 +17,7 @@ class SignalGeneric
 {
 public:
    SignalId mSignalID;
-   
+
    std::string argStr1;
    std::string argStr2;
    std::string argStr3;
@@ -32,7 +32,6 @@ public:
    double argDouble2;
    double argDouble3;
    double argDouble4;
-
 };
 
 enum class SignalId : unsigned short
