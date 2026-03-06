@@ -135,7 +135,7 @@ private:
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
-   UIFlowGrid* mModGrid;
+   UIFlowGrid* mRackGrid;
 
    static constexpr int MaxLayers = 51;
    float mTime{ 0 };
@@ -143,7 +143,7 @@ private:
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
    double mFlashRackStartTime{ 0 };
 
-   int mStartCanvasOffset{ 0 };
+   int mStartCanvasXOffset{ 0 };
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
    static const int mStandardMeasureSize = 48;
@@ -162,9 +162,9 @@ private:
    int mRedLoopStart{ 0 };
    int mRedLoopEnd{ 0 };
 
-   int GetModGridStartYOffset() const
+   int GetRackGridStartYOffset() const
    {
-      return mOffsetFromTopSpacing + mCanvas->GetHeight() + 16;
+      return mOffsetFromTopSpacing + mCanvas->GetHeight() + 8;
    }
 
    int mInternalRackIDCounter = 0;

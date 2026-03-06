@@ -72,15 +72,15 @@ void SongCanvas::CreateUIControls()
    IDrawableModule::CreateUIControls();
 
    if (expertPanelEnabled)
-      mStartCanvasOffset = LayersListHSize + AdvancedConfigHSize;
+      mStartCanvasXOffset = LayersListHSize + AdvancedConfigHSize;
    else
-      mStartCanvasOffset = LayersListHSize;
+      mStartCanvasXOffset = LayersListHSize;
 
    //Default size.
    mWidth = 720;
    mHeight = 288;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
-   mCanvas = new Canvas(this, mStartCanvasOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
+   mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
    mCanvas->SetListener(this);
 
@@ -98,33 +98,33 @@ void SongCanvas::CreateUIControls()
    mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
 
-   mTransportSlider = new FloatSlider(this, "measure", mStartCanvasOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
+   mTransportSlider = new FloatSlider(this, "measure", mStartCanvasXOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
    mTransportSlider->SetNoHover(true);
    mTransportSlider->SetCableTargetable(false);
    mTransportSlider->SetTextAlpha(0);
 
-   mModGrid = new UIFlowGrid("playrack", 8, GetModGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   mRackGrid = new UIFlowGrid("playrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
    mRackRenameTextBox->SetFlexibleWidth(true);
 
 
-   auto mgp = mModGrid->GetPosition(true);
+   auto mgp = mRackGrid->GetPosition(true);
 
-   mRackAddNewButton = new ClickButton(this, "add", mgp.x + mModGrid->GetWidth(), mgp.y, ButtonDisplayStyle::kPlus);
+   mRackAddNewButton = new ClickButton(this, "add", mgp.x + mRackGrid->GetWidth(), mgp.y, ButtonDisplayStyle::kPlus);
    float bWidth;
    float bHeight;
    mRackAddNewButton->GetDimensions(bWidth, bHeight);
-   mRackAddNewButton->SetPosition(mgp.x + mModGrid->GetWidth() - bWidth * 1.5, mgp.y);
-   mRackAddNewButton->SetDimensions(bWidth * 1.5, mModGrid->GetHeight());
+   mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth() - bWidth * 1.5, mgp.y);
+   mRackAddNewButton->SetDimensions(bWidth * 1.5, mRackGrid->GetHeight());
    mRackAddNewButton->SetIconAlignment(ButtonIconAlignment::kCenter);
 
-   mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
+   mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
 
    //HACK, but this is just to avoid having to do further changes to the dropdown element.
    //TL DR: Don't draw it, but send over the events with the button.
-   mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mModGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
+   mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mRackGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
    mRackAddNewDropdown->AddLabel("Enabler", RackAddNewElementOptions::enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", RackAddNewElementOptions::enumPulser);
    mRackAddNewDropdown->AddLabel("OnePulse", RackAddNewElementOptions::enumOnePulse);
@@ -135,7 +135,7 @@ void SongCanvas::CreateUIControls()
 
    mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
-   mTransportTextBox = new TextEntry{ this, "transport", mStartCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
+   mTransportTextBox = new TextEntry{ this, "transport", mStartCanvasXOffset - 68, 22, 6, &mTime, 0, 99999 };
    //mTransportTextBox->SetFloatDecimalCount(2);
 
 
@@ -153,12 +153,13 @@ void SongCanvas::CreateUIControls()
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
+      mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }
 
 
+   Resize(mWidth,mHeight);
    //mLayerName[0]->SetNoHover(false);
 }
 void SongCanvas::DrawModule()
@@ -304,36 +305,23 @@ void SongCanvas::DrawModule()
    ofPopStyle();
 
    int s = seqLayers.size();
-   float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(s);
    for (int i = 0; i < s; i++)
    {
-      float midCentering = layerPosSpacing / 4; //Math on this is a bit spotty. Correct later.
-
-      mLayerNameTextbox[i]->SetPosition(28, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerNameTextbox[i]->Draw();
-
-      mLayerEnableCheckbox[i]->SetPosition(startCanvasOffset - 13, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerEnableCheckbox[i]->Draw();
-
-      mLayerSettingsButton[i]->SetPosition(4, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerSettingsButton[i]->Draw();
    }
    //Draw the rack
-   mModGrid->SetPosition(8, GetModGridStartYOffset());
    if (mFlashRackStartTime > 0)
    {
-      mModGrid->SetBackgroundColour(255, 255, 255, CLAMP(40 + sin(ofGetGlobalTime() * 10) * 30, 0, 255));
+      mRackGrid->SetBackgroundColour(255, 255, 255, CLAMP(40 + sin(ofGetGlobalTime() * 10) * 30, 0, 255));
       if (mFlashRackStartTime + 1 < ofGetGlobalTime())
       {
          mFlashRackStartTime = 0;
-         mModGrid->SetBackgroundColour(0, 0, 0, 75);
+         mRackGrid->SetBackgroundColour(0, 0, 0, 75);
       }
    }
-   mModGrid->Draw();
-   auto mgp = mModGrid->GetPosition(true);
-   //Normally I'd put the following in something like a resize/setup method, but the Y coordinate
-   //borks for some reason, and honestly I couldn't care less right now.
-   mRackAddNewButton->SetPosition(mgp.x + mModGrid->GetWidth(), mgp.y);
+   mRackGrid->Draw();
    mRackAddNewButton->Draw();
    ofPushStyle();
 
@@ -420,29 +408,41 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 {
    float h = mHeight;
    float w = mWidth;
-
+   Resize(w+extraW,h+extraH);
    //ofLog() << "Sanity check, w1:"+ofToString(w)+" w2:"+ofToString(mWidth) +" h1:"+ofToString(h)+" h2:"+ofToString(mHeight);
 }
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w, 350);
-   h = MAX(h, 100 + seqLayers.size() * MinRowSize);
+   h = MAX(h, 100 + seqLayers.size() * MinRowSize + mFlowGridRows*FlowGridRowHeightSize);
 
    int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
 
+   //Snap to a strict size.
    w = LayersListHSize + multiple * mStandardMeasureSize - 6;
-
    mWidth = w;
    mHeight = h;
-   //mCanvas->SetDimensions(w, h);
+
+   //Layers <>V
+   for (int i = 0; i < seqLayers.size(); ++i)
+   {
+      float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(seqLayers.size());
+      float midCentering = layerPosSpacing / 4;
+      mLayerNameTextbox[i]->SetPosition(28, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerEnableCheckbox[i]->SetPosition(mStartCanvasXOffset - 13, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerSettingsButton[i]->SetPosition(4, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+   }
+
+   float canvasHeight = h - (16+mOffsetFromTopSpacing+mFlowGridRows * FlowGridRowHeightSize);
+   mCanvas->SetDimensions(w-mStartCanvasXOffset, canvasHeight);
    mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
 
-   float bWSize;
-   float bHSize;
-   mRackAddNewButton->GetDimensions(bWSize, bHSize);
-   mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
-   mModGrid->RecalculateElements();
-   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
+   int xEndRackSpacing = 46;
+   mRackGrid->SetPosition(8, GetRackGridStartYOffset());
+   mRackGrid->SetDimensions(mWidth - xEndRackSpacing, mFlowGridRows * FlowGridRowHeightSize);
+   mRackGrid->RecalculateElements();
+   mRackAddNewButton->SetPosition(8+mWidth - xEndRackSpacing,GetRackGridStartYOffset());
+   mRackAddNewButton->SetDimensions(28, mFlowGridRows * FlowGridRowHeightSize);
 }
 
 void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
@@ -457,9 +457,9 @@ void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
    float midCentering = layerPosSpacing / 4;
 
    mLayerNameTextbox[lIndex] = new TextEntry(this, ("layer" + std::to_string(lIndex)).c_str(), 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, 12, &seqLayers[lIndex].layerName);
-   mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 8, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, &seqLayers[lIndex].enabled);
+   mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasXOffset - 8, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, &seqLayers[lIndex].enabled);
    mLayerEnableCheckbox[lIndex]->SetDisplayText(false);
-   mLayerSettingsButton[lIndex] = new ClickButton(this, ("setting" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, ButtonDisplayStyle::kHamburger);
+   mLayerSettingsButton[lIndex] = new ClickButton(this, ("setting" + std::to_string(lIndex)).c_str(), mStartCanvasXOffset - 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, ButtonDisplayStyle::kHamburger);
    //mCanvas->SetRowColor(i,ofColor::clear)
    MoveLayerTo(lIndex, index);
 }
@@ -615,18 +615,18 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
 bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
-   mModGrid->MouseMoved(x, y);
+   mRackGrid->MouseMoved(x, y);
    return false;
 }
 void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
-   mModGrid->OnClicked(x - mModGrid->GetPosition().x, y - mModGrid->GetPosition().y, right);
+   mRackGrid->OnClicked(x - mRackGrid->GetPosition().x, y - mRackGrid->GetPosition().y, right);
 }
 void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
-   mModGrid->MouseReleased();
+   mRackGrid->MouseReleased();
 }
 void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
 {
@@ -637,15 +637,15 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       switch (mRackAddNewElementIndex)
       {
          case enumEnabler:
-            mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
             break;
          case enumPulser:
-            mModGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
             break;
          case enumModulator: break;
          case enumSample: break;
          case enumOnePulse:
-            mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
             break;
          default:;
       }
@@ -702,9 +702,9 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
          FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
       }
    }
-   for (int i = 0; i < mModGrid->GetAllElements().size(); ++i)
+   for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
    {
-      auto e = dynamic_cast<SongCanvasRackElement*>(mModGrid->GetAllElements()[i]);
+      auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
       switch (e->mVariantType)
       {
          case SongCanvasElementVariant::Pulser:
@@ -763,12 +763,12 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
    {
       mCanvas->RemoveElement(re);
    }
-   mModGrid->RemoveElement(element);
+   mRackGrid->RemoveElement(element);
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {
    std::vector<SongCanvasRackElement*> output;
-   auto elms = mModGrid->GetAllElements();
+   auto elms = mRackGrid->GetAllElements();
    for (int i = 0; i < elms.size(); ++i)
    {
       auto relm = dynamic_cast<SongCanvasRackElement*>(elms[i]);
@@ -822,7 +822,7 @@ void SongCanvas::ReceiveSignal(SignalId signalID)
 {
    if (signalID == SignalId::ResizeRequest)
    {
-      mFlowGridRows = mModGrid->GetRowCount();
+      mFlowGridRows = mRackGrid->GetRowCount();
 
       float bWSize;
       float bHSize;
@@ -1070,7 +1070,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       static_cast<SongCanvasElementVariant>(eVariantType),
       eName,
       this);
-      mModGrid->AddElement(nrm);
+      mRackGrid->AddElement(nrm);
       nrm->mInternalRackID = eRackId;
 
       switch ((SongCanvasElementVariant)eVariantType)
@@ -1119,14 +1119,15 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 
    in >> mFlowGridRows;
 
+   //Most of this can probably be thrown away.
    float bWSize;
    float bHSize;
    mRackAddNewButton->GetDimensions(bWSize, bHSize);
-   mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
-   mModGrid->RecalculateElements();
-   auto mgp = mModGrid->GetPosition(true);
+   mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
+   mRackGrid->RecalculateElements();
+   auto mgp = mRackGrid->GetPosition(true);
    mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
-   mRackAddNewButton->SetPosition(mgp.x + mModGrid->GetWidth(), mgp.y);
+   mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth(), mgp.y);
    //IDrawableModule::LoadState(in, rev); <-- Meanie :(
 
    std::vector<SongCanvas_CanvasElement*> celms;
@@ -1170,6 +1171,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mRedLoopStart;
    //End reserved variables SEC-1
    SetEnabled(enableState);
+   Resize(mWidth,mHeight);
 }
 
 ///////////////////////////////
