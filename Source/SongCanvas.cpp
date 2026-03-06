@@ -60,6 +60,12 @@ SongCanvas::~SongCanvas()
    TheTransport->RemoveAudioPoller(this);
 }
 
+void SongCanvas::Init()
+{
+   IDrawableModule::Init();
+   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
+   TheTransport->AddAudioPoller(this);
+}
 
 void SongCanvas::CreateUIControls()
 {
@@ -152,13 +158,6 @@ void SongCanvas::CreateUIControls()
 
    //mLayerName[0]->SetNoHover(false);
 }
-void SongCanvas::Init()
-{
-   IDrawableModule::Init();
-   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
-   TheTransport->AddAudioPoller(this);
-}
-
 void SongCanvas::DrawModule()
 {
    mTime = TheTransport->GetMeasureTime(gTime);
@@ -343,6 +342,102 @@ void SongCanvas::DrawModule()
    dText += std::to_string(mCanvas->GetWidth()) + "\n";
    DrawTextNormal(dText, 4, 8);*/
 }
+void SongCanvas::CanvasUpdated(Canvas* canvas)
+{
+   if (mCanvas == canvas)
+   {
+      auto elms = mCanvas->GetElements();
+
+      //How many chunks should we have?
+      int colNum = mCanvas->GetNumCols();
+
+      mChunkAmount = CLAMP(colNum, 50, 1000);
+
+      //Regenerate the canvas list.
+      for (int i = 0; i < mChunkAmount; ++i)
+      {
+         mCanvasChunkList[i].clear();
+      }
+
+      for (int i = 0; i < elms.size(); i++)
+      {
+
+         int cStart = floor(elms[i]->GetStart() * mChunkAmount);
+         int cEnd = ceil(elms[i]->GetEnd() * mChunkAmount);
+
+         if (cStart < 0)
+            cStart = 0;
+         if (cEnd >= mChunkAmount)
+         {
+            cEnd = mChunkAmount - 1;
+         }
+
+         for (int y = cStart; y <= cEnd; ++y)
+         {
+            mCanvasChunkList[y].push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
+         }
+
+         //Workspace view resize check
+         //Disabled, to enforce a more controlled format.
+         /*
+         if (elms[i]->GetEnd() > 0.8)
+         {
+            ResizeWorkspace(1.0 - elms[i]->GetEnd());
+            break;
+         }*/
+      }
+      //TheSynth->LogEvent("SongCanvas Regenerated",LogEventType::kLogEventType_Verbose);
+   }
+}
+void SongCanvas::ResizeWorkspace(float diff)
+{
+   //Todo, allow downsizing.
+   /*
+   auto elms = mCanvas->GetElements();
+   std::vector<float> pos(2 * elms.size());
+
+   for (int i = 0; i < elms.size(); i++)
+   {
+      pos[i*2] = elms[i]->GetStart();
+      pos[i*2+1] = elms[i]->GetEnd();
+   }
+   */
+   mCanvas->SetLength(mCanvas->GetLength() + 1);
+   /*
+   for (int i = 0; i < elms.size(); i++)
+   {
+      elms[i]->SetStart(pos[i*2]/2,false);
+      elms[i]->SetEnd(pos[i*2+1]/2);
+   }*/
+
+   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / (float)mStandardMeasureSize * mCanvas->GetLength()) * 4);
+   //TheSynth->LogEvent(std::to_string(mCanvas->GetNumCols()),kLogEventType_Verbose);
+}
+void SongCanvas::FeatureResize(int extraW, int extraH)
+{
+   float h = mCanvas->GetHeight();
+   float w = mCanvas->GetWidth();
+   Resize(w + extraW, h + extraH);
+}
+void SongCanvas::Resize(float w, float h)
+{
+   w = MAX(w - GetCanvasStartXOffset(), 350);
+   h = MAX(h - mOffsetFromTopSpacing, 100 + seqLayers.size() * MinRowSize);
+
+   int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
+
+   w = LayersListHSize + multiple * mStandardMeasureSize - 6;
+
+   mCanvas->SetDimensions(w, h);
+   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
+
+   float bWSize;
+   float bHSize;
+   mRackAddNewButton->GetDimensions(bWSize, bHSize);
+   mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
+   mModGrid->RecalculateElements();
+   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
+}
 
 void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
 {
@@ -382,7 +477,6 @@ void SongCanvas::DeleteLayer(int index)
    mCanvas->SetNumRows(seqLayers.size());
    mCanvas->SetNumVisibleRows(seqLayers.size());
 }
-
 void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
 {
    int idx = oldIndex;
@@ -450,84 +544,6 @@ bool SongCanvas::IsCanvasElementActive(SongCanvas_CanvasElement* element) const
    return false;
 }
 
-void SongCanvas::CanvasUpdated(Canvas* canvas)
-{
-   if (mCanvas == canvas)
-   {
-      auto elms = mCanvas->GetElements();
-
-      //How many chunks should we have?
-      int colNum = mCanvas->GetNumCols();
-
-      mChunkAmount = CLAMP(colNum, 50, 1000);
-
-      //Regenerate the canvas list.
-      for (int i = 0; i < mChunkAmount; ++i)
-      {
-         mCanvasChunkList[i].clear();
-      }
-
-      for (int i = 0; i < elms.size(); i++)
-      {
-
-         int cStart = floor(elms[i]->GetStart() * mChunkAmount);
-         int cEnd = ceil(elms[i]->GetEnd() * mChunkAmount);
-
-         if (cStart < 0)
-            cStart = 0;
-         if (cEnd >= mChunkAmount)
-         {
-            cEnd = mChunkAmount - 1;
-         }
-
-         for (int y = cStart; y <= cEnd; ++y)
-         {
-            mCanvasChunkList[y].push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
-         }
-
-         //Workspace view resize check
-         //Disabled, to enforce a more controlled format.
-         /*
-         if (elms[i]->GetEnd() > 0.8)
-         {
-            ResizeWorkspace(1.0 - elms[i]->GetEnd());
-            break;
-         }*/
-      }
-      //TheSynth->LogEvent("SongCanvas Regenerated",LogEventType::kLogEventType_Verbose);
-   }
-}
-
-void SongCanvas::ResizeWorkspace(float diff)
-{
-   //Todo, allow downsizing.
-   /*
-   auto elms = mCanvas->GetElements();
-   std::vector<float> pos(2 * elms.size());
-
-   for (int i = 0; i < elms.size(); i++)
-   {
-      pos[i*2] = elms[i]->GetStart();
-      pos[i*2+1] = elms[i]->GetEnd();
-   }
-   */
-   mCanvas->SetLength(mCanvas->GetLength() + 1);
-   /*
-   for (int i = 0; i < elms.size(); i++)
-   {
-      elms[i]->SetStart(pos[i*2]/2,false);
-      elms[i]->SetEnd(pos[i*2+1]/2);
-   }*/
-
-   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / (float)mStandardMeasureSize * mCanvas->GetLength()) * 4);
-   //TheSynth->LogEvent(std::to_string(mCanvas->GetNumCols()),kLogEventType_Verbose);
-}
-
-ofColor SongCanvas::GetRowColor(int row) const
-{
-   return mRowColors[row % mRowColors.size()];
-}
-
 void SongCanvas::TextEntryComplete(TextEntry* entry)
 {
    if (entry == mRackRenameTextBox)
@@ -539,7 +555,6 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
       //TheSynth->LogEvent("StringBeatEvent",kLogEventType_Verbose);
    }
 }
-
 void SongCanvas::FloatSliderUpdated(FloatSlider* slider, float oldVal, double time)
 {
    if (slider == mTransportSlider)
@@ -607,7 +622,6 @@ void SongCanvas::OnClicked(float x, float y, bool right)
    IDrawableModule::OnClicked(x, y, right);
    mModGrid->OnClicked(x - mModGrid->GetPosition().x, y - mModGrid->GetPosition().y, right);
 }
-
 void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
@@ -707,6 +721,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       }
    }
 }
+
 void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 {
    mRightClickDropdownElementContext = element;
@@ -740,7 +755,6 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
    mPartCanvasDirty = true;
    //Then we flag the Canvas as dirty, so we don't stress the DAW too much with pointless regenerations.
 }
-
 void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
 {
    auto res = GetAllCanvasElementsOfRack(element);
@@ -761,7 +775,6 @@ std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
    }
    return output;
 }
-
 //Gets all the canvas elements which have said rack as a parent.
 std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
 {
@@ -788,8 +801,6 @@ std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfLayer(c
    }
    return output;
 }
-
-
 SongCanvasRackElement* SongCanvas::GetRackElementWithID(int id)
 {
    auto RE = GetAllRackElements();
@@ -802,13 +813,10 @@ SongCanvasRackElement* SongCanvas::GetRackElementWithID(int id)
    }
    return nullptr;
 }
-
 void SongCanvas::OnTransportAdvanced(float amount)
 {
    //RESERVED, might get used later, depending on future module support.
 }
-
-
 void SongCanvas::ReceiveSignal(SignalId signalID)
 {
    if (signalID == SignalId::ResizeRequest)
@@ -826,7 +834,6 @@ void SongCanvas::DisposeElement(IClickable* element)
 {
    RemoveUIControl(static_cast<IUIControl*>(element));
 }
-
 //Called on a 64n interval, which is very fast.
 void SongCanvas::OnTimeEvent(double time)
 {
@@ -915,38 +922,10 @@ void SongCanvas::OnTimeEvent(double time)
 }
 
 //Attempt to resize based on the addition/removal of a feature.
-void SongCanvas::FeatureResize(int extraW, int extraH)
-{
-   return; //TODO implement
-   float h = mCanvas->GetHeight();
-   float w = mCanvas->GetWidth();
-   Resize(w + extraW, h + extraH);
-}
-
-void SongCanvas::Resize(float w, float h)
-{
-   w = MAX(w - GetCanvasStartXOffset(), 350);
-   h = MAX(h - mOffsetFromTopSpacing, 100 + seqLayers.size() * MinRowSize);
-
-   int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
-
-   w = LayersListHSize + multiple * mStandardMeasureSize - 6;
-
-   mCanvas->SetDimensions(w, h);
-   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
-
-   float bWSize;
-   float bHSize;
-   mRackAddNewButton->GetDimensions(bWSize, bHSize);
-   mModGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
-   mModGrid->RecalculateElements();
-   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
-}
 
 void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 {
 }
-
 void SongCanvas::SetUpFromSaveData()
 {
 }

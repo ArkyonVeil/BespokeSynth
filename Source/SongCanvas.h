@@ -74,7 +74,7 @@ public:
    bool IsEnabled() const override { return mEnabled; }
    void CanvasUpdated(Canvas* canvas) override;
    void ResizeWorkspace(float diff);
-   ofColor GetRowColor(int row) const;
+   ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()];};
    void TextEntryComplete(TextEntry* entry) override;
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
    void ButtonClicked(ClickButton* button, double time) override;
