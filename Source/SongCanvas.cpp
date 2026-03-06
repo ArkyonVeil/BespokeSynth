@@ -1164,6 +1164,8 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    bool enableState;
    in >> enableState;
    //Reserved variables SEC-1
+   if (rev>1)
+   {
    in >> mGlobalMode;
    in >> mStartMeasure;
    in >> mEndMeasure;
@@ -1171,6 +1173,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mLoopOnEnd;
    in >> mRedLoopEnd;
    in >> mRedLoopStart;
+   }
    //End reserved variables SEC-1
    SetEnabled(enableState);
    Resize(mWidth,mHeight);
