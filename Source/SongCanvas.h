@@ -104,7 +104,7 @@ public:
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override { return 1; };
+   int GetModuleSaveStateRev() const override { return 2; };
 
 private:
    struct SongCanvasLayer
@@ -120,7 +120,6 @@ private:
    void DeleteLayer(int index);
    void SyncCanvasToLayers();
    void MoveLayerTo(int oldIndex, int newIndex);
-   void GetModuleDimensions(float& width, float& height) override;
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
 

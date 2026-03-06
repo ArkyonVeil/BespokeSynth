@@ -76,6 +76,9 @@ void SongCanvas::CreateUIControls()
    else
       mStartCanvasOffset = LayersListHSize;
 
+   //Default size.
+   mWidth = 720;
+   mHeight = 288;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
    mCanvas = new Canvas(this, mStartCanvasOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
@@ -335,12 +338,12 @@ void SongCanvas::DrawModule()
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-   /*
-   std::string dText = std::to_string(mCanvas->GetLength()) + "\n";
+
+   std::string dText = std::to_string(mWidth) + "\n";
+   dText += std::to_string(mHeight) + "\n";
    dText += std::to_string(mCanvas->GetNumCols()) + "\n";
    dText += std::to_string(mCanvasRelativeTime) + "\n";
-   dText += std::to_string(mCanvas->GetWidth()) + "\n";
-   DrawTextNormal(dText, 4, 8);*/
+   DrawTextNormal(dText, 4, 8);
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
@@ -415,20 +418,23 @@ void SongCanvas::ResizeWorkspace(float diff)
 }
 void SongCanvas::FeatureResize(int extraW, int extraH)
 {
-   float h = mCanvas->GetHeight();
-   float w = mCanvas->GetWidth();
-   Resize(w + extraW, h + extraH);
+   float h = mHeight;
+   float w = mWidth;
+
+   //ofLog() << "Sanity check, w1:"+ofToString(w)+" w2:"+ofToString(mWidth) +" h1:"+ofToString(h)+" h2:"+ofToString(mHeight);
 }
 void SongCanvas::Resize(float w, float h)
 {
-   w = MAX(w - GetCanvasStartXOffset(), 350);
-   h = MAX(h - mOffsetFromTopSpacing, 100 + seqLayers.size() * MinRowSize);
+   w = MAX(w, 350);
+   h = MAX(h, 100 + seqLayers.size() * MinRowSize);
 
    int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
 
    w = LayersListHSize + multiple * mStandardMeasureSize - 6;
 
-   mCanvas->SetDimensions(w, h);
+   mWidth = w;
+   mHeight = h;
+   //mCanvas->SetDimensions(w, h);
    mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
 
    float bWSize;
@@ -529,11 +535,6 @@ void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
    }
 }
 
-void SongCanvas::GetModuleDimensions(float& width, float& height)
-{
-   width = LayersListHSize + mCanvas->GetWidth();
-   height = mCanvas->GetHeight() + mOffsetFromTopSpacing + 32 + mFlowGridRows * FlowGridRowHeightSize;
-}
 bool SongCanvas::IsCanvasElementActive(SongCanvas_CanvasElement* element) const
 {
    for (int i = 0; i < mActiveElements.size(); ++i)
@@ -936,7 +937,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
 {
    out << GetModuleSaveStateRev(); //Updating to newer versions? Check this handy variable!
    //SEC-1 format 05/03/2026
-
+   //REV-2 format 06/03/2026 - Resolves buggy panel size values.
 
    out << (int)seqLayers.size();
 
@@ -984,8 +985,8 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mCanvas->GetNumCols();
 
    out << mCanvas->GetLength();
-   out << mCanvas->GetWidth();
-   out << mCanvas->GetHeight();
+   out << mWidth;
+   out << mHeight;
 
    out << mFlowGridRows;
 
@@ -1105,8 +1106,17 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    mCanvas->SetLength(f1);
    in >> f1;
    in >> f2;
+   if (rev == 1)
+   {//Buggy dimensions in this version.
+      mWidth = f1+144;
+      mHeight = f2+128;
+   }
+   else
+   {
+      mWidth = f1;
+      mHeight = f2;
+   }
 
-   mCanvas->SetDimensions(f1, f2);
    in >> mFlowGridRows;
 
    float bWSize;
