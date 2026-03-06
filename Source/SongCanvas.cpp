@@ -367,9 +367,16 @@ void SongCanvas::DeleteLayer(int index)
    int lIdx = seqLayers.size() - 1;
    MoveLayerTo(index, lIdx);
 
-   mLayerNameTextbox[lIdx]->Delete();
-   mLayerEnableCheckbox[lIdx]->Delete();
-   mLayerSettingsButton[lIdx]->Delete();
+   mLayerNameTextbox[lIdx]->RemoveFromOwner();
+   mLayerEnableCheckbox[lIdx]->RemoveFromOwner();
+   mLayerSettingsButton[lIdx]->RemoveFromOwner();
+
+   auto layerEl = GetAllCanvasElementsOfLayer(lIdx);
+   for (int i = 0; i < layerEl.size(); ++i)
+   {
+      mCanvas->RemoveElement(layerEl[i]);
+   }
+
    seqLayers.pop_back();
 
    mCanvas->SetNumRows(seqLayers.size());
@@ -578,7 +585,7 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
          if (seqLayers.size() > 1)
          {
             mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing); //Spacer, makes it a little harder to butter finger deleting a layer full of content.
-            mListDropdownOptions->AddLabel("Delete WIP", LayerDropDownOptions::enumLDPDelete);
+            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
          }
 
          auto rp = mLayerSettingsButton[i]->GetPosition(true);
@@ -677,7 +684,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
                               0,
                               true,
                               "layer" + ofToString(seqLayers.size())});
-         //FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
+         FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
       }
    }
    for (int i = 0; i < mModGrid->GetAllElements().size(); ++i)
@@ -910,6 +917,7 @@ void SongCanvas::OnTimeEvent(double time)
 //Attempt to resize based on the addition/removal of a feature.
 void SongCanvas::FeatureResize(int extraW, int extraH)
 {
+   return; //TODO implement
    float h = mCanvas->GetHeight();
    float w = mCanvas->GetWidth();
    Resize(w + extraW, h + extraH);
