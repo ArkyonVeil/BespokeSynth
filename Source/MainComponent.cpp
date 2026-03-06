@@ -459,7 +459,7 @@ public:
       ++mFrameCountAccum;
 
       int64 time = Time::currentTimeMillis();
-      mSynth.IncrementGlobalTime((time-mLastFrameTime)/1000.0f);
+      mSynth.IncrementGlobalTime((time - mLastFrameTime) / 1000.0f);
       mLastFrameTime = time;
 
       const int64 kCalcFpsIntervalMs = 1000;

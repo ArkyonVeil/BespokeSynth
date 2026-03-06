@@ -364,8 +364,18 @@ void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
 }
 void SongCanvas::DeleteLayer(int index)
 {
+   int lIdx = seqLayers.size()-1;
+   MoveLayerTo(index, lIdx);
 
+   mLayerNameTextbox[lIdx]->Delete();
+   mLayerEnableCheckbox[lIdx]->Delete();
+   mLayerSettingsButton[lIdx]->Delete();
+   seqLayers.pop_back();
+
+   mCanvas->SetNumRows(seqLayers.size());
+   mCanvas->SetNumVisibleRows(seqLayers.size());
 }
+
 void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
 {
    int idx = oldIndex;
@@ -566,10 +576,10 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
          if (seqLayers.size() + 1 < MaxLayers)
             mListDropdownOptions->AddLabel("Add new layer", LayerDropDownOptions::enumLDPAddNewLayerBelow);
 
-         if (i > 0)
+         if (seqLayers.size() > 1)
          {
             mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing);//Spacer, makes it a little harder to butter finger deleting a layer full of content.
-            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
+            mListDropdownOptions->AddLabel("Delete WIP", LayerDropDownOptions::enumLDPDelete);
          }
 
          auto rp = mLayerSettingsButton[i]->GetPosition(true);
@@ -1028,10 +1038,20 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 
    //Step 1, restore our canvas
    in >> canvasLayerCount;
+
+   //Delete the starter layers first.
+   for (int i = 0; i < 5; ++i)
+   {
+      DeleteLayer(0);
+   }
    for (int i = 0; i < canvasLayerCount; ++i)
    {
-      in >> seqLayers[i].enabled;
-      in >> seqLayers[i].layerName;
+      bool lD1;
+      std::string lD2;
+      in >> lD1;
+      in >> lD2;
+
+      AddNewLayer(i,SongCanvasLayer{ofColor::white,0,lD1,lD2});
    }
 
    auto re = GetAllRackElements();

@@ -90,8 +90,8 @@ void ClickButton::Render()
    ofSetColor(color);
    ofRect(mX, mY, w, h);
 
-   float iX = mX+w*mIconOffsetMulX+mIconOffsetX;
-   float iY = mY+h*mIconOffsetMulY+mIconOffsetY;
+   float iX = mX + w * mIconOffsetMulX + mIconOffsetX;
+   float iY = mY + h * mIconOffsetMulY + mIconOffsetY;
 
    if (mDisplayStyle == ButtonDisplayStyle::kText)
    {
@@ -233,7 +233,7 @@ void ClickButton::SetIconAlignment(ButtonIconAlignment alignment)
    //Generally icons have bounds in the x20 y20 range
    switch (alignment)
    {
-      case ButtonIconAlignment::kTopLeft://<--Default
+      case ButtonIconAlignment::kTopLeft: //<--Default
          mIconOffsetX = 0;
          mIconOffsetY = 0;
          mIconOffsetMulX = 0;

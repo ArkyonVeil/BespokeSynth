@@ -118,6 +118,7 @@ private:
    void DrawModule() override;
    void AddNewLayer(int index, SongCanvasLayer layer);
    void DeleteLayer(int index);
+   void SyncCanvasToLayers();
    void MoveLayerTo(int oldIndex, int newIndex);
    void GetModuleDimensions(float& width, float& height) override;
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
@@ -137,7 +138,7 @@ private:
    
    UIFlowGrid* mModGrid;
 
-   static const int MaxLayers = 100;
+   static constexpr int MaxLayers = 51;
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mPartCanvasDirty{false};//If true, the Canvas will regenerate next tick.
@@ -185,7 +186,7 @@ private:
    std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[101];
    int mChunkAmount = 10;
 
-   std::vector<SongCanvas_CanvasElement*> mActiveElements;
+   std::vector<SongCanvas_CanvasElement*> mActiveElements {};
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
    std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
@@ -197,8 +198,8 @@ private:
    ClickButton* mLayerSettingsButton4;
    ClickButton* mLayerSettingsButton5;*/
 
-   std::vector<SongCanvasLayer> seqLayers;
-   std::vector<SongCanvasLayer> layerBuffer;//The reason for this is clumsy <>3
+   std::vector<SongCanvasLayer> seqLayers {};
+   std::vector<SongCanvasLayer> layerBuffer {};//The reason for this is clumsy <>3
 
    ClickButton* mRackAddNewButton;
 
