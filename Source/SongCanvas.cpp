@@ -650,6 +650,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
             mRackRenameTextBox->ClearInput();
             mRackRenameTextBox->ClearActiveKeyboardFocus(false);
             DeleteRackElement(mRightClickDropdownElementContext);
+            mCanvas->SetAllowElementPlacement(false);
          }
          break;
       }
