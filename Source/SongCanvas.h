@@ -181,7 +181,7 @@ private:
 
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[101];
+   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[1001];
    int mChunkAmount = 10;
 
    std::vector<SongCanvas_CanvasElement*> mActiveElements{};
