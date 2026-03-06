@@ -425,6 +425,10 @@ void SongCanvas::Resize(float w, float h)
    mWidth = w;
    mHeight = h;
 
+   float canvasHeight = h - (16+mOffsetFromTopSpacing+mFlowGridRows * FlowGridRowHeightSize);
+   mCanvas->SetDimensions(w-mStartCanvasXOffset, canvasHeight);
+   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
+
    //Layers <>V
    for (int i = 0; i < seqLayers.size(); ++i)
    {
@@ -435,9 +439,6 @@ void SongCanvas::Resize(float w, float h)
       mLayerSettingsButton[i]->SetPosition(4, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
    }
 
-   float canvasHeight = h - (16+mOffsetFromTopSpacing+mFlowGridRows * FlowGridRowHeightSize);
-   mCanvas->SetDimensions(w-mStartCanvasXOffset, canvasHeight);
-   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
 
    int xEndRackSpacing = 46;
    mRackGrid->SetPosition(8, GetRackGridStartYOffset());
@@ -701,7 +702,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
                               0,
                               true,
                               "layer" + ofToString(seqLayers.size())});
-         FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
+         FeatureResize(0,mCanvas->GetHeight()/seqLayers.size());
       }
    }
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
