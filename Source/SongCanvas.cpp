@@ -204,8 +204,8 @@ void SongCanvas::DrawModule()
    }
 
    float drawPointOffset = startCanvasOffset;
-   float tW = mCanvas->GetWidth();
-   float tH = mOffsetFromTopSpacing + mCanvas->GetHeight();
+   float cWidth = mCanvas->GetWidth();
+   float cFoot = mOffsetFromTopSpacing + mCanvas->GetHeight();
    //ofSetColor(ofColor::clear);
 
    /*
@@ -235,13 +235,15 @@ void SongCanvas::DrawModule()
    ofColor hardLineColor = ofColor{ 255, 255, 255, 50 };
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
 
+   float measureSize = mCanvas->GetWidth() / (mCanvas->GetNumCols()/4);
    short iter = 0;
-   float postZoomOffset = static_cast<float>(mStandardMeasureSize) / zoomPercent;
-   float postZoomCanvasOffset = tW * mCanvas->mViewStart / zoomPercent;
+   float postZoomOffset = (measureSize) / zoomPercent;
+   float postZoomCanvasOffset = cWidth * mCanvas->mViewStart / zoomPercent;
    drawPointOffset -= postZoomCanvasOffset;
 
-   mTransportSlider->SetDimensions(tW, 15);
-   mTransportSlider->SetExtents(mCanvas->mViewStart * (tW / mStandardMeasureSize), mCanvas->mViewEnd * (tW / mStandardMeasureSize));
+   mTransportSlider->SetDimensions(cWidth, 15);
+   mTransportSlider->SetExtents(mCanvas->mViewStart * (cWidth / measureSize), mCanvas->mViewEnd * (cWidth / measureSize));
+
    mTransportSlider->Draw();
    mTransportTextBox->Draw();
    mResetButton->Draw();
@@ -267,7 +269,7 @@ void SongCanvas::DrawModule()
    if (zoomPercent > 8.0)
       hardLineClip = 999999999;
 
-   while (drawPointOffset < tW + startCanvasOffset)
+   while (drawPointOffset < mWidth)
    {
       if (drawPointOffset < startCanvasOffset)
       {
@@ -298,7 +300,7 @@ void SongCanvas::DrawModule()
    ofSetColor(ofColor::red);
    float markerLinePos = startCanvasOffset + mTime * postZoomOffset - postZoomCanvasOffset;
    if (markerLinePos > startCanvasOffset)
-      ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, tH);
+      ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, cFoot);
    ofSetColor(ofColor::grey);
 
    mMainScrollbarHorizontal->Draw();
