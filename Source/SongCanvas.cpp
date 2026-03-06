@@ -42,15 +42,15 @@
 SongCanvas::SongCanvas()
 {
    mRowColors.push_back(ofColor::black);
+   seqLayers.reserve(MaxLayers+1);
    mTransportPriority = kTransportPriorityVeryEarly;
    for (int i = 0; i < 5; i++)
    {
-      seqLayers.push_back(SongCanvasLayer{
+      layerBuffer.push_back(SongCanvasLayer{
       ofColor::white,
       0,
       true,
       "layer" + ofToString(i) });
-      mLayerCount++;
    }
 }
 
@@ -65,14 +65,13 @@ void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
 
-   int startCanvasOffset;
    if (expertPanelEnabled)
-      startCanvasOffset = LayersListHSize + AdvancedConfigHSize;
+      mStartCanvasOffset = LayersListHSize + AdvancedConfigHSize;
    else
-      startCanvasOffset = LayersListHSize;
+      mStartCanvasOffset = LayersListHSize;
 
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
-   mCanvas = new Canvas(this, startCanvasOffset, OffsetFromTopSpacing, cSize, seqLayers.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
+   mCanvas = new Canvas(this, mStartCanvasOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
    mCanvas->SetListener(this);
 
@@ -90,7 +89,7 @@ void SongCanvas::CreateUIControls()
    mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
 
-   mTransportSlider = new FloatSlider(this, "measure", startCanvasOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
+   mTransportSlider = new FloatSlider(this, "measure", mStartCanvasOffset, 22, mCanvas->GetWidth(), 15, &mTime, 0, 32);
    mTransportSlider->SetNoHover(true);
    mTransportSlider->SetCableTargetable(false);
    mTransportSlider->SetTextAlpha(0);
@@ -127,7 +126,7 @@ void SongCanvas::CreateUIControls()
 
    mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
-   mTransportTextBox = new TextEntry{ this, "transport", startCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
+   mTransportTextBox = new TextEntry{ this, "transport", mStartCanvasOffset - 68, 22, 6, &mTime, 0, 99999 };
    //mTransportTextBox->SetFloatDecimalCount(2);
 
 
@@ -135,23 +134,17 @@ void SongCanvas::CreateUIControls()
    mPlayPauseButton = new ClickButton{ this, "play/pause", static_cast<int>(mResetButton->GetPosition().x) - 22, 22, ButtonDisplayStyle::kPlay };
 
    //Layers
-   int s = seqLayers.size();
-   float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(s);
-   float midCentering = layerPosSpacing / 4;
-   for (int i = 0; i < s; i++)
+   for (int i = 0; i < layerBuffer.size(); ++i)
    {
-      mLayerNameTextbox[i] = new TextEntry(this, ("layer" + std::to_string(i)).c_str(), 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, 12, &seqLayers[i].layerName);
-      mLayerEnableCheckbox[i] = new Checkbox(this, ("checkbox" + std::to_string(i)).c_str(), startCanvasOffset - 8, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, &seqLayers[i].enabled);
-      mLayerEnableCheckbox[i]->SetDisplayText(false);
-      mLayerSettingsButton[i] = new ClickButton(this, ("setting" + std::to_string(i)).c_str(), startCanvasOffset - 28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing, ButtonDisplayStyle::kHamburger);
-      //mCanvas->SetRowColor(i,ofColor::clear)
+      AddNewLayer(i, layerBuffer[i]);
    }
+   layerBuffer.clear();
 
-   //Patterns
+   //Parts
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Pattern " + std::to_string(dPartIter), this), 0);
+      mModGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }
@@ -209,7 +202,7 @@ void SongCanvas::DrawModule()
 
    float drawPointOffset = startCanvasOffset;
    float tW = mCanvas->GetWidth();
-   float tH = OffsetFromTopSpacing + mCanvas->GetHeight();
+   float tH = mOffsetFromTopSpacing + mCanvas->GetHeight();
    //ofSetColor(ofColor::clear);
 
    /*
@@ -288,12 +281,12 @@ void SongCanvas::DrawModule()
          ofSetColor(softLineColor);
       }
       if (iter % hardLineClip == 0 || iter % softLineClip == 0)
-         ofLine(drawPointOffset, OffsetFromTopSpacing - 16, drawPointOffset, OffsetFromTopSpacing);
+         ofLine(drawPointOffset, mOffsetFromTopSpacing - 16, drawPointOffset, mOffsetFromTopSpacing);
 
       if (iter % drawMeasureLabelIterInterval == 0)
       {
          ofSetColor(labelColor);
-         DrawTextNormal(std::to_string(iter), drawPointOffset + 2, OffsetFromTopSpacing - 2, 13);
+         DrawTextNormal(std::to_string(iter), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
       }
       //ofLine(drawPointerOffset, OffsetFromTopSpacing-20, drawPointerOffset, OffsetFromTopSpacing-5);
       drawPointOffset += postZoomOffset;
@@ -302,7 +295,7 @@ void SongCanvas::DrawModule()
    ofSetColor(ofColor::red);
    float markerLinePos = startCanvasOffset + mTime * postZoomOffset - postZoomCanvasOffset;
    if (markerLinePos > startCanvasOffset)
-      ofLine(markerLinePos, OffsetFromTopSpacing, markerLinePos, tH);
+      ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, tH);
    ofSetColor(ofColor::grey);
 
    mMainScrollbarHorizontal->Draw();
@@ -314,24 +307,24 @@ void SongCanvas::DrawModule()
    {
       float midCentering = layerPosSpacing / 4; //Math on this is a bit spotty. Correct later.
 
-      mLayerNameTextbox[i]->SetPosition(28, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerNameTextbox[i]->SetPosition(28, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerNameTextbox[i]->Draw();
 
-      mLayerEnableCheckbox[i]->SetPosition(startCanvasOffset - 13, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerEnableCheckbox[i]->SetPosition(startCanvasOffset - 13, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerEnableCheckbox[i]->Draw();
 
-      mLayerSettingsButton[i]->SetPosition(4, OffsetFromTopSpacing + midCentering + i * layerPosSpacing);
+      mLayerSettingsButton[i]->SetPosition(4, mOffsetFromTopSpacing + midCentering + i * layerPosSpacing);
       mLayerSettingsButton[i]->Draw();
    }
    //Draw the rack
    mModGrid->SetPosition(8, GetModGridStartYOffset());
    if (mFlashRackStartTime > 0)
    {
-      mModGrid->SetBackgroundColour(255,255,255,CLAMP(40+sin(ofGetGlobalTime()*10)*30,0,255));
-      if (mFlashRackStartTime+1 < ofGetGlobalTime())
+      mModGrid->SetBackgroundColour(255, 255, 255, CLAMP(40 + sin(ofGetGlobalTime() * 10) * 30, 0, 255));
+      if (mFlashRackStartTime + 1 < ofGetGlobalTime())
       {
          mFlashRackStartTime = 0;
-         mModGrid->SetBackgroundColour(0,0,0,75);
+         mModGrid->SetBackgroundColour(0, 0, 0, 75);
       }
    }
    mModGrid->Draw();
@@ -351,10 +344,85 @@ void SongCanvas::DrawModule()
    DrawTextNormal(dText, 4, 8);*/
 }
 
+void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
+{
+   seqLayers.push_back(layer);
+   int layerCount = seqLayers.size();
+   int lIndex = layerCount - 1;
+   mCanvas->SetNumRows(layerCount);
+   mCanvas->SetNumVisibleRows(layerCount);
+
+   float layerPosSpacing = mCanvas->GetHeight() / static_cast<float>(layerCount);
+   float midCentering = layerPosSpacing / 4;
+
+   mLayerNameTextbox[lIndex] = new TextEntry(this, ("layer" + std::to_string(lIndex)).c_str(), 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, 12, &seqLayers[lIndex].layerName);
+   mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 8, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing,  &seqLayers[lIndex].enabled);
+   mLayerEnableCheckbox[lIndex]->SetDisplayText(false);
+   mLayerSettingsButton[lIndex] = new ClickButton(this, ("setting" + std::to_string(lIndex)).c_str(), mStartCanvasOffset - 28, mOffsetFromTopSpacing + midCentering + lIndex * layerPosSpacing, ButtonDisplayStyle::kHamburger);
+      //mCanvas->SetRowColor(i,ofColor::clear)
+   MoveLayerTo(lIndex,index);
+}
+void SongCanvas::DeleteLayer(int index)
+{
+
+}
+void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
+{
+   int idx = oldIndex;
+   while (idx != newIndex)
+   {
+      if (idx > newIndex)
+      {
+         auto oL = GetAllCanvasElementsOfLayer(idx - 1);
+         auto cL = GetAllCanvasElementsOfLayer(idx);
+
+         for (int i = 0; i < oL.size(); ++i)
+         {
+            oL[i]->mRow = idx;
+         }
+
+         for (int i = 0; i < cL.size(); ++i)
+         {
+            cL[i]->mRow = idx - 1;
+         }
+
+         auto oA = seqLayers[idx - 1];
+         auto cA = seqLayers[idx];
+
+         seqLayers[idx - 1].layerName = cA.layerName;
+         seqLayers[idx].layerName = oA.layerName;
+         idx--;
+      }
+      else
+      {
+         auto oL = GetAllCanvasElementsOfLayer(idx + 1);
+         auto cL = GetAllCanvasElementsOfLayer(idx);
+
+         for (int i = 0; i < oL.size(); ++i)
+         {
+            oL[i]->mRow = idx;
+         }
+
+         for (int i = 0; i < cL.size(); ++i)
+         {
+            cL[i]->mRow = idx + 1;
+         }
+
+         auto oA = seqLayers[idx + 1];
+         auto cA = seqLayers[idx];
+
+         seqLayers[idx + 1] = cA;
+         seqLayers[idx] = oA;
+         idx++;
+      }
+
+   }
+}
+
 void SongCanvas::GetModuleDimensions(float& width, float& height)
 {
    width = LayersListHSize + mCanvas->GetWidth();
-   height = mCanvas->GetHeight() + OffsetFromTopSpacing + 32 + mFlowGridRows * FlowGridRowHeightSize;
+   height = mCanvas->GetHeight() + mOffsetFromTopSpacing + 32 + mFlowGridRows * FlowGridRowHeightSize;
 }
 bool SongCanvas::IsCanvasElementActive(SongCanvas_CanvasElement* element) const
 {
@@ -484,7 +552,7 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
       //DropdownClicked(mRackAddNewDropdown);
       return;
    }
-   for (int i = 0; i < mLayerCount; ++i)
+   for (int i = 0; i < seqLayers.size(); ++i)
    {
       if (button == mLayerSettingsButton[i])
       {
@@ -492,13 +560,17 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
          mListDropdownOptions->Clear();
          if (i > 0)
             mListDropdownOptions->AddLabel("Move up", LayerDropDownOptions::enumLDPMoveUp);
-         if (i + 1 < mLayerCount)
+         if (i + 1 < seqLayers.size())
             mListDropdownOptions->AddLabel("Move down", LayerDropDownOptions::enumLDPMoveDown);
-         if (i > 0)
-            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
 
-         if (mLayerCount + 1 >= MaxLayers)
+         if (seqLayers.size() + 1 < MaxLayers)
             mListDropdownOptions->AddLabel("Add new layer", LayerDropDownOptions::enumLDPAddNewLayerBelow);
+
+         if (i > 0)
+         {
+            mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing);//Spacer, makes it a little harder to butter finger deleting a layer full of content.
+            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
+         }
 
          auto rp = mLayerSettingsButton[i]->GetPosition(true);
          mListDropdownOptions->SetPosition(rp.x, rp.y);
@@ -578,57 +650,25 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       int idx = mLayerDropdownOptionButtonIndex;
       if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveUp)
       {
-            auto oL = GetAllCanvasElementsOfLayer(idx - 1);
-            auto cL = GetAllCanvasElementsOfLayer(idx);
-
-            for (int i = 0; i < oL.size(); ++i)
-            {
-               oL[i]->mRow = idx;
-            }
-
-            for (int i = 0; i < cL.size(); ++i)
-            {
-               cL[i]->mRow = idx-1;
-            }
-
-         auto oA = seqLayers[idx - 1];
-         auto cA = seqLayers[idx];
-
-         seqLayers[idx -1].layerName = cA.layerName;
-         seqLayers[idx].layerName = oA.layerName;
+         MoveLayerTo(idx, idx - 1);
       }
       else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveDown)
       {
-         auto oL = GetAllCanvasElementsOfLayer(idx+1);
-         auto cL = GetAllCanvasElementsOfLayer(idx);
-
-         for (int i = 0; i < oL.size(); ++i)
-         {
-            oL[i]->mRow = idx;
-         }
-
-         for (int i = 0; i < cL.size(); ++i)
-         {
-            cL[i]->mRow = idx+1;
-         }
-
-         auto oA = seqLayers[idx + 1];
-         auto cA = seqLayers[idx];
-
-         seqLayers[idx +1] = cA;
-         seqLayers[idx] = oA;
-
+         MoveLayerTo(idx, idx + 1);
       }
       else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPDelete)
       {
-
+         DeleteLayer(idx);
       }
       else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPAddNewLayerBelow)
       {
-
+         AddNewLayer(idx+1, SongCanvasLayer{
+                          ofColor::white,
+                          0,
+                          true,
+                          "layer" + ofToString(seqLayers.size() + 1) });
+         //FeatureResize(0,20);//TODO bump up the size based on the current estimated size of a layer
       }
-
-
    }
    for (int i = 0; i < mModGrid->GetAllElements().size(); ++i)
    {
@@ -680,7 +720,7 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
          mActiveElements.erase(mActiveElements.begin() + i);
       }
    }
-   mCanvasDirty = true;
+   mPartCanvasDirty = true;
    //Then we flag the Canvas as dirty, so we don't stress the DAW too much with pointless regenerations.
 }
 
@@ -774,10 +814,10 @@ void SongCanvas::DisposeElement(IClickable* element)
 void SongCanvas::OnTimeEvent(double time)
 {
    //First check if we have any cleanup to do.
-   if (mCanvasDirty)
+   if (mPartCanvasDirty)
    {
       CanvasUpdated(mCanvas);
-      mCanvasDirty = false;
+      mPartCanvasDirty = false;
    }
 
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
@@ -857,11 +897,18 @@ void SongCanvas::OnTimeEvent(double time)
    }*/
 }
 
+//Attempt to resize based on the addition/removal of a feature.
+void SongCanvas::FeatureResize(int extraW, int extraH)
+{
+   float h = mCanvas->GetHeight();
+   float w = mCanvas->GetWidth();
+   Resize(w+extraW,h+extraH);
+}
 
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w - GetCanvasStartXOffset(), 350);
-   h = MAX(h - OffsetFromTopSpacing, 100);
+   h = MAX(h - mOffsetFromTopSpacing, 100+seqLayers.size()*MinRowSize);
 
    int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
 
@@ -890,7 +937,7 @@ void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 }
 void SongCanvas::SaveState(FileStreamOut& out)
 {
-   out << GetModuleSaveStateRev();//Updating to newer versions? Check this handy variable!
+   out << GetModuleSaveStateRev(); //Updating to newer versions? Check this handy variable!
    //SEC-1 format 05/03/2026
 
 

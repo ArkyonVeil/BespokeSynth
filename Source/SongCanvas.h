@@ -104,6 +104,7 @@ public:
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown;}
 
    void OnTimeEvent(double time) override;
+   void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override {return 1;};
 private:
    struct SongCanvasLayer
@@ -115,6 +116,9 @@ private:
    };
    //IDrawableModule
    void DrawModule() override;
+   void AddNewLayer(int index, SongCanvasLayer layer);
+   void DeleteLayer(int index);
+   void MoveLayerTo(int oldIndex, int newIndex);
    void GetModuleDimensions(float& width, float& height) override;
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
@@ -133,19 +137,19 @@ private:
    
    UIFlowGrid* mModGrid;
 
-   static const int MaxLayers = 51;
-   int mLayerCount{0};
+   static const int MaxLayers = 100;
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
-   bool mCanvasDirty{false};//If true, the Canvas will regenerate next tick.
+   bool mPartCanvasDirty{false};//If true, the Canvas will regenerate next tick.
    double mFlashRackStartTime{0};
 
+   int mStartCanvasOffset{0};
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
    static const int mStandardMeasureSize = 48;
    static const int mDefaultMeasureSpawnAmount = 12;
 
-   static const int OffsetFromTopSpacing = 38;
+   static const int mOffsetFromTopSpacing = 38;
    static const int LayersListHSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
@@ -160,7 +164,7 @@ private:
 
    int GetModGridStartYOffset() const
    {
-      return OffsetFromTopSpacing + mCanvas->GetHeight() + 16;
+      return mOffsetFromTopSpacing + mCanvas->GetHeight() + 16;
    }
 
    int mInternalRackIDCounter = 0;
@@ -194,6 +198,7 @@ private:
    ClickButton* mLayerSettingsButton5;*/
 
    std::vector<SongCanvasLayer> seqLayers;
+   std::vector<SongCanvasLayer> layerBuffer;//The reason for this is clumsy <>3
 
    ClickButton* mRackAddNewButton;
 
@@ -236,8 +241,6 @@ private:
    
    //Expert variables
    bool expertPanelEnabled = false;
-   float loopStart = -1;
-   float loopEnd = -1;
 };
 
 enum class SongCanvasElementVariant
