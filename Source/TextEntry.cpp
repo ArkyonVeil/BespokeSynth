@@ -569,12 +569,14 @@ void TextEntry::SetValue(float value, double time, bool forceUpdate /*= false*/)
    {
       *mVarInt = ofClamp(std::round(value), mIntMin, mIntMax);
       UpdateDisplayString();
+      AcceptEntry(false);
    }
 
    if (mType == kTextEntry_Float)
    {
       *mVarFloat = ofClamp(value, mFloatMin, mFloatMax);
       UpdateDisplayString();
+      AcceptEntry(false);
    }
 }
 

@@ -76,6 +76,7 @@ public:
    void ResizeWorkspace(float diff);
    ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()];};
    void TextEntryComplete(TextEntry* entry) override;
+   void ReloadMeasures();
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
    void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
@@ -124,14 +125,18 @@ private:
    void ElementRemoved(CanvasElement* element) override;
 
    Canvas* mCanvas{ nullptr };
-   FloatSlider* mTransportSlider{ nullptr };
-   TextEntry* mTransportTextBox{};
+   FloatSlider* mMeasureSlider{ nullptr };
+   FloatSlider* mTransportSlider{};
    std::vector<ofColor> mRowColors{};
    ClickButton* mResetButton;
    ClickButton* mPlayPauseButton;
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
    TextEntry* mRackRenameTextBox;
    std::string mRackRenameString;
+
+   TextEntry* mMeasureBaseTextbox;
+   TextEntry* mMeasureEndTextbox;
+   Checkbox* mMeasureAutoCheckbox;
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
@@ -143,13 +148,15 @@ private:
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
    double mFlashRackStartTime{ 0 };
 
+   bool mFlashRackEndTime{ false };
+
    int mStartCanvasXOffset{ 0 };
    static const int MinRowSize = 12;
    static const int StandardRowSize = 32;
    static const int mStandardMeasureSize = 48;
    static const int mDefaultMeasureSpawnAmount = 12;
 
-   static const int mOffsetFromTopSpacing = 38;
+   static const int mOffsetFromTopSpacing = 44;//old val 38
    static const int LayersListHSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
@@ -159,6 +166,7 @@ private:
    int mEndMeasure{ 0 };
    bool mAutoEndMeasure{ true };
    bool mLoopOnEnd{ false };
+   bool mResetButtonAlsoStops{ false};
    int mRedLoopStart{ 0 };
    int mRedLoopEnd{ 0 };
 
@@ -235,6 +243,16 @@ private:
       enumLDPAddNewLayerBelow,
       enumLDPDelete,
    };
+
+   enum EnumOnEndMeasure
+   {
+      enumOEMContinue,
+      enumOEMLoop,
+      enumOEMResetThenStop,
+   };
+   EnumOnEndMeasure mOnEndMeasure;
+
+
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
