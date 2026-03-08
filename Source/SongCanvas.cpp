@@ -614,6 +614,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    }
    mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
    mCanvas->SetNumCols(mMeasureCount * 4);
+   mPartCanvasDirty = true;
    mTransportSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
    mMeasureCountTextbox->UpdateDisplayString();
@@ -909,7 +910,7 @@ void SongCanvas::OnTimeEvent(double time)
    }
 
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
-   mCanvasRelativeTime = (mTime-mMeasureStart + 0.02f) / ((double)mCanvas->GetNumCols() / 4);
+   mCanvasRelativeTime = (mTime-mMeasureStart + 0.02f/((float)mMeasureCount/12)) / ((double)mCanvas->GetNumCols() / 4);
    if (IsEnabled())
    {
       if (mCanvasRelativeTime <= 1)
