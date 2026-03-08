@@ -72,13 +72,15 @@ void SongCanvas::CreateUIControls()
    IDrawableModule::CreateUIControls();
 
    if (expertPanelEnabled)
-      mStartCanvasXOffset = LayersListHSize + AdvancedConfigHSize;
+      mStartCanvasXOffset = LayersListWidthSize + AdvancedConfigHSize;
    else
-      mStartCanvasXOffset = LayersListHSize;
+      mStartCanvasXOffset = LayersListWidthSize;
 
    //Default size.
    mWidth = 720;
    mHeight = 288;
+   //Default measure count.
+   mMeasureCount = 12;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
    mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
@@ -137,25 +139,28 @@ void SongCanvas::CreateUIControls()
 
    mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
-   int transportYOffset = 8;
-   int mTransportXOffset = 4;
-   mPlayPauseButton = new ClickButton{ this, "play/pause", mTransportXOffset, transportYOffset, ButtonDisplayStyle::kPlay };
-   mTransportXOffset += mPlayPauseButton->GetRect(true).width+2;
-   mResetButton = new ClickButton{ this, "reset", mTransportXOffset, transportYOffset, ButtonDisplayStyle::kText };
-   mTransportXOffset += mResetButton->GetRect(true).width+2;
-   mTransportSlider = new FloatSlider(this, "transport", mTransportXOffset,transportYOffset,54, 15, &mTime,0,12);
+   int headerYOffset = 8;
+   int mHeaderOffset = 4;
+   mPlayPauseButton = new ClickButton{ this, "play/pause", mHeaderOffset, headerYOffset, ButtonDisplayStyle::kPlay };
+   mHeaderOffset += mPlayPauseButton->GetRect(true).width+2;
+   mResetButton = new ClickButton{ this, "reset", mHeaderOffset, headerYOffset, ButtonDisplayStyle::kText };
+   mHeaderOffset += mResetButton->GetRect(true).width+2;
+   mTransportSlider = new FloatSlider(this, "transport", mHeaderOffset,headerYOffset,54, 15, &mTime,0,12);
    mTransportSlider->SetShowName(false);
+   mHeaderOffset += mTransportSlider->GetRect(true).width;
 
-   int measureYOffset = mOffsetFromTopSpacing-16;
-   mMeasureBaseTextbox = new TextEntry(this,"measure",4,measureYOffset,3,&mStartMeasure,0,999999);
+   mHeaderOffset+=16;
+
+  // int measureYOffset = mOffsetFromTopSpacing-16;
+   mMeasureBaseTextbox = new TextEntry(this,"measure",mHeaderOffset,headerYOffset,3,&mStartMeasure,0,604800);
    mMeasureBaseTextbox->DrawLabel(true);
    mMeasureBaseTextbox->SetRequireEnter(false);
 
-   int measureEndPos = mMeasureBaseTextbox->GetPosition(true).x+mMeasureBaseTextbox->GetRect(true).width+25;
-   mMeasureEndTextbox = new TextEntry(this,"endmeasure",measureEndPos,measureYOffset,3,&mEndMeasure,0,999999);
+   mHeaderOffset += mMeasureBaseTextbox->GetRect(true).width+6;
+   mMeasureEndTextbox = new TextEntry(this,"count",mHeaderOffset,headerYOffset,3,&mMeasureCount,0,604800);
+   mMeasureEndTextbox->DrawLabel(true);
    mMeasureEndTextbox->SetRequireEnter(false);
-   mMeasureAutoCheckbox = new Checkbox(this,"automeasure", mStartCanvasXOffset - 13, measureYOffset, &mAutoEndMeasure);
-   mMeasureAutoCheckbox->SetDisplayText(false);
+
 
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
@@ -173,10 +178,17 @@ void SongCanvas::CreateUIControls()
       IncrementInternalRackId();
    }
 
-
    Resize(mWidth,mHeight);
+   RefitHeader();
    //mLayerName[0]->SetNoHover(false);
 }
+
+void SongCanvas::RefitHeader()
+{
+   int headerXOffset;
+
+}
+
 void SongCanvas::DrawModule()
 {
    mTime = TheTransport->GetMeasureTime(gTime);
@@ -188,9 +200,9 @@ void SongCanvas::DrawModule()
 
    int startCanvasOffset;
    if (expertPanelEnabled)
-      startCanvasOffset = LayersListHSize + AdvancedConfigHSize;
+      startCanvasOffset = LayersListWidthSize + AdvancedConfigHSize;
    else
-      startCanvasOffset = LayersListHSize;
+      startCanvasOffset = LayersListWidthSize;
 
    ofPushStyle();
    ofFill();
@@ -257,7 +269,7 @@ void SongCanvas::DrawModule()
    drawPointOffset -= postZoomCanvasOffset;
 
    mMeasureSlider->SetDimensions(cWidth, 15);
-   mMeasureSlider->SetExtents(mCanvas->mViewStart * (cWidth / measureSize), mCanvas->mViewEnd * (cWidth / measureSize));
+   mMeasureSlider->SetExtents(mStartMeasure+mCanvas->mViewStart * (cWidth / measureSize), mStartMeasure+mCanvas->mViewEnd * (cWidth / measureSize));
 
    //DrawTextNormal("measure", 4, 8);
    mMeasureSlider->Draw();
@@ -265,13 +277,12 @@ void SongCanvas::DrawModule()
    mResetButton->Draw();
    mPlayPauseButton->Draw();
 
-   ofSetColor(ofColor(255,255,255));
-   auto mesEndRect = mMeasureEndTextbox->GetRect(true);
-   ofLine(mesEndRect.x-6,mesEndRect.y+7.5f,mesEndRect.x-19,mesEndRect.y+7.5f);
-   mMeasureBaseTextbox->Draw();
+   ofSetColor(ofColor(150,150,150));
+   auto mesStartRect = mMeasureBaseTextbox->GetRect(true);
+   ofLine(mesStartRect.x-8,mesStartRect.y,mesStartRect.x-8,mesStartRect.y + 15);
    ofPopStyle();
+   mMeasureBaseTextbox->Draw();
    mMeasureEndTextbox->Draw();
-   mMeasureAutoCheckbox->Draw();
 
    if (TheSynth->IsAudioPaused())
       mPlayPauseButton->SetDisplayStyle(ButtonDisplayStyle::kPlay);
@@ -322,7 +333,7 @@ void SongCanvas::DrawModule()
       iter++;
    }
    ofSetColor(ofColor::red);
-   float markerLinePos = startCanvasOffset + mTime * postZoomOffset - postZoomCanvasOffset;
+   float markerLinePos = startCanvasOffset + (mTime-mStartMeasure) * postZoomOffset - postZoomCanvasOffset;
    if (markerLinePos > startCanvasOffset)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, cFoot);
    ofSetColor(ofColor::grey);
@@ -406,52 +417,31 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
       //TheSynth->LogEvent("SongCanvas Regenerated",LogEventType::kLogEventType_Verbose);
    }
 }
-void SongCanvas::ResizeWorkspace(float diff)
-{
-   //Todo, allow downsizing.
-   /*
-   auto elms = mCanvas->GetElements();
-   std::vector<float> pos(2 * elms.size());
-
-   for (int i = 0; i < elms.size(); i++)
-   {
-      pos[i*2] = elms[i]->GetStart();
-      pos[i*2+1] = elms[i]->GetEnd();
-   }
-   */
-   mCanvas->SetLength(mCanvas->GetLength() + 1);
-   /*
-   for (int i = 0; i < elms.size(); i++)
-   {
-      elms[i]->SetStart(pos[i*2]/2,false);
-      elms[i]->SetEnd(pos[i*2+1]/2);
-   }*/
-
-   mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / (float)mStandardMeasureSize * mCanvas->GetLength()) * 4);
-   //TheSynth->LogEvent(std::to_string(mCanvas->GetNumCols()),kLogEventType_Verbose);
-}
 void SongCanvas::FeatureResize(int extraW, int extraH)
 {
    float h = mHeight;
    float w = mWidth;
    Resize(w+extraW,h+extraH);
-   //ofLog() << "Sanity check, w1:"+ofToString(w)+" w2:"+ofToString(mWidth) +" h1:"+ofToString(h)+" h2:"+ofToString(mHeight);
 }
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w, 350);
    h = MAX(h, 100 + seqLayers.size() * MinRowSize + mFlowGridRows*FlowGridRowHeightSize);
 
-   int multiple = std::ceil((w - LayersListHSize) / static_cast<float>(mStandardMeasureSize));
+   if (mMeasureSize==0)
+   {
+      mMeasureSize = (w-mStartCanvasXOffset)/mMeasureCount;
+   }
 
+   int multiple = std::ceil((w - LayersListWidthSize) / mMeasureSize);
    //Snap to a strict size.
-   w = LayersListHSize + multiple * mStandardMeasureSize - 6;
+   w = LayersListWidthSize + multiple * mMeasureSize;
    mWidth = w;
    mHeight = h;
 
    float canvasHeight = h - (16+mOffsetFromTopSpacing+mFlowGridRows * FlowGridRowHeightSize);
    mCanvas->SetDimensions(w-mStartCanvasXOffset, canvasHeight);
-   ReloadMeasures();
+   ReloadMeasures(false);
    //Layers <>V
    for (int i = 0; i < seqLayers.size(); ++i)
    {
@@ -583,25 +573,34 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
    }
    if (entry == mMeasureBaseTextbox || entry == mMeasureEndTextbox)
    {
-      ReloadMeasures();
+      //Overrides any auto-scaling that may occur.
+      ReloadMeasures(true);
    }
 }
-void SongCanvas::ReloadMeasures()
+void SongCanvas::ReloadMeasures(bool overrideAutoFit)
 {
-   if (mAutoEndMeasure)
+   if (mMeasureSize <= 0)
    {
-      int measureCount = ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength());
-      mEndMeasure = mStartMeasure + measureCount;
-      mCanvas->SetNumCols(ceil(mCanvas->GetWidth() / static_cast<float>(mStandardMeasureSize) * mCanvas->GetLength()) * 4);
+      mMeasureSize = mStandardMeasureSize;
+   }
+   if (mReloadMeasureLoadFlag)
+   {
+      mReloadMeasureLoadFlag = false;
+      mMeasureSize = mCanvas->GetWidth()/ static_cast<float>(mMeasureCount);
+   }
+   if (mAutoScaleMeasureCount && !overrideAutoFit)
+   {
+      mMeasureCount = ceil(mCanvas->GetWidth() / mMeasureSize * mCanvas->GetLength());
+      mMeasureCount = MAX(1,mMeasureCount);
    }
    else
    {
-      mEndMeasure = MAX(mStartMeasure+1,mEndMeasure);//Cannot hold less than one measure. Stuff is likely to break.
-      int measureCount = mEndMeasure-mStartMeasure;
-      mCanvas->SetNumCols(measureCount * 4);
+      mMeasureCount = MAX(1,mMeasureCount);//Cannot hold less than one measure. Stuff is likely to break otherwise.
    }
-
-   mTransportSlider->SetExtents(mStartMeasure,mEndMeasure);
+   mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
+   mCanvas->SetNumCols(mMeasureCount * 4);
+   mTransportSlider->SetExtents(mStartMeasure,mStartMeasure+mMeasureCount);
+   mMeasureSlider->SetExtents(mStartMeasure,mStartMeasure+mMeasureCount);
    mMeasureEndTextbox->UpdateDisplayString();
 }
 
@@ -895,7 +894,7 @@ void SongCanvas::OnTimeEvent(double time)
    }
 
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
-   mCanvasRelativeTime = (mTime + 0.02f) / ((double)mCanvas->GetNumCols() / 4);
+   mCanvasRelativeTime = (mTime-mStartMeasure + 0.02f) / ((double)mCanvas->GetNumCols() / 4);
    if (IsEnabled())
    {
       if (mCanvasRelativeTime <= 1)
@@ -975,6 +974,8 @@ void SongCanvas::OnTimeEvent(double time)
 
 void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 {
+   mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
+   mModuleSaveData.LoadBool("start_end_measure_mode",moduleInfo,false);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap map;
    map["continue"] = 0;
@@ -984,8 +985,11 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 }
 void SongCanvas::SetUpFromSaveData()
 {
+   mAutoScaleMeasureCount = mModuleSaveData.GetBool("auto_scale_measure_count");
+   mStartEndMeasureMode = mModuleSaveData.GetBool("start_end_measure_mode");
    mOnEndMeasure = mModuleSaveData.GetEnum<EnumOnEndMeasure>("on_end_measure");
    mResetButtonAlsoStops = mModuleSaveData.GetBool("reset_button_also_stops");
+   RefitHeader();
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
@@ -1070,8 +1074,8 @@ void SongCanvas::SaveState(FileStreamOut& out)
    //Reserved variables SEC-1
    out << mGlobalMode;
    out << mStartMeasure;
-   out << mEndMeasure;
-   out << mAutoEndMeasure;
+   out << mMeasureCount;
+   out << mAutoScaleMeasureCount;
    out << mLoopOnEnd;
    out << mRedLoopEnd;
    out << mRedLoopStart;
@@ -1223,13 +1227,18 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    {
    in >> mGlobalMode;
    in >> mStartMeasure;
-   in >> mEndMeasure;
-   in >> mAutoEndMeasure;
+   in >> mMeasureCount;
+   in >> mAutoScaleMeasureCount;
    in >> mLoopOnEnd;
    in >> mRedLoopEnd;
    in >> mRedLoopStart;
    }
+   if (rev == 1)
+   {
+      mMeasureCount = ceil((mWidth-mStartCanvasXOffset)/(mCanvas->GetNumCols()));
+   }
    //End reserved variables SEC-1
+   mReloadMeasureLoadFlag = true;
    SetEnabled(enableState);
    Resize(mWidth,mHeight);
 }

@@ -76,7 +76,7 @@ public:
    void ResizeWorkspace(float diff);
    ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()];};
    void TextEntryComplete(TextEntry* entry) override;
-   void ReloadMeasures();
+   void ReloadMeasures(bool overrideAutoFit);
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
    void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
@@ -123,6 +123,7 @@ private:
    void MoveLayerTo(int oldIndex, int newIndex);
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
+   void RefitHeader();
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mMeasureSlider{ nullptr };
@@ -136,7 +137,6 @@ private:
 
    TextEntry* mMeasureBaseTextbox;
    TextEntry* mMeasureEndTextbox;
-   Checkbox* mMeasureAutoCheckbox;
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
@@ -157,18 +157,21 @@ private:
    static const int mDefaultMeasureSpawnAmount = 12;
 
    static const int mOffsetFromTopSpacing = 44;//old val 38
-   static const int LayersListHSize = 150;
+   static const int LayersListWidthSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
    bool mGlobalMode{ true }; //If false, runs on local timing.
    int mStartMeasure{ 0 };
-   int mEndMeasure{ 0 };
-   bool mAutoEndMeasure{ true };
+   int mMeasureCount{ 0 };
+   float mMeasureSize{0};
+   bool mAutoScaleMeasureCount{ true };//If true, automatically increases the amount of measures the panel holds.
    bool mLoopOnEnd{ false };
    bool mResetButtonAlsoStops{ false};
+   bool mStartEndMeasureMode{false};
    int mRedLoopStart{ 0 };
    int mRedLoopEnd{ 0 };
+   bool mReloadMeasureLoadFlag {false};
 
    int GetRackGridStartYOffset() const
    {
@@ -183,8 +186,8 @@ private:
    int GetCanvasStartXOffset() const
    {
       if (expertPanelEnabled)
-         return LayersListHSize + AdvancedConfigHSize;
-      return LayersListHSize;
+         return LayersListWidthSize + AdvancedConfigHSize;
+      return LayersListWidthSize;
    }
 
 
