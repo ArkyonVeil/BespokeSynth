@@ -506,8 +506,8 @@ bool Canvas::MouseScrolled(float x, float y, float scrollX, float scrollY, bool 
          float distFromStart = zoomCenter - mViewStart;
          float distFromEnd = zoomCenter - mViewEnd;
 
-         distFromStart *= 1 - scrollY / 50;
-         distFromEnd *= 1 - scrollY / 50;
+         distFromStart *= 1 - (scrollY / 50)*mZoomScrollMultiplier;
+         distFromEnd *= 1 - (scrollY / 50)*mZoomScrollMultiplier;
 
          mViewStart = ofClamp(zoomCenter - distFromStart, 0, mLength);
          mViewEnd = ofClamp(zoomCenter - distFromEnd, 0, mLength);
@@ -526,7 +526,7 @@ bool Canvas::MouseScrolled(float x, float y, float scrollX, float scrollY, bool 
          SetRowOffset(GetRowOffset() + scrollWhole);
       }
 
-      float slideX = (mViewEnd - mViewStart) * -scrollX / 50;
+      float slideX = (mViewEnd - mViewStart) * -scrollX / 10;
       if (slideX > 0)
          slideX = MIN(slideX, mLength - mViewEnd);
       if (slideX < 0)

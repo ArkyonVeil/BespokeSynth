@@ -133,6 +133,7 @@ public:
    ICanvasListener* GetListener() { return mListener; }
    void SetInvertDragSnapBehavior(bool invert) { mInvertDragSnapBehavior = invert; };
    void SetAllowElementPlacement(bool allow) { mAllowElementPlacement = allow; };
+   void SetScrollZoomSpeed(float newSpeed){mZoomScrollMultiplier = newSpeed;};
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -194,6 +195,7 @@ private:
    ofColor mMajorColumnColour {255,255,255};
    ofColor mMinorColumnColour {0,0,0,50};
    bool mDefaultMinorColumnColour {true};
+   float mZoomScrollMultiplier{ 1.0f };
 
    int mNumRows;
    int mNumCols;

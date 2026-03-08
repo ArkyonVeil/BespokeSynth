@@ -89,6 +89,7 @@ void SongCanvas::CreateUIControls()
    mCanvas->SetDragMode(Canvas::kDragBoth);
    mCanvas->SetNumVisibleRows(5);
    mCanvas->SetMajorColumnInterval(4);
+   mCanvas->SetScrollZoomSpeed(5);
    //mCanvas->SetMajorColumnLineColor(ofColor{ 255, 255, 255, 50 });
    //mCanvas->SetMinorColumnLineColor(ofColor{ 255, 255, 255, 20 });
 
