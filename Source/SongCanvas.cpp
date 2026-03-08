@@ -242,7 +242,7 @@ void SongCanvas::DrawModule()
    mCanvas->Draw();
    ofSetColor(ofColor(255,255,255));
    viewCompression = (float)mMeasureCount*48.0f/mCanvas->GetWidth()*(mCanvas->mViewEnd-mCanvas->mViewStart);
-   DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
+   //DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
    //DrawTextNormal("canvasViewStart: "+ofToString(mCanvas->mViewStart), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+32);
    //DrawTextNormal("canvasViewEnd: "+ofToString(mCanvas->mViewEnd), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+48);
    //mCanvas->RescaleForZoom()
