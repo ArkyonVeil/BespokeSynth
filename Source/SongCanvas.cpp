@@ -233,31 +233,18 @@ void SongCanvas::DrawModule()
    }
 
    float drawPointOffset = startCanvasOffset;
-   float cWidth = mCanvas->GetWidth();
-   float cFoot = mOffsetFromTopSpacing + mCanvas->GetHeight();
+   float canvasFoot = mOffsetFromTopSpacing + mCanvas->GetHeight();
+
+   double viewCompression = 1;//1~ is about the intended value for measures being around 48px long.
    //ofSetColor(ofColor::clear);
 
-   /*
-   if (zoomPercent > 2)
-      mCanvas->SetMinorColumnLineColor(ofColor::clear);
-   else
-   {
-      mCanvas->SetMinorColumnLineColor(ofColor{ 255, 255, 255, 20 });
-   }
-
-   if (zoomPercent > 6)
-      mCanvas->SetMajorColumnLineColor(ofColor::clear);
-   else
-   {
-      if (zoomPercent > 4)
-      {
-         mCanvas->SetMajorColumnLineColor(ofColor{ 255, 255, 255, 20 });
-      }
-      else
-         mCanvas->SetMajorColumnLineColor(ofColor{ 255, 255, 255, 50 });
-   }*/
 
    mCanvas->Draw();
+   ofSetColor(ofColor(255,255,255));
+   viewCompression = (float)mMeasureCount*48.0f/mCanvas->GetWidth()*(mCanvas->mViewEnd-mCanvas->mViewStart);
+   DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
+   //DrawTextNormal("canvasViewStart: "+ofToString(mCanvas->mViewStart), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+32);
+   //DrawTextNormal("canvasViewEnd: "+ofToString(mCanvas->mViewEnd), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+48);
    //mCanvas->RescaleForZoom()
 
    ofColor softLineColor = ofColor{ 255, 255, 255, 20 };
@@ -266,13 +253,9 @@ void SongCanvas::DrawModule()
 
    int measureCount = mCanvas->GetNumCols()/4;
    float measureSize = mCanvas->GetWidth() / measureCount;
-   short iter = mMeasureStart;
-   float postZoomOffset = (measureSize) / zoomPercent;
-   float postZoomCanvasOffset = cWidth * mCanvas->mViewStart / zoomPercent;
-   drawPointOffset -= postZoomCanvasOffset;
 
-   mMeasureSlider->SetDimensions(cWidth, 15);
-   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart * (cWidth / measureSize), mMeasureStart+mCanvas->mViewEnd * (cWidth / measureSize));
+   mMeasureSlider->SetDimensions(mCanvas->GetWidth(), 15);
+   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart * (mCanvas->GetWidth() / measureSize), mMeasureStart+mCanvas->mViewEnd * (mCanvas->GetWidth() / measureSize));
 
    //DrawTextNormal("measure", 4, 8);
    mMeasureSlider->Draw();
@@ -296,26 +279,41 @@ void SongCanvas::DrawModule()
       mPlayPauseButton->SetDisplayStyle(ButtonDisplayStyle::kPause);
 
 
-   int drawMeasureLabelIterInterval = MAX(1, std::ceil((zoomPercent * 2 - 1) / 2.5));
-   int softLineClip = 1;
-   int hardLineClip = 4;
-   if (zoomPercent > 2.5)
-      softLineClip = 2;
-   if (zoomPercent > 4.0)
-      softLineClip = 999999999;
+   int viewMultiplier = MAX(1,floor(viewCompression-0.2));
+   int iter = 0;
+   float postZoomOffset = measureSize / zoomPercent;
+   float postZoomCanvasOffset = mCanvas->GetWidth() * mCanvas->mViewStart / zoomPercent;
+   drawPointOffset -= postZoomCanvasOffset*viewMultiplier;
+   int majorColumnInterval = 4*viewMultiplier;
+   mCanvas->SetMajorColumnInterval(majorColumnInterval);
 
-   if (zoomPercent > 6.0)
-      hardLineClip = 8;
+   if (viewMultiplier > 2)
+      mCanvas->SetMinorColumnLineColor(ofColor::clear);
+   else
+   {
+      mCanvas->SetMinorColumnLineColor(ofColor{ 50, 50, 50});
+   }
 
-   if (zoomPercent > 8.0)
-      hardLineClip = 999999999;
+   if (viewMultiplier > 8)
+   {
+      mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50});
+   }
+   else
+   {
+      if (viewMultiplier > 4)
+      {
+         mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50, 150 });
+      }
+      else
+         mCanvas->SetMajorColumnLineColor(ofColor{ 180, 180, 180});
+   }
 
    while (drawPointOffset < mWidth)
    {
       if (drawPointOffset < startCanvasOffset)
       {
          iter++;
-         drawPointOffset += postZoomOffset;
+         drawPointOffset += postZoomOffset*viewMultiplier;
          continue;
       }
       if (iter % 4 == 0)
@@ -326,22 +324,22 @@ void SongCanvas::DrawModule()
       {
          ofSetColor(softLineColor);
       }
-      if (iter % hardLineClip == 0 || iter % softLineClip == 0)
-         ofLine(drawPointOffset, mOffsetFromTopSpacing - 16, drawPointOffset, mOffsetFromTopSpacing);
 
-      if (iter % drawMeasureLabelIterInterval == 0)
+      ofLine(drawPointOffset, mOffsetFromTopSpacing - 16, drawPointOffset, mOffsetFromTopSpacing);
+
+      if (iter % 1 == 0)
       {
          ofSetColor(labelColor);
-         DrawTextNormal(std::to_string(iter), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
+
+         DrawTextNormal(std::to_string(mMeasureStart+iter*viewMultiplier), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
       }
-      //ofLine(drawPointerOffset, OffsetFromTopSpacing-20, drawPointerOffset, OffsetFromTopSpacing-5);
-      drawPointOffset += postZoomOffset;
+      drawPointOffset += postZoomOffset*viewMultiplier;
       iter++;
    }
    ofSetColor(ofColor::red);
    float markerLinePos = startCanvasOffset + (mTime-mMeasureStart) * postZoomOffset - postZoomCanvasOffset;
    if (markerLinePos > startCanvasOffset)
-      ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, cFoot);
+      ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
 
    mMainScrollbarHorizontal->Draw();

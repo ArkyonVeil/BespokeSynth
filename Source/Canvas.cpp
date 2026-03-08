@@ -87,7 +87,9 @@ void Canvas::Render()
       {
          ofPushStyle();
          if (mMajorColumnInterval != -1 && i % mMajorColumnInterval == 0)
-            ofSetColor(255, 255, 255);
+            ofSetColor(mMajorColumnColour);
+         else if (!mDefaultMinorColumnColour)
+            ofSetColor(mMinorColumnColour);
          ofLine(pos, 0, pos, GetHeight());
          ofPopStyle();
       }

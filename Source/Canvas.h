@@ -125,6 +125,9 @@ public:
    DragMode GetDragMode() const { return mDragMode; }
    bool IsRowVisible(int row) const;
    void SetRowColor(int row, ofColor color);
+   void SetMinorColumnLineColor(ofColor newColour){mMinorColumnColour = newColour; mDefaultMinorColumnColour = false;}
+   void SetMajorColumnLineColor(ofColor newColour){mMajorColumnColour = newColour;}
+   void ResetMinorColumnLineColor(){mDefaultMinorColumnColour = true;}
    juce::MouseCursor GetMouseCursorType();
    ofVec2f RescaleForZoom(float x, float y) const;
    ICanvasListener* GetListener() { return mListener; }
@@ -188,6 +191,9 @@ private:
    bool mAllowElementPlacement{ true };
    float mScrollVerticalPartial{ 0 };
    std::array<ofColor, 128> mRowColors;
+   ofColor mMajorColumnColour {255,255,255};
+   ofColor mMinorColumnColour {0,0,0,50};
+   bool mDefaultMinorColumnColour {true};
 
    int mNumRows;
    int mNumCols;
