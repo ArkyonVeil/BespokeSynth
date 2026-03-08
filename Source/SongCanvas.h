@@ -136,6 +136,7 @@ private:
    std::string mRackRenameString;
 
    TextEntry* mMeasureBaseTextbox;
+   TextEntry* mMeasureCountTextbox;
    TextEntry* mMeasureEndTextbox;
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
@@ -162,8 +163,9 @@ private:
    static const int FlowGridRowHeightSize = 32;
 
    bool mGlobalMode{ true }; //If false, runs on local timing.
-   int mStartMeasure{ 0 };
+   int mMeasureStart{ 0 };
    int mMeasureCount{ 0 };
+   int mMeasureEnd {0};//Secondary viewing style, translated internally to measure count.
    float mMeasureSize{0};
    bool mAutoScaleMeasureCount{ true };//If true, automatically increases the amount of measures the panel holds.
    bool mLoopOnEnd{ false };
