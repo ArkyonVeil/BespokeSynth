@@ -200,8 +200,6 @@ void SongCanvas::DrawModule()
    if (Minimized() || IsVisible() == false)
       return;
 
-   float zoomPercent = abs(mCanvas->mViewStart - mCanvas->mViewEnd);
-
    int startCanvasOffset;
    if (expertPanelEnabled)
       startCanvasOffset = LayersListWidthSize + AdvancedConfigHSize;
@@ -233,7 +231,6 @@ void SongCanvas::DrawModule()
       ofRect(mCanvas->GetPosition(true).x, y, mCanvas->GetWidth(), boxHeight);
    }
 
-   float drawPointOffset = startCanvasOffset;
    float canvasFoot = mOffsetFromTopSpacing + mCanvas->GetHeight();
 
    double viewCompression = 1;//1~ is about the intended value for measures being around 48px long.
@@ -252,12 +249,10 @@ void SongCanvas::DrawModule()
    ofColor hardLineColor = ofColor{ 255, 255, 255, 50 };
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
 
-   int measureCount = mCanvas->GetNumCols()/4;
-   float measureSize = mCanvas->GetWidth() / measureCount;
+   float baseMeasureSize = mCanvas->GetWidth() / mMeasureCount;//Measure size, without factoring for zooming.
 
    mMeasureSlider->SetDimensions(mCanvas->GetWidth(), 15);
-   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart * (mCanvas->GetWidth() / measureSize), mMeasureStart+mCanvas->mViewEnd * (mCanvas->GetWidth() / measureSize));
-
+   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart * (mCanvas->GetWidth() / baseMeasureSize), mMeasureStart+mCanvas->mViewEnd * (mCanvas->GetWidth() / baseMeasureSize));
    //DrawTextNormal("measure", 4, 8);
    mMeasureSlider->Draw();
    mTransportSlider->Draw();
@@ -279,29 +274,30 @@ void SongCanvas::DrawModule()
    else
       mPlayPauseButton->SetDisplayStyle(ButtonDisplayStyle::kPause);
 
-
-   int viewMultiplier = MAX(1,floor(viewCompression-0.2));
+   float drawPointOffset = startCanvasOffset;
+   float zoomPercent = mCanvas->mViewEnd - mCanvas->mViewStart;//1 = zoomed out, 0 = infinite zoom
+   drawPointOffset -= mCanvas->GetWidth() / zoomPercent *mCanvas->mViewStart;
+   int viewCullMultiplier = MAX(1,floor(viewCompression-0.2));
    int iter = 0;
-   float postZoomOffset = measureSize / zoomPercent;
-   float postZoomCanvasOffset = mCanvas->GetWidth() * mCanvas->mViewStart / zoomPercent;
-   drawPointOffset -= postZoomCanvasOffset*viewMultiplier;
-   int majorColumnInterval = 4*viewMultiplier;
+   float measureOffset = baseMeasureSize/zoomPercent*viewCullMultiplier;
+   int majorColumnInterval = 4*viewCullMultiplier;
    mCanvas->SetMajorColumnInterval(majorColumnInterval);
 
-   if (viewMultiplier > 2)
+   //If too many measures are visible on screen. Start culling.
+   if (viewCullMultiplier > 2)
       mCanvas->SetMinorColumnLineColor(ofColor::clear);
    else
    {
       mCanvas->SetMinorColumnLineColor(ofColor{ 50, 50, 50});
    }
 
-   if (viewMultiplier > 8)
+   if (viewCullMultiplier > 8)
    {
       mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50});
    }
    else
    {
-      if (viewMultiplier > 4)
+      if (viewCullMultiplier > 4)
       {
          mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50, 150 });
       }
@@ -309,12 +305,13 @@ void SongCanvas::DrawModule()
          mCanvas->SetMajorColumnLineColor(ofColor{ 180, 180, 180});
    }
 
+   //Draw lines over the timeline, aligned with the canvas.
    while (drawPointOffset < mWidth)
    {
       if (drawPointOffset < startCanvasOffset)
       {
          iter++;
-         drawPointOffset += postZoomOffset*viewMultiplier;
+         drawPointOffset += measureOffset;
          continue;
       }
       if (iter % 4 == 0)
@@ -332,14 +329,15 @@ void SongCanvas::DrawModule()
       {
          ofSetColor(labelColor);
 
-         DrawTextNormal(std::to_string(mMeasureStart+iter*viewMultiplier), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
+         DrawTextNormal(std::to_string(mMeasureStart+iter*viewCullMultiplier), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
       }
-      drawPointOffset += postZoomOffset*viewMultiplier;
+      drawPointOffset += measureOffset;
       iter++;
    }
+   //Now the timeline position line
    ofSetColor(ofColor::red);
-   float markerLinePos = startCanvasOffset + (mTime-mMeasureStart) * postZoomOffset - postZoomCanvasOffset;
-   if (markerLinePos > startCanvasOffset)
+   float markerLinePos = startCanvasOffset + mCanvas->GetWidth()*(((mTime - mMeasureStart) / mMeasureCount)-mCanvas->mViewStart)/zoomPercent ;
+   if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
 
