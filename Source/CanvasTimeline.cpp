@@ -39,7 +39,7 @@ CanvasTimeline::CanvasTimeline(Canvas* canvas, std::string name)
 void CanvasTimeline::Render()
 {
    ofRectangle canvasRect = mCanvas->GetRect(true);
-   SetPosition(canvasRect.x, canvasRect.y - 10);
+   SetPosition(canvasRect.x, canvasRect.y + mCanvasYOffset);
    SetDimensions(canvasRect.width, 10);
 
    ofPushMatrix();
@@ -65,9 +65,9 @@ void CanvasTimeline::Render()
       ofRect(quantizedStartX, 0, quantizedEndX - quantizedStartX, mHeight / 2, 0);
    }
    if (mHoverMode == HoverMode::kMiddle)
-      ofSetColor(255, 200, 0);
+      ofSetColor(mHighlightColour);
    else
-      ofSetColor(100, 100, 100);
+      ofSetColor(mBaseColour);
    ofFill();
    ofRect(startX, 0, endX - startX, mHeight / 2, 0);
 
@@ -80,9 +80,9 @@ void CanvasTimeline::Render()
       DrawTriangle(quantizedX, 1);
    }
    if (mHoverMode == HoverMode::kStart)
-      ofSetColor(255, 200, 0);
+      ofSetColor(mCornerHighlightColour);
    else
-      ofSetColor(150, 150, 150);
+      ofSetColor(mCornerBaseColour);
    ofFill();
    DrawTriangle(startX, 1);
 
@@ -96,9 +96,9 @@ void CanvasTimeline::Render()
       DrawTriangle(quantizedX, -1);
    }
    if (mHoverMode == HoverMode::kEnd)
-      ofSetColor(255, 200, 0);
+      ofSetColor(mCornerHighlightColour);
    else
-      ofSetColor(150, 150, 150);
+      ofSetColor(mCornerBaseColour);
    ofFill();
    DrawTriangle(endX, -1);
    ofPopStyle();

@@ -29,6 +29,7 @@
 #include "Checkbox.h"
 #include "Canvas.h"
 #include "CanvasScrollbar.h"
+#include "CanvasTimeline.h"
 #include "Slider.h"
 #include "ClickButton.h"
 #include "DropdownList.h"
@@ -142,6 +143,7 @@ private:
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
    UIFlowGrid* mRackGrid;
+   CanvasTimeline* mCanvasTimeline;
 
    static constexpr int MaxLayers = 51;
    float mTime{ 0 };
@@ -157,7 +159,7 @@ private:
    static const int mStandardMeasureSize = 48;
    static const int mDefaultMeasureSpawnAmount = 12;
 
-   static const int mOffsetFromTopSpacing = 44;//old val 38
+   static const int mOffsetFromTopSpacing = 50;//old val 38, 44
    static const int LayersListWidthSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;

@@ -35,6 +35,8 @@
 //
 
 #include "SongCanvas.h"
+
+#include "CanvasTimeline.h"
 #include "ModularSynth.h"
 #include "SongCanvas_CanvasElement.h"
 
@@ -78,7 +80,7 @@ void SongCanvas::CreateUIControls()
 
    //Default size.
    mWidth = 720;
-   mHeight = 288;
+   mHeight = 300;
    //Default measure count.
    mMeasureCount = 12;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
@@ -97,6 +99,13 @@ void SongCanvas::CreateUIControls()
    //mCanvas->SetMinorColumnLineLength(0.75f);
    mCanvas->SetInvertDragSnapBehavior(true);
    mCanvas->SetAllowElementPlacement(false);
+
+   mCanvasTimeline = new CanvasTimeline(mCanvas, "loopregion");
+   mCanvasTimeline->SetCanvasYOffset(-22);
+   mCanvasTimeline->SetBaseColour(ofColor(25,25,25));
+   //mCanvasTimeline->SetHighlightColour(ofColor(200, 0, 0));
+   //mCanvasTimeline->SetCornerHighlightColour(ofColor(200, 0, 0));
+   AddUIControl(mCanvasTimeline);
 
    mMainScrollbarHorizontal = new CanvasScrollbar(mCanvas, "scrollh", CanvasScrollbar::Style::kHorizontal);
    AddUIControl(mMainScrollbarHorizontal);
@@ -166,6 +175,9 @@ void SongCanvas::CreateUIControls()
    mMeasureEndTextbox->DrawLabel(true);
    mMeasureEndTextbox->SetRequireEnter(false);
    mMeasureEndTextbox->SetShowing(false);
+
+
+
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
    {
@@ -238,6 +250,7 @@ void SongCanvas::DrawModule()
 
 
    mCanvas->Draw();
+
    ofSetColor(ofColor(255,255,255));
    viewCompression = (float)mMeasureCount*48.0f/mCanvas->GetWidth()*(mCanvas->mViewEnd-mCanvas->mViewStart);
    //DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
@@ -258,6 +271,7 @@ void SongCanvas::DrawModule()
    mTransportSlider->Draw();
    mResetButton->Draw();
    mPlayPauseButton->Draw();
+   mCanvasTimeline->Draw();
 
    ofSetColor(ofColor(150,150,150));
    auto mesStartRect = mMeasureBaseTextbox->GetRect(true);
@@ -600,7 +614,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    }
    if (mAutoScaleMeasureCount && !overrideAutoFit)
    {
-      mMeasureCount = ceil(mCanvas->GetWidth() / mMeasureSize * mCanvas->GetLength());
+      mMeasureCount = ceil(mCanvas->GetWidth() / mMeasureSize);
       mMeasureCount = MAX(1,mMeasureCount);
    }
    else
@@ -612,6 +626,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       mMeasureEnd = mMeasureStart+mMeasureCount;
    }
    mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
+   //mCanvas->SetLength(mMeasureCount);
    mCanvas->SetNumCols(mMeasureCount * 4);
    mPartCanvasDirty = true;
    mTransportSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
