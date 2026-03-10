@@ -93,7 +93,7 @@ public:
    }
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
-   void SetLength(float length) { mLength = length; }
+   void SetLength(float length) { mLength = length; }//sets the length of the canvas. Also used to set the number of measures.
    float GetLength() const { return mLength; }
    void SetNumRows(int rows) { mNumRows = rows; }
    void SetNumCols(int cols) { mNumCols = cols; }
@@ -168,7 +168,7 @@ private:
    ofVec2f mClickedElementStartMousePos;
    float mWidth;
    float mHeight;
-   float mLength;
+   float mLength;//often used as number of measures. DO NOT ignore if you plan to cover multiple measures in your canvas.
    ICanvasListener* mListener{ nullptr };
    std::vector<CanvasElement*> mElements;
    CanvasControls* mControls{ nullptr };

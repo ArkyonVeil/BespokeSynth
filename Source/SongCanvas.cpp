@@ -84,7 +84,7 @@ void SongCanvas::CreateUIControls()
    //Default measure count.
    mMeasureCount = 12;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
-   mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, 1, 5, 12 * 4, &SongCanvas_CanvasElement::Create);
+   mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, mMeasureCount, 5, mMeasureCount * 4, &SongCanvas_CanvasElement::Create);
    AddUIControl(mCanvas);
    mCanvas->SetListener(this);
 
@@ -92,11 +92,6 @@ void SongCanvas::CreateUIControls()
    mCanvas->SetNumVisibleRows(5);
    mCanvas->SetMajorColumnInterval(4);
    mCanvas->SetScrollZoomSpeed(5);
-   //mCanvas->SetMajorColumnLineColor(ofColor{ 255, 255, 255, 50 });
-   //mCanvas->SetMinorColumnLineColor(ofColor{ 255, 255, 255, 20 });
-
-   //mCanvas->SetMajorColumnLineLength(1.0f);
-   //mCanvas->SetMinorColumnLineLength(0.75f);
    mCanvas->SetInvertDragSnapBehavior(true);
    mCanvas->SetAllowElementPlacement(false);
 
@@ -195,6 +190,7 @@ void SongCanvas::CreateUIControls()
    }
 
    Resize(mWidth,mHeight);
+   //mCanvas->mViewEnd = mMeasureCount;
    RefitHeader();
    //mLayerName[0]->SetNoHover(false);
 }
@@ -245,14 +241,13 @@ void SongCanvas::DrawModule()
 
    float canvasFoot = mOffsetFromTopSpacing + mCanvas->GetHeight();
 
-   double viewCompression = 1;//1~ is about the intended value for measures being around 48px long.
+
    //ofSetColor(ofColor::clear);
 
 
    mCanvas->Draw();
 
    ofSetColor(ofColor(255,255,255));
-   viewCompression = (float)mMeasureCount*48.0f/mCanvas->GetWidth()*(mCanvas->mViewEnd-mCanvas->mViewStart);
    //DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
    //DrawTextNormal("canvasViewStart: "+ofToString(mCanvas->mViewStart), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+32);
    //DrawTextNormal("canvasViewEnd: "+ofToString(mCanvas->mViewEnd), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+48);
@@ -262,10 +257,9 @@ void SongCanvas::DrawModule()
    ofColor hardLineColor = ofColor{ 255, 255, 255, 50 };
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
 
-   float baseMeasureSize = mCanvas->GetWidth() / mMeasureCount;//Measure size, without factoring for zooming.
 
    mMeasureSlider->SetDimensions(mCanvas->GetWidth(), 15);
-   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart * (mCanvas->GetWidth() / baseMeasureSize), mMeasureStart+mCanvas->mViewEnd * (mCanvas->GetWidth() / baseMeasureSize));
+   mMeasureSlider->SetExtents(mMeasureStart+mCanvas->mViewStart, mMeasureStart+mCanvas->mViewEnd);
    //DrawTextNormal("measure", 4, 8);
    mMeasureSlider->Draw();
    mTransportSlider->Draw();
@@ -288,14 +282,14 @@ void SongCanvas::DrawModule()
    else
       mPlayPauseButton->SetDisplayStyle(ButtonDisplayStyle::kPause);
 
+
    float drawPointOffset = startCanvasOffset;
-   float zoomPercent = mCanvas->mViewEnd - mCanvas->mViewStart;//1 = zoomed out, 0 = infinite zoom
-   drawPointOffset -= mCanvas->GetWidth() / zoomPercent *mCanvas->mViewStart;
+   float measuresVisible = mCanvas->mViewEnd - mCanvas->mViewStart;//12 = (ex:default)number of measures visible, 0 = infinitely zoomed in
+   float measureOffset = mCanvas->GetWidth()/mMeasureCount*(mMeasureCount/measuresVisible);
+   double viewCompression = 48/measureOffset;//1~ is about the intended value for measures being around 48px long.
    int viewCullMultiplier = MAX(1,floor(viewCompression-0.2));
+   drawPointOffset -= measureOffset*mCanvas->mViewStart;
    int iter = 0;
-   float measureOffset = baseMeasureSize/zoomPercent*viewCullMultiplier;
-   int majorColumnInterval = 4*viewCullMultiplier;
-   mCanvas->SetMajorColumnInterval(majorColumnInterval);
 
    //If too many measures are visible on screen. Start culling.
    if (viewCullMultiplier > 2)
@@ -307,17 +301,18 @@ void SongCanvas::DrawModule()
 
    if (viewCullMultiplier > 8)
    {
-      mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50});
+      mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50,100});
    }
    else
    {
-      if (viewCullMultiplier > 4)
+      if (viewCullMultiplier > 2)
       {
-         mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50, 150 });
+         mCanvas->SetMajorColumnLineColor(ofColor{ 50, 50, 50});
       }
       else
          mCanvas->SetMajorColumnLineColor(ofColor{ 180, 180, 180});
    }
+   mCanvas->SetMajorColumnInterval(4*viewCullMultiplier);
 
    //Draw lines over the timeline, aligned with the canvas.
    while (drawPointOffset < mWidth)
@@ -325,7 +320,7 @@ void SongCanvas::DrawModule()
       if (drawPointOffset < startCanvasOffset)
       {
          iter++;
-         drawPointOffset += measureOffset;
+         drawPointOffset += measureOffset*viewCullMultiplier;
          continue;
       }
       if (iter % 4 == 0)
@@ -345,15 +340,16 @@ void SongCanvas::DrawModule()
 
          DrawTextNormal(std::to_string(mMeasureStart+iter*viewCullMultiplier), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
       }
-      drawPointOffset += measureOffset;
+      drawPointOffset += measureOffset*viewCullMultiplier;
       iter++;
    }
    //Now the timeline position line
    ofSetColor(ofColor::red);
-   float markerLinePos = startCanvasOffset + mCanvas->GetWidth()*(((mTime - mMeasureStart) / mMeasureCount)-mCanvas->mViewStart)/zoomPercent ;
+   float markerLinePos = startCanvasOffset + ofMap(mTime,mMeasureStart+mCanvas->mViewStart,mMeasureStart+mCanvas->mViewEnd,0,mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
+
 
    mMainScrollbarHorizontal->Draw();
    ofPopStyle();
@@ -380,12 +376,17 @@ void SongCanvas::DrawModule()
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-/*
-   std::string dText = std::to_string(mWidth) + "\n";
-   dText += std::to_string(mHeight) + "\n";
-   dText += std::to_string(mCanvas->GetNumCols()) + "\n";
-   dText += std::to_string(mCanvasRelativeTime)+ "\n";
-   DrawTextNormal(dText, 4, 8);*/
+   /*
+   auto canvasRect = mCanvas->GetRect(true);
+   std::string dText = "View Cull: " + ofToString(viewCullMultiplier)+
+      "\nZoomPercent: "+ofToString(measuresVisible)+
+         "\nViewStart: "+ofToString(mCanvas->mViewStart)+
+            "\nViewEnd: "+ofToString(mCanvas->mViewEnd)+
+               "\nCanvas Width: "+ofToString(mCanvas->GetWidth())+
+                  "\nPanel Width: "+ofToString(mWidth)+
+                     "\nCanvas Length(measures): "+ofToString(mCanvas->GetLength())+
+                        "\nCanvas Columns: "+ofToString(mCanvas->GetNumCols());
+   DrawTextNormal(dText,canvasRect.x+4, canvasRect.y+10);*/
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
@@ -626,8 +627,10 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       mMeasureEnd = mMeasureStart+mMeasureCount;
    }
    mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
-   //mCanvas->SetLength(mMeasureCount);
-   mCanvas->SetNumCols(mMeasureCount * 4);
+   mCanvas->SetLength(mMeasureCount);//This line is responsible for an untold amount of misery.
+   mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(kInterval_4n) * mMeasureCount);
+   mCanvas->mViewEnd = mMeasureCount;
+   mCanvas->mLoopEnd = mMeasureCount;//TODO remove later
    mPartCanvasDirty = true;
    mTransportSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
