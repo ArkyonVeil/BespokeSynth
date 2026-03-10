@@ -41,6 +41,21 @@ void CanvasTimeline::Render()
    ofRectangle canvasRect = mCanvas->GetRect(true);
    SetPosition(canvasRect.x, canvasRect.y + mCanvasYOffset);
    SetDimensions(canvasRect.width, 10);
+   bool maxed = mCanvas->mLoopStart == 0 && mCanvas->mLoopEnd == mCanvas->GetLength();
+   bool shiftPreview = false;
+   if (GetKeyModifiers() & kModifier_Shift)
+   {
+      if (gHoveredUIControl == this)
+         if (!mHideShiftTemp)
+            shiftPreview = true;
+   }
+   else
+      mHideShiftTemp = false;
+   if (mShiftOverride)
+   {
+      shiftPreview = true;
+   }
+
 
    ofPushMatrix();
    ofTranslate(mX, mY);
@@ -65,42 +80,82 @@ void CanvasTimeline::Render()
       ofRect(quantizedStartX, 0, quantizedEndX - quantizedStartX, mHeight / 2, 0);
    }
    if (mHoverMode == HoverMode::kMiddle)
-      ofSetColor(mHighlightColour);
+   {
+      if (!maxed && !shiftPreview)
+         ofSetColor(mHighlightColour);
+      else
+         ofSetColor(mBaseSmallHighlight);
+   }
    else
-      ofSetColor(mBaseColour);
+   {
+      if (!shiftPreview)
+         ofSetColor(mBaseColour);
+      else
+         ofSetColor(mBaseSmallHighlight);
+   }
    ofFill();
    ofRect(startX, 0, endX - startX, mHeight / 2, 0);
 
-   if (mClick && mHoverMode == HoverMode::kStart)
+   if (!shiftPreview)
    {
-      ofSetColor(150, 150, 150);
-      ofNoFill();
-      float quantized = GetQuantizedForX(startX, HoverMode::kStart);
-      float quantizedX = ofMap(quantized, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
-      DrawTriangle(quantizedX, 1);
-   }
-   if (mHoverMode == HoverMode::kStart)
-      ofSetColor(mCornerHighlightColour);
-   else
-      ofSetColor(mCornerBaseColour);
-   ofFill();
-   DrawTriangle(startX, 1);
+      if (mClick && mHoverMode == HoverMode::kStart)
+      {
+         ofSetColor(150, 150, 150);
+         ofNoFill();
+         float quantized = GetQuantizedForX(startX, HoverMode::kStart);
+         float quantizedX = ofMap(quantized, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
+         DrawTriangle(quantizedX, 1);
+      }
+      if (mHoverMode == HoverMode::kStart)
+         ofSetColor(mCornerHighlightColour);
+      else
+         ofSetColor(mCornerBaseColour);
+      ofFill();
+      DrawTriangle(startX, 1);
 
 
-   if (mClick && mHoverMode == HoverMode::kEnd)
-   {
-      ofSetColor(150, 150, 150);
-      ofNoFill();
-      float quantized = GetQuantizedForX(endX, HoverMode::kEnd);
-      float quantizedX = ofMap(quantized, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
-      DrawTriangle(quantizedX, -1);
+      if (mClick && mHoverMode == HoverMode::kEnd)
+      {
+         ofSetColor(150, 150, 150);
+         ofNoFill();
+         float quantized = GetQuantizedForX(endX, HoverMode::kEnd);
+         float quantizedX = ofMap(quantized, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
+         DrawTriangle(quantizedX, -1);
+      }
+      if (mHoverMode == HoverMode::kEnd)
+         ofSetColor(mCornerHighlightColour);
+      else
+         ofSetColor(mCornerBaseColour);
+      ofFill();
+      DrawTriangle(endX, -1);
    }
-   if (mHoverMode == HoverMode::kEnd)
-      ofSetColor(mCornerHighlightColour);
-   else
-      ofSetColor(mCornerBaseColour);
-   ofFill();
-   DrawTriangle(endX, -1);
+   //Hover shift behaviors
+   if (shiftPreview)
+   {
+      if (!mShiftOverride)
+      {
+         ofSetColor(150, 150, 150);
+         ofNoFill();
+         float quantized = GetQuantizedForX(mMousePos.x, HoverMode::kNone);
+         float quantizedX = ofMap(quantized, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
+         DrawTriangle(quantizedX - 12, 1);
+         DrawTriangle(quantizedX + 12, -1);
+      }
+      else
+      {
+         ofSetColor(150, 150, 150);
+         ofNoFill();
+         float quantizedClick = GetQuantizedForX(mModuleClickMousePos.x, HoverMode::kNone);
+         float quantizedNow = GetQuantizedForX(mMousePos.x, HoverMode::kNone);
+         float quantizedXClick = ofMap(quantizedClick, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
+         float quantizedXNow = ofMap(quantizedNow, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
+         DrawTriangle(MIN(quantizedXClick - 12, quantizedXNow - 12), 1);
+         DrawTriangle(MAX(quantizedXClick + 12, quantizedXNow + 12), -1);
+         ofFill();
+         ofSetColor(mHighlightColour);
+         ofRect(MIN(quantizedXClick, quantizedXNow), 0, MAX(quantizedXClick, quantizedXNow) - MIN(quantizedXClick, quantizedXNow), mHeight / 2, 0);
+      }
+   }
    ofPopStyle();
 
    ofPopMatrix();
@@ -136,8 +191,13 @@ float CanvasTimeline::GetQuantizedForX(float posX, HoverMode clampSide)
 void CanvasTimeline::OnClicked(float x, float y, bool right)
 {
    mClickMousePos.set(TheSynth->GetRawMouseX(), TheSynth->GetRawMouseY());
+   mModuleClickMousePos = ofVec2f(x, y);
    mDragOffset.set(0, 0);
-   mClick = true;
+   mHideShiftTemp = false;
+   if (GetKeyModifiers() & kModifier_Shift)
+      mShiftOverride = true;
+   else
+      mClick = true;
 }
 
 void CanvasTimeline::MouseReleased()
@@ -166,12 +226,34 @@ void CanvasTimeline::MouseReleased()
          mCanvas->mLoopEnd = ofClamp(mCanvas->mLoopEnd, loopLength, mCanvas->GetLength());
       }
    }
+   if (mShiftOverride)
+   {
+      float quantizedClick = GetQuantizedForX(mModuleClickMousePos.x, HoverMode::kNone);
+      float quantizedNow = GetQuantizedForX(mMousePos.x, HoverMode::kNone);
+
+      float minValue = MIN(quantizedNow, quantizedClick);
+      float maxValue = MAX(quantizedNow, quantizedClick);
+
+      if (minValue == maxValue)
+      {
+         mCanvas->mLoopStart = 0;
+         mCanvas->mLoopEnd = mCanvas->GetLength();
+      }
+      else
+      {
+         mCanvas->mLoopStart = minValue;
+         mCanvas->mLoopEnd = maxValue;
+      }
+      mHideShiftTemp = true; //Used to stop the panel flickering slightly after completing the operation.
+   }
+   mShiftOverride = false;
    mClick = false;
 }
 
 bool CanvasTimeline::MouseMoved(float x, float y)
 {
    CheckHover(x, y);
+   mMousePos = ofVec2f(x, y);
 
    if (!mClick)
    {

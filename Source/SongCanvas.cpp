@@ -351,10 +351,9 @@ void SongCanvas::DrawModule()
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
-
-
    mMainScrollbarHorizontal->Draw();
    ofPopStyle();
+
 
    int s = seqLayers.size();
    for (int i = 0; i < s; i++)
@@ -633,7 +632,6 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
    mCanvas->SetLength(mMeasureCount);//This line is responsible for an untold amount of misery.
    mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(kInterval_4n) * mMeasureCount);
-   mCanvas->mLoopEnd = mMeasureCount;//TODO remove later
    if (mAutoScaleMeasureCount && !overrideAutoFit)
    {
       mCanvas->mViewEnd = MIN(mMeasureCount,oldViewEnd*mMeasureCount/oldMeasureCount);

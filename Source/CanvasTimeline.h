@@ -44,9 +44,10 @@ public:
 
    void SetCanvasYOffset(float newOffset){ mCanvasYOffset = newOffset; }
    void SetHighlightColour(ofColor newColour) {mHighlightColour = newColour;};
-   void SetBaseColour(ofColor newColour) {mBaseColour = newColour;};
+   void SetBaseColour(ofColor newColour) {mBaseColour = newColour; mBaseSmallHighlight = ofColor(MIN(255,newColour.r+50),MIN(255,newColour.g+50),MIN(255,newColour.b+50));}
    void SetCornerHighlightColour(ofColor newColour) {mCornerHighlightColour = newColour;};
    void SetCornerBaseColour(ofColor newColour) {mCornerBaseColour = newColour;};
+
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -87,13 +88,17 @@ private:
    float mCanvasYOffset{-10};
 
    bool mClick{ false };
+   bool mShiftOverride{ false };
+   bool mHideShiftTemp{ false };
    ofVec2f mClickMousePos;
+   ofVec2f mModuleClickMousePos;
    ofVec2f mDragOffset;
+   ofVec2f mMousePos;
    HoverMode mHoverMode{ HoverMode::kNone };
    ofColor mHighlightColour{255, 200, 0};
    ofColor mBaseColour{100, 100, 100};
    ofColor mCornerBaseColour{150, 150, 150};
    ofColor mCornerHighlightColour{255, 200, 0};
-
+   ofColor mBaseSmallHighlight{150, 150, 150};
    Canvas* mCanvas{ nullptr };
 };
