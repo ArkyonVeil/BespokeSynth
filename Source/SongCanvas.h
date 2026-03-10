@@ -106,7 +106,7 @@ public:
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override { return 2; };
+   int GetModuleSaveStateRev() const override { return 3; };
 
 private:
    struct SongCanvasLayer
@@ -173,8 +173,6 @@ private:
    bool mLoopOnEnd{ false };
    bool mResetButtonAlsoStops{ false};
    bool mStartEndMeasureMode{false};
-   int mRedLoopStart{ 0 };
-   int mRedLoopEnd{ 0 };
    bool mReloadMeasureLoadFlag {false};
 
    int GetRackGridStartYOffset() const

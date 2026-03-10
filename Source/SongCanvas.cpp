@@ -94,6 +94,8 @@ void SongCanvas::CreateUIControls()
    mCanvas->SetScrollZoomSpeed(5);
    mCanvas->SetInvertDragSnapBehavior(true);
    mCanvas->SetAllowElementPlacement(false);
+   mCanvas->mViewEnd = mMeasureCount;
+   mCanvas->mLoopEnd = mMeasureCount;
 
    mCanvasTimeline = new CanvasTimeline(mCanvas, "loopregion");
    mCanvasTimeline->SetCanvasYOffset(-22);
@@ -598,6 +600,8 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
 }
 void SongCanvas::ReloadMeasures(bool overrideAutoFit)
 {
+   float oldViewEnd = mCanvas->mViewEnd;
+   float oldMeasureCount = mCanvas->GetLength();
    if (mMeasureSize <= 0)
    {
       mMeasureSize = mStandardMeasureSize;
@@ -629,8 +633,15 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    mMeasureSize = ceil(mCanvas->GetWidth()/ static_cast<float>(mMeasureCount));
    mCanvas->SetLength(mMeasureCount);//This line is responsible for an untold amount of misery.
    mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(kInterval_4n) * mMeasureCount);
-   mCanvas->mViewEnd = mMeasureCount;
    mCanvas->mLoopEnd = mMeasureCount;//TODO remove later
+   if (mAutoScaleMeasureCount && !overrideAutoFit)
+   {
+      mCanvas->mViewEnd = MIN(mMeasureCount,oldViewEnd*mMeasureCount/oldMeasureCount);
+   }
+   else
+   {
+      mCanvas->mViewEnd = MIN(mMeasureCount,mCanvas->mViewEnd);
+   }
    mPartCanvasDirty = true;
    mTransportSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart,mMeasureStart+mMeasureCount);
@@ -1123,15 +1134,15 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mMeasureCount;
    out << mAutoScaleMeasureCount;
    out << mLoopOnEnd;
-   out << mRedLoopEnd;
-   out << mRedLoopStart;
+   out << mCanvas->mLoopStart;
+   out << mCanvas->mLoopEnd;
    //End reserved variables SEC-1
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
    int canvasLayerCount;
 
-   //Step 1, restore our canvas
+   //restore our canvas
    in >> canvasLayerCount;
 
    //Delete the starter layers first.
@@ -1151,13 +1162,13 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 
    auto re = GetAllRackElements();
 
-   //Step 2, clean up our starter rack.
+   //clean up our starter rack.
    for (int i = 0; i < re.size(); ++i)
    {
       DeleteRackElement(re[i]);
    }
 
-   //Step 3, now load our real rack.
+   //now load our real rack.
    int numRackElements;
    in >> mInternalRackIDCounter;
    in >> numRackElements;
@@ -1200,7 +1211,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
             break;
       }
    }
-   //Step 3: time to set up our Canvas and scaling now
+   //time to set up our Canvas and scaling now
 
    int i1;
    float f1;
@@ -1260,15 +1271,24 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       celm->SetEnd(eEnd);
       mCanvas->AddElement(celm);
    }
-   in >> mCanvas->mViewStart;
-   in >> mCanvas->mViewEnd;
+
+   float vS = 0;
+   float vE = 0;
+   in >> vS;
+   in >> vE;
+   if (rev < 3)
+   {
+      vS *= 12;
+      vE *= 12;
+   }
+   mCanvas->mViewStart = vS;
+   mCanvas->mViewEnd = vE;
 
    CanvasUpdated(mCanvas);
    //More misc stuff.
    in >> mPartNameCount;
    bool enableState;
    in >> enableState;
-   //Reserved variables SEC-1
    if (rev>1)
    {
    in >> mGlobalMode;
@@ -1276,8 +1296,13 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mMeasureCount;
    in >> mAutoScaleMeasureCount;
    in >> mLoopOnEnd;
-   in >> mRedLoopEnd;
-   in >> mRedLoopStart;
+   in >> mCanvas->mLoopStart;
+   in >> mCanvas->mLoopEnd;
+   }
+   if (rev < 3)
+   {
+      mCanvas->mLoopStart = 0;
+      mCanvas->mLoopEnd = mMeasureCount;
    }
    if (rev == 1)
    {
