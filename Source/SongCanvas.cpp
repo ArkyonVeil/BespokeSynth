@@ -281,6 +281,60 @@ void SongCanvas::ReloadHeader()
    }
    mLocalModeCheckbox->SetPosition(mWidth - 47, headerYOffset);
 }
+ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
+{
+   switch (style)
+   {
+      case ESRed:
+         return ofColor::red;
+      case ESPink:
+         return ofColor(255, 0, 238);
+      case ESYellow:
+         return ofColor::yellow;
+      case ESCyan:
+         return ofColor::cyan;
+      case ESGreen:
+         return ofColor::green;
+      case ESOrange:
+         return ofColor::orange;
+      case ESPurple:
+         return ofColor::purple;
+      case ESBlue:
+         return ofColor::blue;
+      case ESWhite:
+         return ofColor::white;
+      case ESBlack:
+         return ofColor::black;
+      case ESGlass:
+         return ofColor(166, 237, 255, 150);
+      case ESCarbon:
+      {
+         float hue = remainderf(time,2.0f);
+      }
+      case ESCheckerboard:
+      {
+         if ((int)floor(time) % 2 == 0)
+            return ofColor(255, 255, 255);
+         return ofColor(0, 0, 0);
+      }
+      case ESTransport:
+      {
+         if ((int)floor(time) % 2 == 0)
+            return ofColor::cyan;
+         return ofColor(255, 0, 238);
+      }
+      case ESRGB: {
+
+      }
+      case ESPride:{
+
+      }
+      case ESTrans: {
+
+      }
+      default:;
+   }
+}
 
 void SongCanvas::UpdateEndMode()
 {
@@ -372,7 +426,7 @@ void SongCanvas::DrawModule()
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
 
 
-   mMeasureSlider->SetDimensions(mCanvas->GetWidth(), 15);
+   mMeasureSlider->SetDimensions(mCanvas->GetWidth()+2, 15);//+2 fixes a very slight but annoying visual disconnect between it and the Canvas transport line.
    mMeasureSlider->SetExtents(mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd);
    //DrawTextNormal("measure", 4, 8);
    mTransportSlider->Draw();
@@ -717,6 +771,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
 {
    float oldViewEnd = mCanvas->mViewEnd;
    float oldMeasureCount = mCanvas->GetLength();
+   bool loopMaxed = mCanvas->mViewStart == mCanvas->mLoopStart && mCanvas->mViewEnd == mCanvas->mLoopEnd;
    if (mMeasureSize <= 0)
    {
       mMeasureSize = mStandardMeasureSize;
@@ -757,6 +812,21 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       mCanvas->mViewEnd = MIN(mMeasureCount, mCanvas->mViewEnd);
    }
    mPartCanvasDirty = true;
+   if (loopMaxed)
+   {//If its already maxed, we sync it.
+      mCanvas->mLoopStart = 0;
+      mCanvas->mLoopEnd = mCanvas->GetLength();
+   }
+   else//Otherwise just ensure it's within bounds
+   {
+      mCanvas->mLoopEnd = MIN(mCanvas->GetLength(),mCanvas->mLoopEnd);
+      if (mCanvas->mLoopStart >= mCanvas->mLoopEnd)//If its too small reset.
+      {
+         mCanvas->mLoopStart = 0;
+         mCanvas->mLoopEnd = mCanvas->GetLength();
+      }
+      UserUpdatedCanvasTimeline(mCanvas->mLoopStart,mCanvas->mLoopEnd);
+   }
    mTransportSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureCountTextbox->UpdateDisplayString();
@@ -799,25 +869,25 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
    }
    if (button == mResetButton)
    {
-         if (!mLocalMode)
+      if (!mLocalMode)
+      {
+         TheTransport->SetMeasureTime(mCanvas->mLoopStart);
+         if (mResetButtonAlsoStops)
          {
-            TheTransport->SetMeasureTime(mCanvas->mLoopStart);
-            if (mResetButtonAlsoStops)
-            {
-               TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
-            }
+            TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
          }
-         else
+      }
+      else
+      {
+         mLocalStopped = false;
+         mTime = mCanvas->mLoopStart;
+         mLocalSynced = false;
+         mSyncButton->SetEnabled(true);
+         if (mResetButtonAlsoStops)
          {
-            mLocalStopped = false;
-            mTime = mCanvas->mLoopStart;
-            mLocalSynced = false;
-            mSyncButton->SetEnabled(true);
-            if (mResetButtonAlsoStops)
-            {
-               mLocalStopped = true;
-            }
+            mLocalStopped = true;
          }
+      }
 
       return;
    }
@@ -1561,7 +1631,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
          mMeasureSlider->SetLineColour(LocalModeColour);
       }
    }
-   UserUpdatedCanvasTimeline(mCanvas->mLoopStart,mCanvas->mLoopEnd);
+   UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
 
    mReloadMeasureLoadFlag = true;
    SetEnabled(enableState);

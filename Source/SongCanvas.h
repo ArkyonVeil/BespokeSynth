@@ -113,6 +113,29 @@ public:
 
    ofColor LocalModeColour {255,0,238};
 
+   enum EnumSongCanvasStyle
+   {
+      ESRed = 0,
+      ESPink = 1,
+      ESYellow = 2,
+      ESCyan = 3,
+      ESGreen = 4,
+      ESOrange = 5,
+      ESPurple = 6,
+      ESBlue = 7,
+      ESWhite = 8,
+      ESBlack = 9,
+      ESGlass = 10,
+      ESCarbon = 11,
+      ESCheckerboard = 12,
+      ESTransport = 13,
+      ESRGB = 14,
+      ESPride = 15,
+      ESTrans = 16
+   };
+   ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
+
+
 private:
    struct SongCanvasLayer
    {
@@ -123,6 +146,8 @@ private:
    };
    void UpdateEndMode();
 
+
+
    //IDrawableModule
    void DrawModule() override;
    void AddNewLayer(int index, SongCanvasLayer layer);
@@ -132,6 +157,7 @@ private:
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
    void ReloadHeader();
+
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mMeasureSlider{ nullptr };
@@ -273,6 +299,10 @@ private:
       enumOEMLoop = 1,
       enumOEMStop = 2,
    };
+
+
+
+
    int mOnEndMeasure;
    int mPreviousGlobalEndMeasure{-1};
    int mPreviousLocalEndMeasure{-1};
