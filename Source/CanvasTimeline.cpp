@@ -226,7 +226,7 @@ void CanvasTimeline::MouseReleased()
          mCanvas->mLoopEnd = ofClamp(mCanvas->mLoopEnd, loopLength, mCanvas->GetLength());
       }
       if (mListener)
-         mListener->UserUpdatedCanvasTimeline(mCanvas->mLoopStart,mCanvas->mLoopEnd);
+         mListener->UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
    if (mShiftOverride)
    {
@@ -248,7 +248,7 @@ void CanvasTimeline::MouseReleased()
       }
       mHideShiftTemp = true; //Used to stop the panel flickering slightly after completing the operation.
       if (mListener)
-         mListener->UserUpdatedCanvasTimeline(mCanvas->mLoopStart,mCanvas->mLoopEnd);
+         mListener->UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
    mShiftOverride = false;
    mClick = false;

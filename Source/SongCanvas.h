@@ -76,7 +76,7 @@ public:
    bool IsEnabled() const override { return mEnabled; }
    void CanvasUpdated(Canvas* canvas) override;
    void ResizeWorkspace(float diff);
-   ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()];};
+   ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
    void TextEntryComplete(TextEntry* entry) override;
    void ReloadMeasures(bool overrideAutoFit);
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
@@ -111,7 +111,7 @@ public:
    void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override { return 4; }
 
-   ofColor LocalModeColour {255,0,238};
+   ofColor LocalModeColour{ 255, 0, 238 };
 
    enum EnumSongCanvasStyle
    {
@@ -145,7 +145,6 @@ private:
       std::string layerName;
    };
    void UpdateEndMode();
-
 
 
    //IDrawableModule
@@ -182,7 +181,7 @@ private:
    UIFlowGrid* mRackGrid;
    CanvasTimeline* mCanvasTimeline;
 
-   static constexpr int MaxLayers = 51;//Further increasing this may cause crashes.
+   static constexpr int MaxLayers = 51; //Further increasing this may cause crashes.
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
@@ -196,7 +195,7 @@ private:
    static const int mStandardMeasureSize = 48;
    static const int mDefaultMeasureSpawnAmount = 12;
 
-   static const int mOffsetFromTopSpacing = 50;//old val 38, 44
+   static const int mOffsetFromTopSpacing = 50; //old val 38, 44
    static const int LayersListWidthSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
@@ -204,17 +203,17 @@ private:
    bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
    int mMeasureCount{ 0 };
-   int mMeasureEnd {0};//Secondary viewing style, translated internally to measure count.
-   float mMeasureSize{0};
-   bool mAutoScaleMeasureCount{ true };//If true, automatically increases the amount of measures the panel holds.
+   int mMeasureEnd{ 0 }; //Secondary viewing style, translated internally to measure count.
+   float mMeasureSize{ 0 };
+   bool mAutoScaleMeasureCount{ true }; //If true, automatically increases the amount of measures the panel holds.
    bool mLoopOnEnd{ false };
-   bool mResetButtonAlsoStops{ false};
-   bool mStartEndMeasureMode{false};
-   bool mReloadMeasureLoadFlag {false};
-   bool mLocalSynced{ true };//Used in local mode's on end loop
+   bool mResetButtonAlsoStops{ false };
+   bool mStartEndMeasureMode{ false };
+   bool mReloadMeasureLoadFlag{ false };
+   bool mLocalSynced{ true }; //Used in local mode's on end loop
    bool mLocalStopped{ false };
 
-   bool mPreviewRackSounds{ true };//Sends a sound signal every time a rack part is interacted with.
+   bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
@@ -299,15 +298,15 @@ private:
       enumOEMLoop = 1,
       enumOEMStop = 2,
    };
-/*
+   /*
    std::vector<ofColor> mESCarbonColours[2];
    std::vector<ofColor> mESRGBColours[3];
    std::vector<ofColor> mESPrideColours[6];
    std::vector<ofColor> mESTransColours[4];
 */
-   int mOnEndMeasure{0};
-   int mPreviousGlobalEndMeasure{-1};
-   int mPreviousLocalEndMeasure{-1};
+   int mOnEndMeasure{ 0 };
+   int mPreviousGlobalEndMeasure{ -1 };
+   int mPreviousLocalEndMeasure{ -1 };
 
 
    LayerDropDownOptions mLayerDropDownOptions;

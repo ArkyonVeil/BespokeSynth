@@ -79,8 +79,8 @@ public:
    void SetDisplayText(bool display) { mDisplayStyle = ButtonDisplayStyle::kNoLabel; }
    void SetDisplayStyle(ButtonDisplayStyle style) { mDisplayStyle = style; }
    void SetIconAlignment(ButtonIconAlignment alignment);
-   void SetEnabled(bool enabled) {mEnabled = enabled;};
-   bool IsEnabled(){ return mEnabled;}
+   void SetEnabled(bool enabled) { mEnabled = enabled; };
+   bool IsEnabled() { return mEnabled; }
 
    void SetDimensions(float width, float height)
    {

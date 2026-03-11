@@ -95,8 +95,7 @@ void SongCanvas::CreateUIControls()
       ofColor(245, 171, 182),
       ofColor(255, 255, 255),
       ofColor(245, 171, 182)
-   };
-*/
+   };*/
    if (expertPanelEnabled)
       mStartCanvasXOffset = LayersListWidthSize + AdvancedConfigHSize;
    else

@@ -93,7 +93,7 @@ public:
    }
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
-   void SetLength(float length) { mLength = length; }//sets the length of the canvas. Also used to set the number of measures.
+   void SetLength(float length) { mLength = length; } //sets the length of the canvas. Also used to set the number of measures.
    float GetLength() const { return mLength; }
    void SetNumRows(int rows) { mNumRows = rows; }
    void SetNumCols(int cols) { mNumCols = cols; }
@@ -125,15 +125,19 @@ public:
    DragMode GetDragMode() const { return mDragMode; }
    bool IsRowVisible(int row) const;
    void SetRowColor(int row, ofColor color);
-   void SetMinorColumnLineColor(ofColor newColour){mMinorColumnColour = newColour; mDefaultMinorColumnColour = false;}
-   void SetMajorColumnLineColor(ofColor newColour){mMajorColumnColour = newColour;}
-   void ResetMinorColumnLineColor(){mDefaultMinorColumnColour = true;}
+   void SetMinorColumnLineColor(ofColor newColour)
+   {
+      mMinorColumnColour = newColour;
+      mDefaultMinorColumnColour = false;
+   }
+   void SetMajorColumnLineColor(ofColor newColour) { mMajorColumnColour = newColour; }
+   void ResetMinorColumnLineColor() { mDefaultMinorColumnColour = true; }
    juce::MouseCursor GetMouseCursorType();
    ofVec2f RescaleForZoom(float x, float y) const;
    ICanvasListener* GetListener() { return mListener; }
    void SetInvertDragSnapBehavior(bool invert) { mInvertDragSnapBehavior = invert; };
    void SetAllowElementPlacement(bool allow) { mAllowElementPlacement = allow; };
-   void SetScrollZoomSpeed(float newSpeed){mZoomScrollMultiplier = newSpeed;};
+   void SetScrollZoomSpeed(float newSpeed) { mZoomScrollMultiplier = newSpeed; };
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -168,7 +172,7 @@ private:
    ofVec2f mClickedElementStartMousePos;
    float mWidth;
    float mHeight;
-   float mLength;//often used as number of measures. DO NOT ignore if you plan to cover multiple measures in your canvas.
+   float mLength; //often used as number of measures. DO NOT ignore if you plan to cover multiple measures in your canvas.
    ICanvasListener* mListener{ nullptr };
    std::vector<CanvasElement*> mElements;
    CanvasControls* mControls{ nullptr };
@@ -192,9 +196,9 @@ private:
    bool mAllowElementPlacement{ true };
    float mScrollVerticalPartial{ 0 };
    std::array<ofColor, 128> mRowColors;
-   ofColor mMajorColumnColour {255,255,255};
-   ofColor mMinorColumnColour {0,0,0,50};
-   bool mDefaultMinorColumnColour {true};
+   ofColor mMajorColumnColour{ 255, 255, 255 };
+   ofColor mMinorColumnColour{ 0, 0, 0, 50 };
+   bool mDefaultMinorColumnColour{ true };
    float mZoomScrollMultiplier{ 1.0f };
 
    int mNumRows;
