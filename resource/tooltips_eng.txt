@@ -2191,15 +2191,21 @@ velocitytoduration~use a note's velocity to set its duration
 
 songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules, trigger pulses and more in a timeline canvas.
 ~canvas~select a part in the rack and place it on the canvas. parts will activate their rack elements when their timing is reached\n-shift-click to place a new part\n-ctrl-click-drag a corner freely without snapping\n-alt-click-drag a part to move it without snapping\n-shift-scrollwheel to zoom in/out
-~reset~sets the time to the canvas's first measure
+~reset~sets the time to the first measure
 ~add~add a new pattern to the rack
 ~interval~set the rack pattern's interval
 ~measure~starting measure of the timeline, increase to make the panel affect a later time in the music track
 ~count~number of measures the timeline covers, increase for a longer timeline
 ~end~last measure covered by this timeline
-~transport~current measure in the global transport
+~transport~current measure in the transport
 ~play/pause~play or pause the current timeline
 ~setting*~add, delete or move a layer
 ~checkbox*~disable or enable every part on the current layer
 ~layer*~the current row of parts
 ~loopregion~repeatedly loop a specific section of the track
+~stop~resets to the first measure and stops
+~replay~resets to the first measure and starts playing
+~loop region~loops the selected area, respects the on finish mode.\n-Drag corners to resize.\n-Drag middle to move.\n-Shift drag to define a new area.\n-Shift click to reset.
+~local~if active, disconnects the panel from the global transport, allowing to play parts on its own isolated time. \nLocal mode can still reference global time if on loop mode and synced
+~on finish~what happens when the transport reaches the final measure (outside the canvas or out of the loop range)\n-continue: does nothing, keeps going past the canvas bounds. Still respects the loop region if active (Global only)\n-loop: resets to the first possible measure and keeps playing.\n-stop: resets to the first possible measure and stops
+~sync~syncs the local time to the global transport. looping if needed. does nothing if active

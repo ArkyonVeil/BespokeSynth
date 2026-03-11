@@ -375,11 +375,11 @@ void SongCanvas::DrawModule()
    mMeasureSlider->SetDimensions(mCanvas->GetWidth(), 15);
    mMeasureSlider->SetExtents(mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd);
    //DrawTextNormal("measure", 4, 8);
-   mMeasureSlider->Draw();
    mTransportSlider->Draw();
    mResetButton->Draw();
    mPlayPauseButton->Draw();
    mCanvasTimeline->Draw();
+   mMeasureSlider->Draw();
    mLocalModeCheckbox->Draw();
    mOnEndMeasureDropdown->Draw();
    if (mLocalMode && mOnEndMeasure == enumOEMLoop)
@@ -558,7 +558,7 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 }
 void SongCanvas::Resize(float w, float h)
 {
-   w = MAX(w, 350);
+   w = MAX(w, 450);
    h = MAX(h, 100 + seqLayers.size() * MinRowSize + mFlowGridRows * FlowGridRowHeightSize);
 
    if (mMeasureSize == 0)
