@@ -299,11 +299,13 @@ private:
       enumOEMLoop = 1,
       enumOEMStop = 2,
    };
-
-
-
-
-   int mOnEndMeasure;
+/*
+   std::vector<ofColor> mESCarbonColours[2];
+   std::vector<ofColor> mESRGBColours[3];
+   std::vector<ofColor> mESPrideColours[6];
+   std::vector<ofColor> mESTransColours[4];
+*/
+   int mOnEndMeasure{0};
    int mPreviousGlobalEndMeasure{-1};
    int mPreviousLocalEndMeasure{-1};
 

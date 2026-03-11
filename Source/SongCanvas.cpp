@@ -44,6 +44,7 @@ SongCanvas::SongCanvas()
    mRowColors.push_back(ofColor::black);
    seqLayers.reserve(MaxLayers + 1);
    mTransportPriority = kTransportPriorityVeryEarly;
+
    for (int i = 0; i < 5; i++)
    {
       layerBuffer.push_back(SongCanvasLayer{
@@ -70,7 +71,32 @@ void SongCanvas::Init()
 void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
+/*
+   ESCarbonColours = {
+      ofColor(255, 255, 255),
+      ofColor(0, 0, 0)
+   };
 
+   ESRGBColours = {
+      ofColor(255, 0, 0),
+      ofColor(0, 255, 0),
+      ofColor(0, 255, 255)
+   };
+   ESPrideColours = {
+      ofColor(255, 0, 0),
+      ofColor(255, 165, 0),
+      ofColor(255, 255, 0),
+      ofColor(0, 255, 0),
+      ofColor(0, 0, 255),
+      ofColor(148, 0, 211)
+   };
+   ESTransColours = {
+      ofColor(91, 207, 250),
+      ofColor(245, 171, 182),
+      ofColor(255, 255, 255),
+      ofColor(245, 171, 182)
+   };
+*/
    if (expertPanelEnabled)
       mStartCanvasXOffset = LayersListWidthSize + AdvancedConfigHSize;
    else
@@ -309,7 +335,20 @@ ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
          return ofColor(166, 237, 255, 150);
       case ESCarbon:
       {
-         float hue = remainderf(time,2.0f);
+         return ofColor(0, 0, 0);
+         /*
+         const auto col = ESCarbonColours;
+         float modl = 2.0f;
+
+         float hue = remainderf(time,modl);
+         float hueR = remainderf(hue,1.0f);
+         int idx = floor(hue);
+         int idx2 =  (idx + 1) % (int)floor(modl);
+         float colr = ofLerp(col[idx].r,col[idx2].r,hueR);
+         float colg = ofLerp(col[idx].g,col[idx2].g,hueR);
+         float colb = ofLerp(col[idx].b,col[idx2].b,hueR);
+
+         return ofColor(colr,colg,colb);*/
       }
       case ESCheckerboard:
       {
@@ -323,14 +362,14 @@ ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
             return ofColor::cyan;
          return ofColor(255, 0, 238);
       }
-      case ESRGB: {
-
+      case ESRGB:
+      {
       }
-      case ESPride:{
-
+      case ESPride:
+      {
       }
-      case ESTrans: {
-
+      case ESTrans:
+      {
       }
       default:;
    }
@@ -426,7 +465,7 @@ void SongCanvas::DrawModule()
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
 
 
-   mMeasureSlider->SetDimensions(mCanvas->GetWidth()+2, 15);//+2 fixes a very slight but annoying visual disconnect between it and the Canvas transport line.
+   mMeasureSlider->SetDimensions(mCanvas->GetWidth() + 2, 15); //+2 fixes a very slight but annoying visual disconnect between it and the Canvas transport line.
    mMeasureSlider->SetExtents(mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd);
    //DrawTextNormal("measure", 4, 8);
    mTransportSlider->Draw();
@@ -813,19 +852,19 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    }
    mPartCanvasDirty = true;
    if (loopMaxed)
-   {//If its already maxed, we sync it.
+   { //If its already maxed, we sync it.
       mCanvas->mLoopStart = 0;
       mCanvas->mLoopEnd = mCanvas->GetLength();
    }
-   else//Otherwise just ensure it's within bounds
+   else //Otherwise just ensure it's within bounds
    {
-      mCanvas->mLoopEnd = MIN(mCanvas->GetLength(),mCanvas->mLoopEnd);
-      if (mCanvas->mLoopStart >= mCanvas->mLoopEnd)//If its too small reset.
+      mCanvas->mLoopEnd = MIN(mCanvas->GetLength(), mCanvas->mLoopEnd);
+      if (mCanvas->mLoopStart >= mCanvas->mLoopEnd) //If its too small reset.
       {
          mCanvas->mLoopStart = 0;
          mCanvas->mLoopEnd = mCanvas->GetLength();
       }
-      UserUpdatedCanvasTimeline(mCanvas->mLoopStart,mCanvas->mLoopEnd);
+      UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
    mTransportSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);

@@ -83,6 +83,7 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
    if (rect.width > 0)
    {
       ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
+
       //ofSetColor(mCurrentColor);
       ofRect(rect, 0);
 
