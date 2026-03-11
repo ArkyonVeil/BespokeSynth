@@ -261,10 +261,10 @@ void SongCanvas::ReloadHeader()
          mOnEndMeasureDropdown->SetLabel("continue", enumOEMContinue);
          break;
       case enumOEMStop:
-         mOnEndMeasureDropdown->SetLabel("stop", enumOEMContinue);
+         mOnEndMeasureDropdown->SetLabel("stop", enumOEMStop);
          break;
       case enumOEMLoop:
-         mOnEndMeasureDropdown->SetLabel("loop", enumOEMContinue);
+         mOnEndMeasureDropdown->SetLabel("loop", enumOEMLoop);
          break;
    }
 
@@ -459,7 +459,7 @@ void SongCanvas::DrawModule()
       ofSetColor(ofColor::red);
    else
       ofSetColor(LocalModeColour);
-   float markerLinePos = startCanvasOffset + ofMap(mTime,mMeasureStart+mCanvas->mViewStart,mMeasureStart+mCanvas->mViewEnd,0,mCanvas->GetWidth());
+   float markerLinePos = startCanvasOffset + ofMap(mCanvasRelativeTime*mMeasureCount,mMeasureStart+mCanvas->mViewStart,mMeasureStart+mCanvas->mViewEnd,0,mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
@@ -510,7 +510,7 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
       //How many chunks should we have?
       int colNum = mCanvas->GetNumCols();
 
-      mChunkAmount = CLAMP(colNum, 50, 1000);
+      mChunkAmount = CLAMP(colNum, 50, 200);
 
       //Regenerate the canvas list.
       for (int i = 0; i < mChunkAmount; ++i)
@@ -520,7 +520,6 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
 
       for (int i = 0; i < elms.size(); i++)
       {
-
          int cStart = floor(elms[i]->GetStart() * mChunkAmount);
          int cEnd = ceil(elms[i]->GetEnd() * mChunkAmount);
 
@@ -530,22 +529,11 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
          {
             cEnd = mChunkAmount - 1;
          }
-
          for (int y = cStart; y <= cEnd; ++y)
          {
             mCanvasChunkList[y].push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
          }
-
-         //Workspace view resize check
-         //Disabled, to enforce a more controlled format.
-         /*
-         if (elms[i]->GetEnd() > 0.8)
-         {
-            ResizeWorkspace(1.0 - elms[i]->GetEnd());
-            break;
-         }*/
       }
-      //TheSynth->LogEvent("SongCanvas Regenerated",LogEventType::kLogEventType_Verbose);
    }
 }
 void SongCanvas::FeatureResize(int extraW, int extraH)
@@ -1057,29 +1045,7 @@ void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 }
 void SongCanvas::OnTransportAdvanced(float amount)
 {
-   //RESERVED, might get used later, depending on future module support.
-}
-void SongCanvas::ReceiveSignal(SignalId signalID)
-{
-   if (signalID == SignalId::ResizeRequest)
-   {
-      mFlowGridRows = mRackGrid->GetRowCount();
-
-      float bWSize;
-      float bHSize;
-      mRackAddNewButton->GetDimensions(bWSize, bHSize);
-
-      mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
-   }
-}
-void SongCanvas::DisposeElement(IClickable* element)
-{
-   RemoveUIControl(static_cast<IUIControl*>(element));
-}
-//Called on a 64n interval, which is very fast.
-void SongCanvas::OnTimeEvent(double time)
-{
-   //First check if we have any cleanup to do.
+  //First check if we have any cleanup to do.
    if (mPartCanvasDirty)
    {
       CanvasUpdated(mCanvas);
@@ -1087,7 +1053,53 @@ void SongCanvas::OnTimeEvent(double time)
    }
 
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
-   mCanvasRelativeTime = (mTime-mMeasureStart + 0.02f/((float)mMeasureCount/12)) / ((double)mCanvas->GetNumCols() / 4);
+   if (!mLocalMode)
+   {
+      float procTime = mTime;
+      bool timelineLoopActive = true;
+      if (mCanvas->mLoopEnd == mCanvas->GetLength() && mCanvas->mLoopStart == 0)
+         timelineLoopActive = false;
+
+      if (timelineLoopActive)
+      {
+         if (mTime > mCanvas->mLoopEnd)
+         {
+            mTime = mCanvas->mLoopStart;
+            TheTransport->SetMeasureTime(mTime);
+         }
+      }
+      else if (mOnEndMeasure == EnumOnEndMeasure::enumOEMLoop)
+      {
+         if (mTime > mCanvas->GetLength())
+         {
+            mTime = mCanvas->mLoopStart;
+            TheTransport->SetMeasureTime(mTime);
+         }
+      }
+      else if (mOnEndMeasure == EnumOnEndMeasure::enumOEMStop)
+      {
+         if (mTime > mCanvas->GetLength())
+         {
+            mTime = mCanvas->mLoopStart;
+            TheTransport->SetMeasureTime(mTime);
+            TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
+         }
+      }
+      procTime = mTime;
+      mCanvasRelativeTime = (procTime-mMeasureStart+0.02f)/mMeasureCount;
+   }
+   else
+   {
+      float procTime = mTime;
+      if (mOnEndMeasure == EnumOnEndMeasure::enumOEMLoop)
+      {
+         if (mLocalSynced)
+         {
+            procTime = mCanvas->mLoopStart +std::fmod(mTime,mCanvas->mLoopEnd - mCanvas->mLoopStart);
+         }
+      }
+      mCanvasRelativeTime = (procTime+0.02f)/mMeasureCount;
+   }
    if (IsEnabled())
    {
       if (mCanvasRelativeTime <= 1)
@@ -1145,22 +1157,28 @@ void SongCanvas::OnTimeEvent(double time)
          i--;
       }
    }
-
-   /*
-   for (int i = 0; i < mActiveElements.size(); ++i)
+}
+void SongCanvas::ReceiveSignal(SignalId signalID)
+{
+   if (signalID == SignalId::ResizeRequest)
    {
-      auto elm = mActiveElements[i];
+      mFlowGridRows = mRackGrid->GetRowCount();
 
-      if (elm->GetVariantType() == SongCanvasElementVariant::Pulser)
-      {
-         auto rck = elm->GetRackElement();
+      float bWSize;
+      float bHSize;
+      mRackAddNewButton->GetDimensions(bWSize, bHSize);
 
-         auto interv = rck->GetInterval();
+      mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
+   }
+}
+void SongCanvas::DisposeElement(IClickable* element)
+{
+   RemoveUIControl(static_cast<IUIControl*>(element));
+}
+//Called on a 64n interval, which is very fast.
+void SongCanvas::OnTimeEvent(double time)
+{
 
-
-      }
-
-   }*/
 }
 
 //Attempt to resize based on the addition/removal of a feature.

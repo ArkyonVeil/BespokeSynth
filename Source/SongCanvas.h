@@ -185,6 +185,7 @@ private:
    bool mResetButtonAlsoStops{ false};
    bool mStartEndMeasureMode{false};
    bool mReloadMeasureLoadFlag {false};
+   bool mLocalSynced{ true };//Used in local mode's on end loop
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
@@ -208,7 +209,7 @@ private:
 
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[1001];
+   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[201];
    int mChunkAmount = 10;
 
    std::vector<SongCanvas_CanvasElement*> mActiveElements{};
