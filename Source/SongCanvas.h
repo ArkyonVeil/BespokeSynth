@@ -49,7 +49,8 @@ class SongCanvas : public IDrawableModule,
                    public IDropdownListener,
                    public IAudioPoller,
                    public ISignalListener,
-                   public ITimeListener
+                   public ITimeListener,
+                   public ICanvasTimelineListener
 {
 public:
    SongCanvas();
@@ -80,6 +81,7 @@ public:
    void ReloadMeasures(bool overrideAutoFit);
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
    void ButtonClicked(ClickButton* button, double time) override;
+   void CheckboxUpdated(Checkbox* checkbox, double time) override;
    bool MouseMoved(float x, float y) override;
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
@@ -94,6 +96,7 @@ public:
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackElementWithID(int id);
+   void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
 
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
@@ -108,6 +111,8 @@ public:
    void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override { return 3; };
 
+   ofColor LocalModeColour {255,0,238};
+
 private:
    struct SongCanvasLayer
    {
@@ -116,6 +121,8 @@ private:
       bool enabled;
       std::string layerName;
    };
+   void UpdateEndMode();
+
    //IDrawableModule
    void DrawModule() override;
    void AddNewLayer(int index, SongCanvasLayer layer);
@@ -124,7 +131,7 @@ private:
    void MoveLayerTo(int oldIndex, int newIndex);
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
-   void RefitHeader();
+   void ReloadHeader();
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mMeasureSlider{ nullptr };
@@ -132,13 +139,17 @@ private:
    std::vector<ofColor> mRowColors{};
    ClickButton* mResetButton;
    ClickButton* mPlayPauseButton;
+   ClickButton* mSyncButton;
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
+   DropdownList* mOnEndMeasureDropdown;
    TextEntry* mRackRenameTextBox;
    std::string mRackRenameString;
 
    TextEntry* mMeasureBaseTextbox;
    TextEntry* mMeasureCountTextbox;
    TextEntry* mMeasureEndTextbox;
+
+   Checkbox* mLocalModeCheckbox;
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
@@ -164,7 +175,7 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
-   bool mGlobalMode{ true }; //If false, runs on local timing.
+   bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
    int mMeasureCount{ 0 };
    int mMeasureEnd {0};//Secondary viewing style, translated internally to measure count.
@@ -174,6 +185,9 @@ private:
    bool mResetButtonAlsoStops{ false};
    bool mStartEndMeasureMode{false};
    bool mReloadMeasureLoadFlag {false};
+
+   ofVec2f mHeaderSplitter1;
+   ofVec2f mHeaderSplitter2;
 
    int GetRackGridStartYOffset() const
    {
@@ -251,11 +265,13 @@ private:
 
    enum EnumOnEndMeasure
    {
-      enumOEMContinue,
-      enumOEMLoop,
-      enumOEMResetThenStop,
+      enumOEMContinue = 0,
+      enumOEMLoop = 1,
+      enumOEMStop = 2,
    };
-   EnumOnEndMeasure mOnEndMeasure;
+   int mOnEndMeasure;
+   int mPreviousGlobalEndMeasure{-1};
+   int mPreviousLocalEndMeasure{-1};
 
 
    LayerDropDownOptions mLayerDropDownOptions;

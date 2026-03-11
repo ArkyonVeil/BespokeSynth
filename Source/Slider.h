@@ -92,6 +92,7 @@ public:
    float GetModulationRangeMin() const override { return mMin; }
    float GetModulationRangeMax() const override { return mMax; }
    void OnTransportAdvanced(float amount) override;
+   void SetLineColour(ofColor newColor) {mBaseLineColour = newColor;}
 
    void Init() override;
 
@@ -187,6 +188,7 @@ private:
    int mLastComputeSamplesIn{ 0 };
    double* mLastComputeCacheTime;
    float* mLastComputeCacheValue;
+   ofColor mBaseLineColour{255,0,0};
 
    float mLastDisplayedValue{ std::numeric_limits<float>::max() };
 

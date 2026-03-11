@@ -36,9 +36,7 @@
 
 #include "SongCanvas.h"
 
-#include "CanvasTimeline.h"
 #include "ModularSynth.h"
-#include "SongCanvas_CanvasElement.h"
 
 #include <cstring>
 SongCanvas::SongCanvas()
@@ -97,9 +95,10 @@ void SongCanvas::CreateUIControls()
    mCanvas->mViewEnd = mMeasureCount;
    mCanvas->mLoopEnd = mMeasureCount;
 
-   mCanvasTimeline = new CanvasTimeline(mCanvas, "loopregion");
+   mCanvasTimeline = new CanvasTimeline(mCanvas, "loop region");
    mCanvasTimeline->SetCanvasYOffset(-22);
    mCanvasTimeline->SetBaseColour(ofColor(25,25,25));
+   mCanvasTimeline->SetListener(this);
    //mCanvasTimeline->SetHighlightColour(ofColor(200, 0, 0));
    //mCanvasTimeline->SetCornerHighlightColour(ofColor(200, 0, 0));
    AddUIControl(mCanvasTimeline);
@@ -111,8 +110,6 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetNoHover(true);
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
-
-
 
    mRackGrid = new UIFlowGrid("playrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
 
@@ -173,7 +170,10 @@ void SongCanvas::CreateUIControls()
    mMeasureEndTextbox->SetRequireEnter(false);
    mMeasureEndTextbox->SetShowing(false);
 
-
+   mSyncButton = new ClickButton(this,"sync",0,0,ButtonDisplayStyle::kText);
+   mOnEndMeasureDropdown = new DropdownList(this,"on finish",0,0,&mOnEndMeasure);
+   mOnEndMeasureDropdown->DrawLabel(true);
+   mLocalModeCheckbox = new Checkbox(this,"local",0,0,&mLocalMode);
 
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
@@ -190,17 +190,115 @@ void SongCanvas::CreateUIControls()
       dPartIter++;
       IncrementInternalRackId();
    }
-
+   UpdateEndMode();
    Resize(mWidth,mHeight);
    //mCanvas->mViewEnd = mMeasureCount;
-   RefitHeader();
    //mLayerName[0]->SetNoHover(false);
 }
 
-void SongCanvas::RefitHeader()
+void SongCanvas::ReloadHeader()
 {
-   int headerXOffset;
+   int headerXOffset = 4;
+   int headerYOffset = 8;
 
+   mPlayPauseButton->SetPosition(headerXOffset, headerYOffset);
+   headerXOffset += mPlayPauseButton->GetRect(true).width + 2;
+   mResetButton->SetPosition(headerXOffset, headerYOffset);
+   headerXOffset += mResetButton->GetRect(true).width + 2;
+   mTransportSlider->SetPosition(headerXOffset, headerYOffset);
+   headerXOffset += mTransportSlider->GetRect(true).width + 2;
+   if (mLocalMode && mOnEndMeasure == enumOEMLoop)
+   {
+      mSyncButton->SetPosition(headerXOffset, headerYOffset);
+      headerXOffset += mSyncButton->GetRect(true).width + 2;
+      mSyncButton->SetShowing(true);
+   }
+   else
+   {
+      mSyncButton->SetShowing(false);
+   }
+
+   headerXOffset += 16;
+   mHeaderSplitter1 = ofVec2f(headerXOffset, headerYOffset);
+   headerXOffset += 4;
+
+   if (!mLocalMode)
+   {
+      mMeasureBaseTextbox->SetPosition(headerXOffset, headerYOffset);
+      headerXOffset += mMeasureBaseTextbox->GetRect(true).width + 2;
+      mMeasureBaseTextbox->SetShowing(true);
+   }
+   else
+   {
+      mMeasureBaseTextbox->SetShowing(false);
+   }
+   if (!mStartEndMeasureMode)
+   {
+      mMeasureCountTextbox->SetShowing(true);
+      mMeasureEndTextbox->SetShowing(false);
+      mMeasureCountTextbox->SetPosition(headerXOffset, headerYOffset);
+      headerXOffset += mMeasureBaseTextbox->GetRect(true).width + 4;
+   }
+   else
+   {
+      mMeasureEndTextbox->SetPosition(headerXOffset, headerYOffset);
+      mMeasureCountTextbox->SetShowing(false);
+      mMeasureEndTextbox->SetShowing(true);
+      headerXOffset += mMeasureEndTextbox->GetRect(true).width + 4;
+   }
+   mHeaderSplitter2 = ofVec2f(headerXOffset, headerYOffset);
+   headerXOffset += 4;
+   mOnEndMeasureDropdown->SetPosition(headerXOffset, headerYOffset);
+   mOnEndMeasureDropdown->Clear();
+   if (!mLocalMode)
+      mOnEndMeasureDropdown->AddLabel("continue", enumOEMContinue);
+
+   mOnEndMeasureDropdown->AddLabel("stop", enumOEMStop);
+   mOnEndMeasureDropdown->AddLabel("loop", enumOEMLoop);
+   switch (mOnEndMeasure) //Probably a better way to do this, but can't be arsed.
+   {
+      case enumOEMContinue:
+         mOnEndMeasureDropdown->SetLabel("continue", enumOEMContinue);
+         break;
+      case enumOEMStop:
+         mOnEndMeasureDropdown->SetLabel("stop", enumOEMContinue);
+         break;
+      case enumOEMLoop:
+         mOnEndMeasureDropdown->SetLabel("loop", enumOEMContinue);
+         break;
+   }
+
+   mLocalModeCheckbox->SetPosition(mWidth - 47, headerYOffset);
+}
+
+void SongCanvas::UpdateEndMode()
+{
+   if (mLocalMode)
+   {
+      mTransportSlider->SetLineColour(LocalModeColour);
+      mMeasureSlider->SetLineColour(LocalModeColour);
+
+      if (mPreviousLocalEndMeasure == -1)
+      {
+         mOnEndMeasure = enumOEMLoop;
+      }
+      else
+         mOnEndMeasure = mPreviousLocalEndMeasure;
+   }
+   else
+   {
+      mTransportSlider->SetLineColour(ofColor::red);
+      mMeasureSlider->SetLineColour(ofColor::red);
+
+      if (mPreviousGlobalEndMeasure == -1)
+      {
+         mOnEndMeasure = enumOEMContinue;
+      }
+      else
+      {
+         mOnEndMeasure = mPreviousGlobalEndMeasure;
+      }
+   }
 }
 
 void SongCanvas::DrawModule()
@@ -268,10 +366,16 @@ void SongCanvas::DrawModule()
    mResetButton->Draw();
    mPlayPauseButton->Draw();
    mCanvasTimeline->Draw();
+   mLocalModeCheckbox->Draw();
+   mOnEndMeasureDropdown->Draw();
+   if (mLocalMode && mOnEndMeasure == enumOEMLoop)
+   {
+      mSyncButton->Draw();
+   }
 
    ofSetColor(ofColor(150,150,150));
-   auto mesStartRect = mMeasureBaseTextbox->GetRect(true);
-   ofLine(mesStartRect.x-8,mesStartRect.y,mesStartRect.x-8,mesStartRect.y + 15);
+   ofLine(mHeaderSplitter1.x-8,mHeaderSplitter1.y,mHeaderSplitter1.x-8,mHeaderSplitter1.y + 15);
+   ofLine(mHeaderSplitter2.x-8,mHeaderSplitter2.y,mHeaderSplitter2.x-8,mHeaderSplitter2.y + 15);
    ofPopStyle();
    mMeasureBaseTextbox->Draw();
    if (!mStartEndMeasureMode)
@@ -340,13 +444,21 @@ void SongCanvas::DrawModule()
       {
          ofSetColor(labelColor);
 
-         DrawTextNormal(std::to_string(mMeasureStart+iter*viewCullMultiplier), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
+         int displayNum;
+         if (!mLocalMode)
+            displayNum = mMeasureStart+iter*viewCullMultiplier;
+         else
+            displayNum = iter*viewCullMultiplier;
+         DrawTextNormal(ofToString(displayNum), drawPointOffset + 2, mOffsetFromTopSpacing - 2, 13);
       }
       drawPointOffset += measureOffset*viewCullMultiplier;
       iter++;
    }
    //Now the timeline position line
-   ofSetColor(ofColor::red);
+   if (!mLocalMode)
+      ofSetColor(ofColor::red);
+   else
+      ofSetColor(LocalModeColour);
    float markerLinePos = startCanvasOffset + ofMap(mTime,mMeasureStart+mCanvas->mViewStart,mMeasureStart+mCanvas->mViewEnd,0,mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
@@ -478,6 +590,8 @@ void SongCanvas::Resize(float w, float h)
    mRackGrid->RecalculateElements();
    mRackAddNewButton->SetPosition(8+mWidth - xEndRackSpacing,GetRackGridStartYOffset());
    mRackAddNewButton->SetDimensions(28, mFlowGridRows * FlowGridRowHeightSize);
+
+   ReloadHeader();
 }
 
 void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
@@ -660,12 +774,12 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
       TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
       return;
    }
-   else if (button == mResetButton)
+   if (button == mResetButton)
    {
       TheTransport->SetMeasureTime(0);
       return;
    }
-   else if (button == mRackAddNewButton)
+   if (button == mRackAddNewButton)
    {
       auto rp = mRackAddNewButton->GetPosition(true);
       mRackAddNewDropdown->SetPosition(rp.x, rp.y);
@@ -674,6 +788,12 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
       //DropdownClicked(mRackAddNewDropdown);
       return;
    }
+   if (button == mSyncButton)
+   {
+      //TODO implement
+      return;
+   }
+
    for (int i = 0; i < seqLayers.size(); ++i)
    {
       if (button == mLayerSettingsButton[i])
@@ -700,6 +820,14 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
          mListDropdownOptions->SetPosition(-2000, -2000);
          return;
       }
+   }
+}
+void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
+{
+   if (checkbox == mLocalModeCheckbox)
+   {
+      UpdateEndMode();
+      ReloadHeader();
    }
 }
 bool SongCanvas::MouseMoved(float x, float y)
@@ -791,6 +919,18 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
                               "layer" + ofToString(seqLayers.size())});
          FeatureResize(0,mCanvas->GetHeight()/seqLayers.size());
       }
+   }
+   if (list == mOnEndMeasureDropdown)
+   {
+      if (mLocalMode)
+      {
+         mPreviousLocalEndMeasure = mOnEndMeasureDropdown->GetValue();
+      }
+      else
+      {
+         mPreviousGlobalEndMeasure = mOnEndMeasureDropdown->GetValue();
+      }
+      ReloadHeader();
    }
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
    {
@@ -903,6 +1043,17 @@ SongCanvasRackElement* SongCanvas::GetRackElementWithID(int id)
       }
    }
    return nullptr;
+}
+void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
+{
+   if (newLoopMin == mCanvas->mViewStart && newLoopMax == mCanvas->mViewEnd)
+   {
+      mCanvasTimeline->SetBaseColour(ofColor(25,25,25));
+   }
+   else
+   {
+      mCanvasTimeline->SetBaseColour(ofColor(180,0,0));
+   }
 }
 void SongCanvas::OnTransportAdvanced(float amount)
 {
@@ -1019,32 +1170,15 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
    mModuleSaveData.LoadBool("start_end_measure_mode",moduleInfo,false);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
-   EnumMap map;
-   map["continue"] = 0;
-   map["loop"] = 1;
-   map["reset_and_stop"] = 2;
-   mModuleSaveData.LoadEnum<EnumOnEndMeasure>("on_end_measure",moduleInfo,0,nullptr,&map);
+
 }
 void SongCanvas::SetUpFromSaveData()
 {
    mAutoScaleMeasureCount = mModuleSaveData.GetBool("auto_scale_measure_count");
    mStartEndMeasureMode = mModuleSaveData.GetBool("start_end_measure_mode");
-   mOnEndMeasure = mModuleSaveData.GetEnum<EnumOnEndMeasure>("on_end_measure");
    mResetButtonAlsoStops = mModuleSaveData.GetBool("reset_button_also_stops");
 
-   if (mStartEndMeasureMode)
-   {
-      mMeasureCountTextbox->SetShowing(false);
-      mMeasureEndTextbox->SetShowing(true);
-      mMeasureEnd = mMeasureStart+mMeasureCount;
-   }
-   else
-   {
-      mMeasureCountTextbox->SetShowing(true);
-      mMeasureEndTextbox->SetShowing(false);
-   }
-
-   RefitHeader();
+   ReloadHeader();
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
@@ -1127,7 +1261,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << IsEnabled();
 
    //Reserved variables SEC-1
-   out << mGlobalMode;
+   out << mLocalMode;
    out << mMeasureStart;
    out << mMeasureCount;
    out << mAutoScaleMeasureCount;
@@ -1289,7 +1423,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> enableState;
    if (rev>1)
    {
-   in >> mGlobalMode;
+   in >> mLocalMode;
    in >> mMeasureStart;
    in >> mMeasureCount;
    in >> mAutoScaleMeasureCount;

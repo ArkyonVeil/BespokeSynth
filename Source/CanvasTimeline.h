@@ -30,6 +30,13 @@
 
 class Canvas;
 
+class ICanvasTimelineListener
+{
+public:
+   virtual ~ICanvasTimelineListener() {}
+   virtual void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) = 0;
+};
+
 class CanvasTimeline : public IUIControl
 {
 public:
@@ -47,7 +54,8 @@ public:
    void SetBaseColour(ofColor newColour) {mBaseColour = newColour; mBaseSmallHighlight = ofColor(MIN(255,newColour.r+50),MIN(255,newColour.g+50),MIN(255,newColour.b+50));}
    void SetCornerHighlightColour(ofColor newColour) {mCornerHighlightColour = newColour;};
    void SetCornerBaseColour(ofColor newColour) {mCornerBaseColour = newColour;};
-
+   ICanvasTimelineListener* GetListener() { return mListener; }
+   void SetListener(ICanvasTimelineListener* listener){mListener = listener;}
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -101,4 +109,5 @@ private:
    ofColor mCornerHighlightColour{255, 200, 0};
    ofColor mBaseSmallHighlight{150, 150, 150};
    Canvas* mCanvas{ nullptr };
+   ICanvasTimelineListener* mListener{ nullptr };
 };
