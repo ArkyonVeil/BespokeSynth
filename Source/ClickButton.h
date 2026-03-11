@@ -79,6 +79,8 @@ public:
    void SetDisplayText(bool display) { mDisplayStyle = ButtonDisplayStyle::kNoLabel; }
    void SetDisplayStyle(ButtonDisplayStyle style) { mDisplayStyle = style; }
    void SetIconAlignment(ButtonIconAlignment alignment);
+   void SetEnabled(bool enabled) {mEnabled = enabled;};
+   bool IsEnabled(){ return mEnabled;}
 
    void SetDimensions(float width, float height)
    {
@@ -124,6 +126,7 @@ private:
    float mIconOffsetX{ 0 };
    float mIconOffsetY{ 0 };
    float mHeight{ 15 };
+   bool mEnabled{ true };
    double mClickTime{ -9999 };
    IButtonListener* mOwner{ nullptr };
    ButtonDisplayStyle mDisplayStyle{ ButtonDisplayStyle::kText };

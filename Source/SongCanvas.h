@@ -109,7 +109,7 @@ public:
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override { return 3; };
+   int GetModuleSaveStateRev() const override { return 4; }
 
    ofColor LocalModeColour {255,0,238};
 
@@ -156,7 +156,7 @@ private:
    UIFlowGrid* mRackGrid;
    CanvasTimeline* mCanvasTimeline;
 
-   static constexpr int MaxLayers = 51;
+   static constexpr int MaxLayers = 51;//Further increasing this may cause crashes.
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
@@ -186,6 +186,9 @@ private:
    bool mStartEndMeasureMode{false};
    bool mReloadMeasureLoadFlag {false};
    bool mLocalSynced{ true };//Used in local mode's on end loop
+   bool mLocalStopped{ false };
+
+   bool mPreviewRackSounds{ true };//Sends a sound signal every time a rack part is interacted with.
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;

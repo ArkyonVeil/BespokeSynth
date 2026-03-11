@@ -78,7 +78,6 @@ void ClickButton::Render()
 
    ofColor color, textColor;
    IUIControl::GetColors(color, textColor);
-
    ofFill();
    ofSetColor(0, 0, 0, gModuleDrawAlpha * .5f);
    ofRect(mX + 1, mY + 1, w, h);
@@ -87,6 +86,11 @@ void ClickButton::Render()
    color.r = ofLerp(color.r, 0, press);
    color.g = ofLerp(color.g, 0, press);
    color.b = ofLerp(color.b, 0, press);
+   if (!mEnabled)
+   {
+      color.a = 130;
+      textColor.a = 130;
+   }
    ofSetColor(color);
    ofRect(mX, mY, w, h);
 
@@ -214,7 +218,8 @@ void ClickButton::OnClicked(float x, float y, bool right)
 void ClickButton::DoClick(double time)
 {
    mClickTime = time;
-   mOwner->ButtonClicked(this, time);
+   if (mEnabled)
+      mOwner->ButtonClicked(this, time);
 }
 
 void ClickButton::MouseReleased()
