@@ -444,9 +444,19 @@ void DrawTextNormal(std::string text, int x, int y, float size)
    gFont.DrawString(text, size, x, y);
 }
 
+void DrawTextMono(std::string text, int x, int y, float size)
+{
+   gFontFixedWidth.DrawString(text, size, x, y);
+}
+
 void DrawTextRightJustify(std::string text, int x, int y, float size)
 {
    gFont.DrawString(text, size, x - gFont.GetStringWidth(text, size), y);
+}
+
+void DrawTextMonoRightJustify(std::string text, int x, int y, float size)
+{
+   gFontFixedWidth.DrawString(text, size, x - gFontFixedWidth.GetStringWidth(text, size), y);
 }
 
 void DrawTextBold(std::string text, int x, int y, float size)

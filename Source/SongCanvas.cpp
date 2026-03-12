@@ -204,18 +204,18 @@ void SongCanvas::CreateUIControls()
    mOnFinalMeasureDropdown->DrawLabel(true);
    mLocalModeCheckbox = new Checkbox(this, "local", 0, 0, &mLocalMode);
 
-   mCanvasIntervalDropdown = new DropdownList(this,"interval",0,0,&mCanvasIntervalInt);
+   mCanvasIntervalDropdown = new DropdownList(this, "canvas interval", 0, 0, &mCanvasIntervalInt);
    mCanvasIntervalDropdown->DrawLabel(false);
-   mCanvasIntervalDropdown->AddLabel("1n",kInterval_1n);
-   mCanvasIntervalDropdown->AddLabel("2n",kInterval_2n);
-   mCanvasIntervalDropdown->AddLabel("4n",kInterval_4n);
+   mCanvasIntervalDropdown->AddLabel("1n", kInterval_1n);
+   mCanvasIntervalDropdown->AddLabel("2n", kInterval_2n);
+   mCanvasIntervalDropdown->AddLabel("4n", kInterval_4n);
    mCanvasIntervalDropdown->AddLabel("4nt", kInterval_4nt);
-   mCanvasIntervalDropdown->AddLabel("8n",kInterval_8n);
+   mCanvasIntervalDropdown->AddLabel("8n", kInterval_8n);
    mCanvasIntervalDropdown->AddLabel("8nt", kInterval_8nt);
-   mCanvasIntervalDropdown->AddLabel("16n",kInterval_16n);
+   mCanvasIntervalDropdown->AddLabel("16n", kInterval_16n);
    mCanvasIntervalDropdown->AddLabel("16nt", kInterval_16nt);
-   mCanvasIntervalDropdown->AddLabel("32n",kInterval_32n);
-   mCanvasIntervalDropdown->AddLabel("64n",kInterval_64n);
+   mCanvasIntervalDropdown->AddLabel("32n", kInterval_32n);
+   mCanvasIntervalDropdown->AddLabel("64n", kInterval_64n);
 
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
@@ -273,7 +273,7 @@ void SongCanvas::ReloadHeader()
    }
 
    headerXOffset += 16;
-   mHeaderSplitter1 = ofVec2f(headerXOffset+2, headerYOffset);
+   mHeaderSplitter1 = ofVec2f(headerXOffset + 2, headerYOffset);
    headerXOffset += 4;
 
    if (!mLocalMode)
@@ -300,7 +300,8 @@ void SongCanvas::ReloadHeader()
       mMeasureEndTextbox->SetShowing(true);
       headerXOffset += mMeasureEndTextbox->GetRect(true).width;
    }
-   mCanvasIntervalDropdown->SetPosition(headerXOffset-8, headerYOffset);
+
+   mCanvasIntervalDropdown->SetPosition(headerXOffset - 8, headerYOffset);
    headerXOffset += mCanvasIntervalDropdown->GetRect(true).width + 4;
    headerXOffset += 8;
    mHeaderSplitter2 = ofVec2f(headerXOffset, headerYOffset);
@@ -324,7 +325,6 @@ void SongCanvas::ReloadHeader()
          mOnFinalMeasureDropdown->SetLabel("loop", enumOEMLoop);
          break;
    }
-
 
    mLocalModeCheckbox->SetPosition(mWidth - 47, headerYOffset);
 }
@@ -355,7 +355,7 @@ ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
       case ESGlass:
          return ofColor(166, 237, 255, 150);
       case ESCarbon:
-         return ofColor::arrayInterpolate(ESCarbonColours,mTime);
+         return ofColor::arrayInterpolate(ESCarbonColours, mTime);
       case ESCheckerboard:
          if ((int)floor(time) % 2 == 0)
             return ofColor(255, 255, 255);
@@ -365,11 +365,11 @@ ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
             return ofColor::cyan;
          return ofColor(255, 0, 238);
       case ESRGB:
-         return ofColor::arrayInterpolate(ESRGBColours,mTime*2);
+         return ofColor::arrayInterpolate(ESRGBColours, mTime * 2);
       case ESPride:
-         return ofColor::arrayInterpolate(ESPrideColours,mTime*2);
+         return ofColor::arrayInterpolate(ESPrideColours, mTime * 2);
       case ESTrans:
-         return ofColor::arrayInterpolate(ESTransColours,mTime);
+         return ofColor::arrayInterpolate(ESTransColours, mTime);
       default:
          return ofColor::red;
    }
@@ -422,13 +422,13 @@ void SongCanvas::DrawModule()
    ofFill();
    if (mLocalMode)
    {
-      mTransportSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor,mTime));
-      mMeasureSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor,mTime));
+      mTransportSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor, mTime));
+      mMeasureSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor, mTime));
    }
    else
    {
-      mTransportSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor,mTime));
-      mMeasureSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor,mTime));
+      mTransportSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor, mTime));
+      mMeasureSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor, mTime));
    }
    //Draw the canvas.
 
@@ -493,6 +493,7 @@ void SongCanvas::DrawModule()
    ofLine(mHeaderSplitter1.x - 8, mHeaderSplitter1.y, mHeaderSplitter1.x - 8, mHeaderSplitter1.y + 15);
    ofLine(mHeaderSplitter2.x - 8, mHeaderSplitter2.y, mHeaderSplitter2.x - 8, mHeaderSplitter2.y + 15);
    ofPopStyle();
+
    mMeasureBaseTextbox->Draw();
    if (!mStartEndMeasureMode)
       mMeasureCountTextbox->Draw();
@@ -504,7 +505,50 @@ void SongCanvas::DrawModule()
    else
       mPlayPauseButton->SetDisplayStyle(ButtonDisplayStyle::kPause);
 
+   if (mShowRealTime)
+   {
+      float sDTime = round(mMeasureStart * (TheTransport->MsPerBar() / 1000) * 10) / 10;
+      float eDTime = round(mMeasureCount * (TheTransport->MsPerBar() / 1000) * 10) / 10;
+      float cDTime = round(mTime * (TheTransport->MsPerBar() / 1000) * 10) / 10;
+      std::string timeField;
 
+      std::string std2;
+
+      if (mStartEndMeasureMode && !mLocalMode)
+      {
+         eDTime += sDTime;
+         std2 = "-";
+      }
+      else
+      {
+         std2 = "";
+      }
+
+      std::string str1;
+      if (fmod(cDTime, 1) == 0)
+         str1 = ".0";
+      int mins1 = floor(sDTime / 60);
+      int mins2 = floor(eDTime / 60);
+      int mins3 = floor(cDTime / 60);
+      std::string strM1;
+      std::string strM2;
+      std::string strM3;
+      if (mins1 > 0)
+         strM1 = ofToString(mins1) + ":";
+      if (mins2 > 0)
+         strM2 = ofToString(mins2) + ":";
+      if (mins3 > 0)
+         strM3 = ofToString(mins3) + ":";
+
+      std::string strStartMeasure;
+      if (!mLocalMode)
+         strStartMeasure = "(" + strM1 + ofToString(fmod(sDTime, 60)) + ")"+std2;
+      std::string strMeasureCount =  "(" + strM2 + ofToString(fmod(eDTime, 60)) + ")";
+      std::string strCurrentTime = " [" + strM3 + ofToString(fmod(cDTime, 60)) + str1 + "]";
+
+      timeField = strStartMeasure + strMeasureCount + strCurrentTime;
+      DrawTextMonoRightJustify(timeField, mLocalModeCheckbox->GetRect(true).x - 4, mLocalModeCheckbox->GetRect(true).y + 13);
+   }
    float drawPointOffset = startCanvasOffset;
    float measuresVisible = mCanvas->mViewEnd - mCanvas->mViewStart; //12 = (ex:default)number of measures visible, 0 = infinitely zoomed in
    float measureOffset = mCanvas->GetWidth() / mMeasureCount * (mMeasureCount / measuresVisible);
@@ -572,9 +616,9 @@ void SongCanvas::DrawModule()
    }
    //Now the timeline position line
    if (!mLocalMode)
-      ofSetColor(GetFancyStyleColour(mGlobalModeColor,mTime));
+      ofSetColor(GetFancyStyleColour(mGlobalModeColor, mTime));
    else
-      ofSetColor(GetFancyStyleColour(mLocalModeColor,mTime));
+      ofSetColor(GetFancyStyleColour(mLocalModeColor, mTime));
    float markerLinePos = startCanvasOffset + ofMap(mCanvasRelativeTime * mMeasureCount, mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd, 0, mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
@@ -605,7 +649,7 @@ void SongCanvas::DrawModule()
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-/*
+   /*
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText = "View Cull: " + ofToString(viewCullMultiplier)+
       "\nZoomPercent: "+ofToString(measuresVisible)+
@@ -819,7 +863,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
 {
    float oldViewEnd = mCanvas->mViewEnd;
    float oldMeasureCount = mCanvas->GetLength();
-   bool loopMaxed = mCanvas->mViewStart == mCanvas->mLoopStart && mCanvas->mViewEnd == mCanvas->mLoopEnd;
+   bool loopMaxed = 0 == mCanvas->mLoopStart && mCanvas->GetLength() == mCanvas->mLoopEnd;
    if (mMeasureSize <= 0)
    {
       mMeasureSize = mStandardMeasureSize;
@@ -850,7 +894,15 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    }
    mMeasureSize = ceil(mCanvas->GetWidth() / static_cast<float>(mMeasureCount));
    mCanvas->SetLength(mMeasureCount); //This line is responsible for an untold amount of misery.
-   mCanvas->RescaleNumCols(TheTransport->CountInStandardMeasure(mCanvasInterval) * mMeasureCount);
+   if (mAlteredIntervalFlag)
+   {
+      mCanvas->RescaleNumCols(TheTransport->CountInStandardMeasure(mCanvasInterval) * mMeasureCount);
+      mAlteredIntervalFlag = false;
+   }
+   else
+   {
+      mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(mCanvasInterval) * mMeasureCount);
+   }
    if (mAutoScaleMeasureCount && !overrideAutoFit)
    {
       mCanvas->mViewEnd = MIN(mMeasureCount, oldViewEnd * mMeasureCount / oldMeasureCount);
@@ -1097,6 +1149,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
    if (list == mCanvasIntervalDropdown)
    {
       mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
+      mAlteredIntervalFlag = true;
       ReloadMeasures(false);
    }
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
@@ -1384,6 +1437,7 @@ void SongCanvas::OnTimeEvent(double time)
 
 void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 {
+   mModuleSaveData.LoadBool("show_real_time", moduleInfo, false);
    mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
    mModuleSaveData.LoadBool("start_end_measure_mode", moduleInfo, false);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
@@ -1405,15 +1459,15 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mapCols["rgb"] = 14;
    mapCols["pride"] = 15;
    mapCols["trans"] = 16;
-   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style",moduleInfo,0,nullptr,&mapCols);
-   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style",moduleInfo,1,nullptr,&mapCols);
-
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style", moduleInfo, 0, nullptr, &mapCols);
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style", moduleInfo, 1, nullptr, &mapCols);
 }
 void SongCanvas::SetUpFromSaveData()
 {
    mAutoScaleMeasureCount = mModuleSaveData.GetBool("auto_scale_measure_count");
    mStartEndMeasureMode = mModuleSaveData.GetBool("start_end_measure_mode");
    mResetButtonAlsoStops = mModuleSaveData.GetBool("reset_button_also_stops");
+   mShowRealTime = mModuleSaveData.GetBool("show_real_time");
 
    mGlobalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("global_colour_style");
    mLocalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("local_colour_style");

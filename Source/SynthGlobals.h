@@ -215,6 +215,8 @@ double DoubleWrap(double num, float space);
 void DrawTextNormal(std::string text, int x, int y, float size = 13);
 void DrawTextRightJustify(std::string text, int x, int y, float size = 13);
 void DrawTextBold(std::string text, int x, int y, float size = 13);
+void DrawTextMono(std::string text, int x, int y, float size = 13);
+void DrawTextMonoRightJustify(std::string text, int x, int y, float size = 13);
 float GetStringWidth(std::string text, float size = 13);
 void AssertIfDenormal(float input);
 float GetInterpolatedSample(double offset, const float* buffer, int bufferSize);

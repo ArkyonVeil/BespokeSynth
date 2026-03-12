@@ -217,6 +217,9 @@ private:
    bool mReloadMeasureLoadFlag{ false };
    bool mLocalSynced{ true }; //Used in local mode's on end loop
    bool mLocalStopped{ false };
+   bool mAlteredIntervalFlag{ false };
+
+   bool mShowRealTime{ false };
 
    bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
    NoteInterval mCanvasInterval{NoteInterval::kInterval_4n};
