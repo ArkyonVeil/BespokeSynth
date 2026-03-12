@@ -291,18 +291,18 @@ void SongCanvas::ReloadHeader()
       mMeasureCountTextbox->SetShowing(true);
       mMeasureEndTextbox->SetShowing(false);
       mMeasureCountTextbox->SetPosition(headerXOffset, headerYOffset);
-      headerXOffset += mMeasureBaseTextbox->GetRect(true).width;
+      headerXOffset += mMeasureCountTextbox->GetRect(true).width+8;
    }
    else
    {
       mMeasureEndTextbox->SetPosition(headerXOffset, headerYOffset);
       mMeasureCountTextbox->SetShowing(false);
       mMeasureEndTextbox->SetShowing(true);
-      headerXOffset += mMeasureEndTextbox->GetRect(true).width;
+      headerXOffset += mMeasureEndTextbox->GetRect(true).width+8;
    }
 
-   mCanvasIntervalDropdown->SetPosition(headerXOffset - 8, headerYOffset);
-   headerXOffset += mCanvasIntervalDropdown->GetRect(true).width + 4;
+   mCanvasIntervalDropdown->SetPosition(headerXOffset, headerYOffset);
+   headerXOffset += mCanvasIntervalDropdown->GetRect(true).width + 8;
    headerXOffset += 8;
    mHeaderSplitter2 = ofVec2f(headerXOffset, headerYOffset);
    headerXOffset += 4;
@@ -619,7 +619,7 @@ void SongCanvas::DrawModule()
       ofSetColor(GetFancyStyleColour(mGlobalModeColor, mTime));
    else
       ofSetColor(GetFancyStyleColour(mLocalModeColor, mTime));
-   float markerLinePos = startCanvasOffset + ofMap(mCanvasRelativeTime * mMeasureCount, mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd, 0, mCanvas->GetWidth());
+   float markerLinePos = startCanvasOffset + ofMap(mCanvasRelativeTime * mMeasureCount, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
    ofSetColor(ofColor::grey);
@@ -1294,7 +1294,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
    //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
    if (!mLocalMode) //Global Time ops
    {
-      float procTime = mTime;
+
       bool timelineLoopActive = true;
       if (mCanvas->mLoopEnd == mCanvas->GetLength() && mCanvas->mLoopStart == 0)
          timelineLoopActive = false;
@@ -1324,8 +1324,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
             TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
          }
       }
-      procTime = mTime;
-      mCanvasRelativeTime = (procTime - mMeasureStart + 0.02f) / mMeasureCount;
+      mCanvasRelativeTime = (mTime - mMeasureStart + 0.02f) / mMeasureCount;
    }
    else //Local time Ops
    {
@@ -1472,7 +1471,9 @@ void SongCanvas::SetUpFromSaveData()
    mGlobalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("global_colour_style");
    mLocalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("local_colour_style");
 
+
    ReloadHeader();
+   ReloadMeasures(false);
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
