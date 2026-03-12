@@ -98,7 +98,7 @@ void CanvasTimeline::Render()
       ofRect(startX, 0, endX - startX, mHeight / 2, 0);
    else
    {
-      ofRect(MAX(startX,0), 0, MIN(mWidth,endX - startX), mHeight / 2, 0);
+      ofRect(MAX(startX, 0), 0, MIN(mWidth, endX - startX), mHeight / 2, 0);
    }
    if (!shiftPreview)
    {
@@ -115,12 +115,12 @@ void CanvasTimeline::Render()
       else
          ofSetColor(mCornerBaseColour);
       ofFill();
-      if (startX>=0 || mClick)
+      if (startX >= 0 || mClick)
          DrawTriangle(startX, 1);
       else
       {
          ofSetLineWidth(2);
-         ofLine(0,0,0,mHeight);
+         ofLine(0, 0, 0, mHeight);
       }
 
 
@@ -137,12 +137,12 @@ void CanvasTimeline::Render()
       else
          ofSetColor(mCornerBaseColour);
       ofFill();
-      if (endX<=mWidth || mClick)//Probably best to make this a variable.
+      if (endX <= mWidth || mClick) //Probably best to make this a variable.
          DrawTriangle(endX, -1);
       else
       {
          ofSetLineWidth(2);
-         ofLine(mWidth,0,mWidth,mHeight);
+         ofLine(mWidth, 0, mWidth, mHeight);
       }
    }
    //Hover shift behaviors
@@ -190,18 +190,39 @@ void CanvasTimeline::DrawTriangle(float posX, int direction)
 float CanvasTimeline::GetQuantizedForX(float posX, HoverMode clampSide)
 {
    float pos = ((posX / mWidth) * (mCanvas->mViewEnd - mCanvas->mViewStart)) + mCanvas->mViewStart;
-   int measure = CLAMP(int(pos + .5f), 0, mCanvas->GetLength());
-   if (clampSide == HoverMode::kStart)
+   bool control = GetKeyModifiers() & kModifier_Command;
+   if (!control)
    {
-      if (measure >= mCanvas->mLoopEnd)
-         measure = mCanvas->mLoopEnd - 1;
+      int measure = CLAMP(int(pos + .5f), 0, mCanvas->GetLength());
+      if (clampSide == HoverMode::kStart)
+      {
+         if (measure >= mCanvas->mLoopEnd)
+            measure = mCanvas->mLoopEnd - 1;
+      }
+      if (clampSide == HoverMode::kEnd)
+      {
+         if (measure <= mCanvas->mLoopStart)
+            measure = mCanvas->mLoopStart + 1;
+      }
+         return measure;
    }
-   if (clampSide == HoverMode::kEnd)
+   else
    {
-      if (measure <= mCanvas->mLoopStart)
-         measure = mCanvas->mLoopStart + 1;
+      float cPerM = mCanvas->GetNumCols()/mCanvas->GetLength();
+      pos = round(pos*(cPerM))/cPerM;
+      float interval = CLAMP(pos, 0, mCanvas->GetLength());
+      if (clampSide == HoverMode::kStart)
+      {
+         if (interval >= mCanvas->mLoopEnd)
+            interval = mCanvas->mLoopEnd - 1;
+      }
+      if (clampSide == HoverMode::kEnd)
+      {
+         if (interval <= mCanvas->mLoopStart)
+            interval = mCanvas->mLoopStart + 1;
+      }
+      return interval;
    }
-   return measure;
 }
 
 void CanvasTimeline::OnClicked(float x, float y, bool right)
