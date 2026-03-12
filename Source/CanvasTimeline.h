@@ -60,6 +60,7 @@ public:
    void SetCornerBaseColour(ofColor newColour) { mCornerBaseColour = newColour; };
    ICanvasTimelineListener* GetListener() { return mListener; }
    void SetListener(ICanvasTimelineListener* listener) { mListener = listener; }
+   void SetDisableColumnSnapping(bool disable) { mDisableControlSnapping = disable; };
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
@@ -99,6 +100,7 @@ private:
    float mHeight{ 20 };
    float mCanvasYOffset{ -10 };
 
+   bool mDisableControlSnapping { false };
    bool mClick{ false };
    bool mShiftOverride{ false };
    bool mHideShiftTemp{ false };

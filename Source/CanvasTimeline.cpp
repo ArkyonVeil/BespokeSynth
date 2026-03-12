@@ -191,6 +191,8 @@ float CanvasTimeline::GetQuantizedForX(float posX, HoverMode clampSide)
 {
    float pos = ((posX / mWidth) * (mCanvas->mViewEnd - mCanvas->mViewStart)) + mCanvas->mViewStart;
    bool control = GetKeyModifiers() & kModifier_Command;
+   if (mDisableControlSnapping)
+      control = false;
    if (!control)
    {
       int measure = CLAMP(int(pos + .5f), 0, mCanvas->GetLength());
