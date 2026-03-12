@@ -314,6 +314,7 @@ private:
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
+
    //Expert variables
    bool expertPanelEnabled = false;
 };

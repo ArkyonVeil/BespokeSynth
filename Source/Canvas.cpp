@@ -489,6 +489,7 @@ void Canvas::MouseReleased()
 
 bool Canvas::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
 {
+
    if (GetKeyModifiers() & kModifier_Alt)
    {
       scrollX = scrollY;
@@ -498,7 +499,11 @@ bool Canvas::MouseScrolled(float x, float y, float scrollX, float scrollY, bool 
    if (GetKeyModifiers() & kModifier_Shift)
    {
       float canvasX, canvasY;
+      float canvasXl, canvasYl;
       GetPosition(canvasX, canvasY, false);
+      GetPosition(canvasXl, canvasYl, true);//Compensates for offsets added by being the child of other modules.
+      canvasX -= canvasXl;
+      canvasY -= canvasYl;
       ofVec2f canvasPos = ofVec2f(ofMap(x, canvasX, canvasX + GetWidth(), 0, 1),
                                   ofMap(y, canvasY, canvasY + GetHeight(), 0, 1));
       if (IsInUnitBox(canvasPos))

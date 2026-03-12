@@ -586,7 +586,7 @@ void SongCanvas::DrawModule()
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-   /*
+/*
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText = "View Cull: " + ofToString(viewCullMultiplier)+
       "\nZoomPercent: "+ofToString(measuresVisible)+
