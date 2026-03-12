@@ -156,6 +156,8 @@ public:
    float mLoopStart{ 0 };
    float mLoopEnd;
 
+   float mMinimumSnappingInterval{ 64 };
+
 private:
    void OnClicked(float x, float y, bool right) override;
    void GetDimensions(float& width, float& height) override
@@ -166,6 +168,7 @@ private:
 
    bool IsOnElement(CanvasElement* element, float x, float y) const;
    float QuantizeToGrid(float input) const;
+   float QuantizeToGridMin(float input) const;
 
    bool mClick{ false };
    CanvasElement* mClickedElement{ nullptr };

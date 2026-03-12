@@ -239,10 +239,15 @@ void CanvasElement::GetDragDestinationData(ofVec2f dragOffset, int& newRow, int&
       newRow = ofClamp(int(mRow + rowDrag + .5f), 0, mCanvas->GetNumRows() - 1);
 
    newOffset = mOffset;
-   if (GetKeyModifiers() & kModifier_Alt) //non-snapped drag
-      newOffset = mOffset + colDrag - (newCol - mCol);
+   if (GetKeyModifiers() & kModifier_Alt) //minimum drag
+   {
+      int minSnap =mCanvas->mMinimumSnappingInterval/ (mCanvas->GetNumCols()/mCanvas->GetLength());//compensate for existing snapping.
+      newOffset = round((mOffset + colDrag - (newCol - mCol))*minSnap)/minSnap;
+   }
    if (GetKeyModifiers() & kModifier_Command) //quantize
       newOffset = 0;
+   if (GetKeyModifiers() & kModifier_Command && GetKeyModifiers() &  kModifier_Alt)//True free
+      newOffset = mOffset + colDrag - (newCol - mCol);
 }
 
 void CanvasElement::MoveElementByDrag(ofVec2f dragOffset)

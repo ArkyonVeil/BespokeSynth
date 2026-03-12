@@ -291,6 +291,11 @@ float Canvas::QuantizeToGrid(float input) const
    float col = int(input * GetNumCols() + .5f);
    return col / GetNumCols();
 }
+float Canvas::QuantizeToGridMin(float input) const
+{
+   float col = int(input * GetLength()*mMinimumSnappingInterval + .5f);
+   return col / (GetLength()*mMinimumSnappingInterval);
+}
 
 bool Canvas::CanBeTargetedBy(PatchCableSource* source) const
 {
@@ -302,6 +307,7 @@ bool Canvas::MouseMoved(float x, float y)
    CheckHover(x, y);
 
    bool quantize = GetKeyModifiers() & kModifier_Command;
+   bool freeRescale = GetKeyModifiers() & kModifier_Alt;
    if (mInvertDragSnapBehavior)
       quantize = !quantize;
 
@@ -319,7 +325,12 @@ bool Canvas::MouseMoved(float x, float y)
             {
                float start = element->GetStart() + startDelta;
                if (quantize)
-                  start = QuantizeToGrid(start);
+                     start = QuantizeToGrid(start);
+               else
+               {
+                  if (!freeRescale)
+                     start = QuantizeToGridMin(start);
+               }
                element->SetStart(start, false);
             }
          }
@@ -336,6 +347,11 @@ bool Canvas::MouseMoved(float x, float y)
                float end = element->GetEnd() + endDelta;
                if (quantize)
                   end = QuantizeToGrid(end);
+               else
+               {
+                  if (!freeRescale)
+                     end = QuantizeToGridMin(end);
+               }
                element->SetEnd(end);
             }
          }
