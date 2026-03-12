@@ -200,9 +200,22 @@ void SongCanvas::CreateUIControls()
    mMeasureEndTextbox->SetShowing(false);
 
    mSyncButton = new ClickButton(this, "sync", 0, 0, ButtonDisplayStyle::kText);
-   mOnEndMeasureDropdown = new DropdownList(this, "on finish", 0, 0, &mOnEndMeasure);
-   mOnEndMeasureDropdown->DrawLabel(true);
+   mOnFinalMeasureDropdown = new DropdownList(this, "on finish", 0, 0, &mOnEndMeasure);
+   mOnFinalMeasureDropdown->DrawLabel(true);
    mLocalModeCheckbox = new Checkbox(this, "local", 0, 0, &mLocalMode);
+
+   mCanvasIntervalDropdown = new DropdownList(this,"interval",0,0,&mCanvasIntervalInt);
+   mCanvasIntervalDropdown->DrawLabel(false);
+   mCanvasIntervalDropdown->AddLabel("1n",kInterval_1n);
+   mCanvasIntervalDropdown->AddLabel("2n",kInterval_2n);
+   mCanvasIntervalDropdown->AddLabel("4n",kInterval_4n);
+   mCanvasIntervalDropdown->AddLabel("4nt", kInterval_4nt);
+   mCanvasIntervalDropdown->AddLabel("8n",kInterval_8n);
+   mCanvasIntervalDropdown->AddLabel("8nt", kInterval_8nt);
+   mCanvasIntervalDropdown->AddLabel("16n",kInterval_16n);
+   mCanvasIntervalDropdown->AddLabel("16nt", kInterval_16nt);
+   mCanvasIntervalDropdown->AddLabel("32n",kInterval_32n);
+   mCanvasIntervalDropdown->AddLabel("64n",kInterval_64n);
 
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
@@ -260,7 +273,7 @@ void SongCanvas::ReloadHeader()
    }
 
    headerXOffset += 16;
-   mHeaderSplitter1 = ofVec2f(headerXOffset, headerYOffset);
+   mHeaderSplitter1 = ofVec2f(headerXOffset+2, headerYOffset);
    headerXOffset += 4;
 
    if (!mLocalMode)
@@ -278,36 +291,41 @@ void SongCanvas::ReloadHeader()
       mMeasureCountTextbox->SetShowing(true);
       mMeasureEndTextbox->SetShowing(false);
       mMeasureCountTextbox->SetPosition(headerXOffset, headerYOffset);
-      headerXOffset += mMeasureBaseTextbox->GetRect(true).width + 4;
+      headerXOffset += mMeasureBaseTextbox->GetRect(true).width;
    }
    else
    {
       mMeasureEndTextbox->SetPosition(headerXOffset, headerYOffset);
       mMeasureCountTextbox->SetShowing(false);
       mMeasureEndTextbox->SetShowing(true);
-      headerXOffset += mMeasureEndTextbox->GetRect(true).width + 4;
+      headerXOffset += mMeasureEndTextbox->GetRect(true).width;
    }
+   mCanvasIntervalDropdown->SetPosition(headerXOffset-8, headerYOffset);
+   headerXOffset += mCanvasIntervalDropdown->GetRect(true).width + 4;
+   headerXOffset += 8;
    mHeaderSplitter2 = ofVec2f(headerXOffset, headerYOffset);
    headerXOffset += 4;
-   mOnEndMeasureDropdown->SetPosition(headerXOffset, headerYOffset);
-   mOnEndMeasureDropdown->Clear();
+   mOnFinalMeasureDropdown->SetPosition(headerXOffset, headerYOffset);
+   mOnFinalMeasureDropdown->Clear();
    if (!mLocalMode)
-      mOnEndMeasureDropdown->AddLabel("continue", enumOEMContinue);
+      mOnFinalMeasureDropdown->AddLabel("continue", enumOEMContinue);
 
-   mOnEndMeasureDropdown->AddLabel("stop", enumOEMStop);
-   mOnEndMeasureDropdown->AddLabel("loop", enumOEMLoop);
+   mOnFinalMeasureDropdown->AddLabel("stop", enumOEMStop);
+   mOnFinalMeasureDropdown->AddLabel("loop", enumOEMLoop);
    switch (mOnEndMeasure) //Probably a better way to do this, but can't be arsed.
    {
       case enumOEMContinue:
-         mOnEndMeasureDropdown->SetLabel("continue", enumOEMContinue);
+         mOnFinalMeasureDropdown->SetLabel("continue", enumOEMContinue);
          break;
       case enumOEMStop:
-         mOnEndMeasureDropdown->SetLabel("stop", enumOEMStop);
+         mOnFinalMeasureDropdown->SetLabel("stop", enumOEMStop);
          break;
       case enumOEMLoop:
-         mOnEndMeasureDropdown->SetLabel("loop", enumOEMLoop);
+         mOnFinalMeasureDropdown->SetLabel("loop", enumOEMLoop);
          break;
    }
+
+
    mLocalModeCheckbox->SetPosition(mWidth - 47, headerYOffset);
 }
 ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
@@ -464,7 +482,8 @@ void SongCanvas::DrawModule()
    mCanvasTimeline->Draw();
    mMeasureSlider->Draw();
    mLocalModeCheckbox->Draw();
-   mOnEndMeasureDropdown->Draw();
+   mOnFinalMeasureDropdown->Draw();
+   mCanvasIntervalDropdown->Draw();
    if (mLocalMode && mOnEndMeasure == enumOEMLoop)
    {
       mSyncButton->Draw();
@@ -831,7 +850,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    }
    mMeasureSize = ceil(mCanvas->GetWidth() / static_cast<float>(mMeasureCount));
    mCanvas->SetLength(mMeasureCount); //This line is responsible for an untold amount of misery.
-   mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(kInterval_4n) * mMeasureCount);
+   mCanvas->RescaleNumCols(TheTransport->CountInStandardMeasure(mCanvasInterval) * mMeasureCount);
    if (mAutoScaleMeasureCount && !overrideAutoFit)
    {
       mCanvas->mViewEnd = MIN(mMeasureCount, oldViewEnd * mMeasureCount / oldMeasureCount);
@@ -1062,17 +1081,23 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
          FeatureResize(0, mCanvas->GetHeight() / seqLayers.size());
       }
    }
-   if (list == mOnEndMeasureDropdown)
+   if (list == mOnFinalMeasureDropdown)
    {
       if (mLocalMode)
       {
-         mPreviousLocalEndMeasure = mOnEndMeasureDropdown->GetValue();
+         mPreviousLocalEndMeasure = mOnFinalMeasureDropdown->GetValue();
       }
       else
       {
-         mPreviousGlobalEndMeasure = mOnEndMeasureDropdown->GetValue();
+         mPreviousGlobalEndMeasure = mOnFinalMeasureDropdown->GetValue();
       }
       ReloadHeader();
+      return;
+   }
+   if (list == mCanvasIntervalDropdown)
+   {
+      mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
+      ReloadMeasures(false);
    }
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
    {
@@ -1362,26 +1387,27 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
    mModuleSaveData.LoadBool("start_end_measure_mode", moduleInfo, false);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
-   EnumMap map;
-   map["red"] = 0;
-   map["pink"] = 1;
-   map["yellow"] = 2;
-   map["cyan"] = 3;
-   map["green"] = 4;
-   map["orange"] = 5;
-   map["purple"] = 6;
-   map["blue"] = 7;
-   map["white"] = 8;
-   map["black"] = 9;
-   map["glass"] = 10;
-   map["carbon"] = 11;
-   map["checkerboard"] = 12;
-   map["transport"] = 13;
-   map["rgb"] = 14;
-   map["pride"] = 15;
-   map["trans"] = 16;
-   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style",moduleInfo,0,nullptr,&map);
-   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style",moduleInfo,1,nullptr,&map);
+   EnumMap mapCols;
+   mapCols["red"] = 0;
+   mapCols["pink"] = 1;
+   mapCols["yellow"] = 2;
+   mapCols["cyan"] = 3;
+   mapCols["green"] = 4;
+   mapCols["orange"] = 5;
+   mapCols["purple"] = 6;
+   mapCols["blue"] = 7;
+   mapCols["white"] = 8;
+   mapCols["black"] = 9;
+   mapCols["glass"] = 10;
+   mapCols["carbon"] = 11;
+   mapCols["checkerboard"] = 12;
+   mapCols["transport"] = 13;
+   mapCols["rgb"] = 14;
+   mapCols["pride"] = 15;
+   mapCols["trans"] = 16;
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style",moduleInfo,0,nullptr,&mapCols);
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style",moduleInfo,1,nullptr,&mapCols);
+
 }
 void SongCanvas::SetUpFromSaveData()
 {
@@ -1491,6 +1517,9 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mLocalSynced;
    out << mOnEndMeasure;
    out << mTime;
+
+   //Rev5
+   out << mCanvasIntervalInt;
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
@@ -1573,7 +1602,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> i1;
    mCanvas->SetNumRows(i1);
    in >> i1;
-   mCanvas->SetNumCols(i1);
+   //mCanvas->SetNumCols(i1);no longer used
    in >> f1;
    mCanvas->SetLength(f1);
    in >> f1;
@@ -1678,6 +1707,11 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
          mSyncButton->SetEnabled(!mLocalSynced);
          mTime = t;
       }
+   }
+   if (rev >= 5)
+   {
+      in >> mCanvasIntervalInt;
+      mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
    }
    UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
 

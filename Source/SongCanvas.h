@@ -109,7 +109,7 @@ public:
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override { return 4; }
+   int GetModuleSaveStateRev() const override { return 5; }
 
    enum EnumSongCanvasStyle
    {
@@ -148,6 +148,7 @@ private:
       std::string layerName;
    };
    void UpdateEndMode();
+   void UpdateNumColumns();
 
 
    //IDrawableModule
@@ -169,7 +170,8 @@ private:
    ClickButton* mPlayPauseButton;
    ClickButton* mSyncButton;
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
-   DropdownList* mOnEndMeasureDropdown;
+   DropdownList* mOnFinalMeasureDropdown;
+   DropdownList* mCanvasIntervalDropdown;
    TextEntry* mRackRenameTextBox;
    std::string mRackRenameString;
 
@@ -217,6 +219,8 @@ private:
    bool mLocalStopped{ false };
 
    bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
+   NoteInterval mCanvasInterval{NoteInterval::kInterval_4n};
+   int mCanvasIntervalInt{NoteInterval::kInterval_4n};
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
