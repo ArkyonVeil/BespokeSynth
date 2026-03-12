@@ -98,6 +98,8 @@ public:
    SongCanvasRackElement* GetRackElementWithID(int id);
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
 
+   bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled;}
+
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void OnTransportAdvanced(float amount) override;

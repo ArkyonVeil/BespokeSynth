@@ -8,8 +8,8 @@ SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int 
 {
    //canvas->SetZoomSpeed(10);
    mLength *= 4;
-   SongCanvas* seq = static_cast<SongCanvas*>(canvas->GetListener());
-   seq->SetupCanvasElement(this);
+   mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
+   mSongCanvas->SetupCanvasElement(this);
 }
 
 void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
@@ -82,8 +82,17 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
    rect.y += (fullHeight - rect.height) * .5f;
    if (rect.width > 0)
    {
-      ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
-
+      bool isActive = mSongCanvas->IsEnabled() && mSongCanvas->IsLayerActive(mRow);
+      int eDiv = 1;//Enabled Divisor
+      if (isActive)
+         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
+      else
+      {
+         eDiv = 2;
+         auto colA1 = ofColor(mCurrentColor.r/2, mCurrentColor.g/2, mCurrentColor.b/2);
+         auto colA2 = ofColor(mCurrentColorGrad.r/2, mCurrentColorGrad.g/2, mCurrentColorGrad.b/2);
+         ofSetColorGradient(colA2, colA1, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
+      }
       //ofSetColor(mCurrentColor);
       ofRect(rect, 0);
 
@@ -108,12 +117,15 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
          case SongCanvasElementVariant::OnePulse:
             ofRectangle seamRect = rect;
             seamRect.width = MIN(rect.x, 3);
-            ofSetColor(ofColor(180, 180, 0)); //Draw a seam.
+            ofSetColor(ofColor(180/eDiv, 180/eDiv, 0/eDiv)); //Draw a seam.
+
             ofRect(seamRect, 0);
             break;
       }
-
-      ofSetColor(ofColor::white);
+      if (isActive)
+         ofSetColor(ofColor::white);
+      else
+         ofSetColor(ofColor(125,125,125));
 
       if (mNameCache != *mName)
       {

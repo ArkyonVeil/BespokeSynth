@@ -2,6 +2,7 @@
 #include "CanvasElement.h"
 
 
+class SongCanvas;
 enum class SongCanvasElementVariant;
 class SongCanvasRackElement;
 class SongCanvas_CanvasElement : public CanvasElement
@@ -34,6 +35,7 @@ private:
    std::string mDisplayName;
    float mCachedNameSize = -1;
    float mTextDrawXOffset = 2;
+   SongCanvas* mSongCanvas;
 
    ofColor mCurrentColor;
    ofColor mCurrentColorGrad;
