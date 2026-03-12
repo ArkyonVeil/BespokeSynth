@@ -94,8 +94,12 @@ void CanvasTimeline::Render()
          ofSetColor(mBaseSmallHighlight);
    }
    ofFill();
-   ofRect(startX, 0, endX - startX, mHeight / 2, 0);
-
+   if (mClick)
+      ofRect(startX, 0, endX - startX, mHeight / 2, 0);
+   else
+   {
+      ofRect(MAX(startX,0), 0, MIN(mWidth,endX - startX), mHeight / 2, 0);
+   }
    if (!shiftPreview)
    {
       if (mClick && mHoverMode == HoverMode::kStart)
@@ -111,7 +115,13 @@ void CanvasTimeline::Render()
       else
          ofSetColor(mCornerBaseColour);
       ofFill();
-      DrawTriangle(startX, 1);
+      if (startX>=0 || mClick)
+         DrawTriangle(startX, 1);
+      else
+      {
+         ofSetLineWidth(2);
+         ofLine(0,0,0,mHeight);
+      }
 
 
       if (mClick && mHoverMode == HoverMode::kEnd)
@@ -127,7 +137,13 @@ void CanvasTimeline::Render()
       else
          ofSetColor(mCornerBaseColour);
       ofFill();
-      DrawTriangle(endX, -1);
+      if (endX<=mWidth || mClick)//Probably best to make this a variable.
+         DrawTriangle(endX, -1);
+      else
+      {
+         ofSetLineWidth(2);
+         ofLine(mWidth,0,mWidth,mHeight);
+      }
    }
    //Hover shift behaviors
    if (shiftPreview)
