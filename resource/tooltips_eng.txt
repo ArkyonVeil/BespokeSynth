@@ -2208,4 +2208,4 @@ songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules
 ~loop region~loops the selected area, respects the on finish mode.\n-Drag corners to resize.\n-Drag middle to move.\n-Shift drag to define a new area.\n-Shift click to reset.
 ~local~if active, disconnects the panel from the global transport, allowing to play parts on its own isolated time. \nLocal mode can still reference global time if on loop mode and synced
 ~on finish~what happens when the transport reaches the final measure (outside the canvas or out of the loop range)\n-continue: does nothing, keeps going past the canvas bounds. Still respects the loop region if active (Global only)\n-loop: resets to the first possible measure and keeps playing.\n-stop: resets to the first possible measure and stops
-~sync~syncs the local time to the global transport. looping if needed. does nothing if active
+~sync~syncs the local time to the global transport. looping if needed.

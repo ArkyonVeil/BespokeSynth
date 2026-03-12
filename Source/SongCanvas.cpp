@@ -1251,13 +1251,11 @@ void SongCanvas::OnTransportAdvanced(float amount)
    }
    else //Local time Ops
    {
-      float procTime = mTime;
-
       if (mOnEndMeasure == EnumOnEndMeasure::enumOEMLoop)
       {
          if (mLocalSynced)
          {
-            procTime = mCanvas->mLoopStart + std::fmod(mTime, mCanvas->mLoopEnd - mCanvas->mLoopStart);
+            mTime = mCanvas->mLoopStart + std::fmod(mTime, mCanvas->mLoopEnd - mCanvas->mLoopStart);
          }
          else
          {
@@ -1275,7 +1273,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
             mLocalStopped = true;
          }
       }
-      mCanvasRelativeTime = (procTime + 0.02f) / mMeasureCount;
+      mCanvasRelativeTime = (mTime + 0.02f) / mMeasureCount;
    }
    if (IsEnabled())
    {
