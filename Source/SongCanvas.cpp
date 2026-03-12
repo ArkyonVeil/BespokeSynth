@@ -18,7 +18,6 @@
 //
 //
 //  Bespoke
-//  Aka the Song Canvas
 //
 //  Module assembled by ArkyonVeil on April/24 - June/24. Reheated in March/26
 //
@@ -35,12 +34,38 @@
 //
 
 #include "SongCanvas.h"
-
 #include "ModularSynth.h"
 
 #include <cstring>
+
+
+std::array<ofColor, 2> SongCanvas::ESCarbonColours{
+   ofColor(255, 255, 255),
+   ofColor(0, 0, 0),
+};
+std::array<ofColor, 3> SongCanvas::ESRGBColours{
+   ofColor(255, 0, 0),
+   ofColor(0, 255, 0),
+   ofColor(0, 255, 255)
+};
+std::array<ofColor, 6> SongCanvas::ESPrideColours{
+   ofColor(255, 0, 0),
+   ofColor(255, 165, 0),
+   ofColor(255, 255, 0),
+   ofColor(0, 255, 0),
+   ofColor(0, 0, 255),
+   ofColor(148, 0, 211)
+};
+std::array<ofColor, 4> SongCanvas::ESTransColours{
+   ofColor(91, 207, 250),
+   ofColor(245, 171, 182),
+   ofColor(255, 255, 255),
+   ofColor(245, 171, 182)
+};
+
 SongCanvas::SongCanvas()
 {
+
    mRowColors.push_back(ofColor::black);
    seqLayers.reserve(MaxLayers + 1);
    mTransportPriority = kTransportPriorityVeryEarly;
@@ -63,6 +88,8 @@ SongCanvas::~SongCanvas()
 
 void SongCanvas::Init()
 {
+
+
    IDrawableModule::Init();
    mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
    TheTransport->AddAudioPoller(this);
@@ -71,31 +98,8 @@ void SongCanvas::Init()
 void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
-/*
-   ESCarbonColours = {
-      ofColor(255, 255, 255),
-      ofColor(0, 0, 0)
-   };
 
-   ESRGBColours = {
-      ofColor(255, 0, 0),
-      ofColor(0, 255, 0),
-      ofColor(0, 255, 255)
-   };
-   ESPrideColours = {
-      ofColor(255, 0, 0),
-      ofColor(255, 165, 0),
-      ofColor(255, 255, 0),
-      ofColor(0, 255, 0),
-      ofColor(0, 0, 255),
-      ofColor(148, 0, 211)
-   };
-   ESTransColours = {
-      ofColor(91, 207, 250),
-      ofColor(245, 171, 182),
-      ofColor(255, 255, 255),
-      ofColor(245, 171, 182)
-   };*/
+
    if (expertPanelEnabled)
       mStartCanvasXOffset = LayersListWidthSize + AdvancedConfigHSize;
    else
@@ -333,44 +337,23 @@ ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
       case ESGlass:
          return ofColor(166, 237, 255, 150);
       case ESCarbon:
-      {
-         return ofColor(0, 0, 0);
-         /*
-         const auto col = ESCarbonColours;
-         float modl = 2.0f;
-
-         float hue = remainderf(time,modl);
-         float hueR = remainderf(hue,1.0f);
-         int idx = floor(hue);
-         int idx2 =  (idx + 1) % (int)floor(modl);
-         float colr = ofLerp(col[idx].r,col[idx2].r,hueR);
-         float colg = ofLerp(col[idx].g,col[idx2].g,hueR);
-         float colb = ofLerp(col[idx].b,col[idx2].b,hueR);
-
-         return ofColor(colr,colg,colb);*/
-      }
+         return ofColor::arrayInterpolate(ESCarbonColours,mTime);
       case ESCheckerboard:
-      {
          if ((int)floor(time) % 2 == 0)
             return ofColor(255, 255, 255);
          return ofColor(0, 0, 0);
-      }
       case ESTransport:
-      {
          if ((int)floor(time) % 2 == 0)
             return ofColor::cyan;
          return ofColor(255, 0, 238);
-      }
       case ESRGB:
-      {
-      }
+         return ofColor::arrayInterpolate(ESRGBColours,mTime*2);
       case ESPride:
-      {
-      }
+         return ofColor::arrayInterpolate(ESPrideColours,mTime*2);
       case ESTrans:
-      {
-      }
-      default:;
+         return ofColor::arrayInterpolate(ESTransColours,mTime);
+      default:
+         return ofColor::red;
    }
 }
 
@@ -378,9 +361,6 @@ void SongCanvas::UpdateEndMode()
 {
    if (mLocalMode)
    {
-      mTransportSlider->SetLineColour(LocalModeColour);
-      mMeasureSlider->SetLineColour(LocalModeColour);
-
       if (mPreviousLocalEndMeasure == -1)
       {
          mOnEndMeasure = enumOEMLoop;
@@ -422,7 +402,18 @@ void SongCanvas::DrawModule()
 
    ofPushStyle();
    ofFill();
+   if (mLocalMode)
+   {
+      mTransportSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor,mTime));
+      mMeasureSlider->SetLineColour(GetFancyStyleColour(mLocalModeColor,mTime));
+   }
+   else
+   {
+      mTransportSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor,mTime));
+      mMeasureSlider->SetLineColour(GetFancyStyleColour(mGlobalModeColor,mTime));
+   }
    //Draw the canvas.
+
    for (int i = 0; i < mCanvas->GetNumVisibleRows(); ++i)
    {
       ofColor color = GetRowColor(i + mCanvas->GetRowOffset());
@@ -562,9 +553,9 @@ void SongCanvas::DrawModule()
    }
    //Now the timeline position line
    if (!mLocalMode)
-      ofSetColor(ofColor::red);
+      ofSetColor(GetFancyStyleColour(mGlobalModeColor,mTime));
    else
-      ofSetColor(LocalModeColour);
+      ofSetColor(GetFancyStyleColour(mLocalModeColor,mTime));
    float markerLinePos = startCanvasOffset + ofMap(mCanvasRelativeTime * mMeasureCount, mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd, 0, mCanvas->GetWidth());
    if (markerLinePos > startCanvasOffset && markerLinePos < mWidth)
       ofLine(markerLinePos, mOffsetFromTopSpacing, markerLinePos, canvasFoot);
@@ -1373,12 +1364,35 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
    mModuleSaveData.LoadBool("start_end_measure_mode", moduleInfo, false);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
+   EnumMap map;
+   map["red"] = 0;
+   map["pink"] = 1;
+   map["yellow"] = 2;
+   map["cyan"] = 3;
+   map["green"] = 4;
+   map["orange"] = 5;
+   map["purple"] = 6;
+   map["blue"] = 7;
+   map["white"] = 8;
+   map["black"] = 9;
+   map["glass"] = 10;
+   map["carbon"] = 11;
+   map["checkerboard"] = 12;
+   map["transport"] = 13;
+   map["rgb"] = 14;
+   map["pride"] = 15;
+   map["trans"] = 16;
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style",moduleInfo,0,nullptr,&map);
+   mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style",moduleInfo,1,nullptr,&map);
 }
 void SongCanvas::SetUpFromSaveData()
 {
    mAutoScaleMeasureCount = mModuleSaveData.GetBool("auto_scale_measure_count");
    mStartEndMeasureMode = mModuleSaveData.GetBool("start_end_measure_mode");
    mResetButtonAlsoStops = mModuleSaveData.GetBool("reset_button_also_stops");
+
+   mGlobalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("global_colour_style");
+   mLocalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("local_colour_style");
 
    ReloadHeader();
 }
@@ -1665,8 +1679,6 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       {
          mSyncButton->SetEnabled(!mLocalSynced);
          mTime = t;
-         mTransportSlider->SetLineColour(LocalModeColour);
-         mMeasureSlider->SetLineColour(LocalModeColour);
       }
    }
    UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);

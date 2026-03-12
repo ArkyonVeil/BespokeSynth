@@ -111,8 +111,6 @@ public:
    void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override { return 4; }
 
-   ofColor LocalModeColour{ 255, 0, 238 };
-
    enum EnumSongCanvasStyle
    {
       ESRed = 0,
@@ -135,6 +133,11 @@ public:
    };
    ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
 
+
+   static std::array<ofColor,2> ESCarbonColours;
+   static std::array<ofColor,3> ESRGBColours;
+   static std::array<ofColor,6> ESPrideColours;
+   static std::array<ofColor,4> ESTransColours;
 
 private:
    struct SongCanvasLayer
@@ -181,7 +184,7 @@ private:
    UIFlowGrid* mRackGrid;
    CanvasTimeline* mCanvasTimeline;
 
-   static constexpr int MaxLayers = 51; //Further increasing this may cause crashes.
+   static constexpr int MaxLayers = 101; //Further increasing this may cause crashes.
    float mTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
@@ -298,16 +301,15 @@ private:
       enumOEMLoop = 1,
       enumOEMStop = 2,
    };
-   /*
-   std::vector<ofColor> mESCarbonColours[2];
-   std::vector<ofColor> mESRGBColours[3];
-   std::vector<ofColor> mESPrideColours[6];
-   std::vector<ofColor> mESTransColours[4];
-*/
+
+
+
    int mOnEndMeasure{ 0 };
    int mPreviousGlobalEndMeasure{ -1 };
    int mPreviousLocalEndMeasure{ -1 };
 
+   EnumSongCanvasStyle mGlobalModeColor { ESRed };
+   EnumSongCanvasStyle mLocalModeColor { ESPink };
 
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;

@@ -52,6 +52,24 @@ struct ofColor
    {
       return ofColor(int(a.r * (1 - t) + b.r * t), int(a.g * (1 - t) + b.g * t), int(a.b * (1 - t) + b.b * t), int(a.a * (1 - t) + b.a * t));
    }
+   template<std::size_t N>
+   static ofColor arrayInterpolate(std::array<ofColor,N> colArray, float t)
+   {
+      const auto col = colArray;
+      int cNum = col.size();
+      float hue = fmodf(t, (float)cNum);
+      if (hue < 0.0f) hue += cNum;
+
+      int idx = (int)floorf(hue);
+      int idx2 = (idx + 1) % cNum;
+      float hueR = hue - idx;
+      //start + (stop - start) * amt
+      float colr = col[idx].r+ (col[idx2].r - col[idx].r) * hueR;
+      float colg = col[idx].g+ (col[idx2].g - col[idx].g) * hueR;
+      float colb = col[idx].b+ (col[idx2].b - col[idx].b) * hueR;
+      float cola = col[idx].a+ (col[idx2].a - col[idx].a) * hueR;
+      return ofColor(colr, colg, colb,cola);
+   }
 };
 
 struct ofVec2f
