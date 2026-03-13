@@ -855,8 +855,8 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
 {
    if (entry == mRackRenameTextBox)
    {
-      mRightClickDropdownElementContext->SetName(mRackRenameTextBox->GetText());
-      mRightClickDropdownElementContext->SetRenameState(false);
+      mSelectedRackElement->SetName(mRackRenameTextBox->GetText());
+      SetRackElementRenameState(mSelectedRackElement,false);
       mRackRenameTextBox->SetPosition(-500, -500);
       mRackRenameTextBox->CheckHover(-500, -500);
       //TheSynth->LogEvent("StringBeatEvent",kLogEventType_Verbose);
@@ -962,6 +962,100 @@ void SongCanvas::FloatSliderUpdated(FloatSlider* slider, float oldVal, double ti
       }
    }
 }
+
+void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
+{
+   if (list == mRackAddNewDropdown)
+   {
+      std::string newPartName = "Part " + std::to_string(mPartNameCount);
+      mPartNameCount++;
+      switch (mRackAddNewElementIndex)
+      {
+         case enumEnabler:
+            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
+            break;
+         case enumPulser:
+            mRackGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
+            break;
+         case enumModulator: break;
+         case enumSample: break;
+         case enumOnePulse:
+            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
+            break;
+         default:;
+      }
+      IncrementInternalRackId();
+      return;
+   }
+   if (list == mRackElementRightClickDropdown)
+   {
+      ProcessRackElementRightClickDropdown(list);
+      return;
+   }
+   if (list == mListDropdownOptions)
+   {
+      int idx = mLayerDropdownOptionButtonIndex;
+      if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveUp)
+      {
+         MoveLayerTo(idx, idx - 1);
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveDown)
+      {
+         MoveLayerTo(idx, idx + 1);
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPDelete)
+      {
+         DeleteLayer(idx);
+      }
+      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPAddNewLayerBelow)
+      {
+         AddNewLayer(idx + 1, SongCanvasLayer{
+                              0,
+                              true,
+                              "layer" + ofToString(seqLayers.size()) });
+         FeatureResize(0, mCanvas->GetHeight() / seqLayers.size());
+      }
+   }
+   if (list == mOnFinalMeasureDropdown)
+   {
+      if (mLocalMode)
+      {
+         mPreviousLocalEndMeasure = mOnFinalMeasureDropdown->GetValue();
+      }
+      else
+      {
+         mPreviousGlobalEndMeasure = mOnFinalMeasureDropdown->GetValue();
+      }
+      ReloadHeader();
+      return;
+   }
+   if (list == mCanvasIntervalDropdown)
+   {
+      mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
+      mAlteredIntervalFlag = true;
+      ReloadMeasures(false);
+   }
+   for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
+   {
+      auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
+      switch (e->mVariantType)
+      {
+         case SongCanvasElementVariant::Pulser:
+            if (list == e->GetPulserIntervalDropdown())
+            {
+               TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(e);
+               if (transportListenerInfo != nullptr)
+               {
+                  transportListenerInfo->mInterval = e->GetInterval();
+                  transportListenerInfo->mOffsetInfo = OffsetInfo(0, false);
+               }
+            }
+            break;
+         default:;
+      }
+   }
+}
+
 void SongCanvas::ButtonClicked(ClickButton* button, double time)
 {
    if (button == mPlayPauseButton)
@@ -1068,128 +1162,7 @@ void SongCanvas::MouseReleased()
    IDrawableModule::MouseReleased();
    mRackGrid->MouseReleased();
 }
-void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
-{
-   if (list == mRackAddNewDropdown)
-   {
-      std::string newPartName = "Part " + std::to_string(mPartNameCount);
-      mPartNameCount++;
-      switch (mRackAddNewElementIndex)
-      {
-         case enumEnabler:
-            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
-            break;
-         case enumPulser:
-            mRackGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
-            break;
-         case enumModulator: break;
-         case enumSample: break;
-         case enumOnePulse:
-            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
-            break;
-         default:;
-      }
-      IncrementInternalRackId();
-      return;
-   }
-   if (list == mRackElementRightClickDropdown)
-   {
-      switch (mRackElementRightClickIndex)
-      {
-         case enumNothing: break;
-         case enumRename:
-         {
-            if (mRightClickDropdownElementContext != nullptr)
-               mRightClickDropdownElementContext->SetRenameState(false);
-            mRackRenameTextBox->SetText(*mRightClickDropdownElementContext->GetName());
-            mRightClickDropdownElementContext->SetRenameState(true);
-         }
-         break;
-         case enumDelete:
-         {
-            mRackRenameTextBox->SetPosition(-500, -500);
-            mRackRenameTextBox->ClearInput();
-            mRackRenameTextBox->ClearActiveKeyboardFocus(false);
-            DeleteRackElement(mRightClickDropdownElementContext);
-            mCanvas->SetAllowElementPlacement(false);
-         }
-         break;
-      }
-      return;
-   }
-   if (list == mListDropdownOptions)
-   {
-      int idx = mLayerDropdownOptionButtonIndex;
-      if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveUp)
-      {
-         MoveLayerTo(idx, idx - 1);
-      }
-      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveDown)
-      {
-         MoveLayerTo(idx, idx + 1);
-      }
-      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPDelete)
-      {
-         DeleteLayer(idx);
-      }
-      else if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPAddNewLayerBelow)
-      {
-         AddNewLayer(idx + 1, SongCanvasLayer{
-                              0,
-                              true,
-                              "layer" + ofToString(seqLayers.size()) });
-         FeatureResize(0, mCanvas->GetHeight() / seqLayers.size());
-      }
-   }
-   if (list == mOnFinalMeasureDropdown)
-   {
-      if (mLocalMode)
-      {
-         mPreviousLocalEndMeasure = mOnFinalMeasureDropdown->GetValue();
-      }
-      else
-      {
-         mPreviousGlobalEndMeasure = mOnFinalMeasureDropdown->GetValue();
-      }
-      ReloadHeader();
-      return;
-   }
-   if (list == mCanvasIntervalDropdown)
-   {
-      mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
-      mAlteredIntervalFlag = true;
-      ReloadMeasures(false);
-   }
-   for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
-   {
-      auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
-      switch (e->mVariantType)
-      {
-         case SongCanvasElementVariant::Pulser:
-            if (list == e->GetPulserIntervalDropdown())
-            {
-               TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(e);
-               if (transportListenerInfo != nullptr)
-               {
-                  transportListenerInfo->mInterval = e->GetInterval();
-                  transportListenerInfo->mOffsetInfo = OffsetInfo(0, false);
-               }
-            }
-            break;
-         default:;
-      }
-   }
-}
 
-void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
-{
-   mRightClickDropdownElementContext = element;
-}
-void SongCanvas::SetSelectedRackElement(SongCanvasRackElement* element)
-{
-   mSelectedRackElement = element;
-   mCanvas->SetAllowElementPlacement(true);
-}
 void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
    element->Setup(mSelectedRackElement);
@@ -1214,26 +1187,7 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
    mPartCanvasDirty = true;
    //Then we flag the Canvas as dirty, so we don't stress the DAW too much with pointless regenerations.
 }
-void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
-{
-   auto res = GetAllCanvasElementsOfRack(element);
-   for (auto re : res)
-   {
-      mCanvas->RemoveElement(re);
-   }
-   mRackGrid->RemoveElement(element);
-}
-std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
-{
-   std::vector<SongCanvasRackElement*> output;
-   auto elms = mRackGrid->GetAllElements();
-   for (int i = 0; i < elms.size(); ++i)
-   {
-      auto relm = dynamic_cast<SongCanvasRackElement*>(elms[i]);
-      output.push_back(relm);
-   }
-   return output;
-}
+
 //Gets all the canvas elements which have said rack as a parent.
 std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
 {
@@ -1778,4 +1732,100 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    mReloadMeasureLoadFlag = true;
    SetEnabled(enableState);
    Resize(mWidth, mHeight);
+}
+/////////////////////
+///RACK MANAGEMENT///
+/////////////////////
+
+void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool state)
+{
+   if (element == nullptr)
+      return;
+   if (state)
+   {
+      if (mSelectedRackElement != element)
+      {
+         mRackRenameTextBox->ClearInput();
+         mRackRenameTextBox->ClearActiveKeyboardFocus(false);
+         if (mSelectedRackElement != nullptr)
+         {
+            mSelectedRackElement->SetRenameState(false);
+         }
+      }
+      mRackRenameTextBox->SetShowing(true);
+      mRackRenameTextBox->SetText(*element->GetName());
+      mRackRenameTextBox->UpdateDisplayString();
+      mRackRenameTextBox->SelectAll();
+      mRackRenameTextBox->MakeActiveTextEntry(false);
+      element->SetRenameState(true);
+   }
+   else
+   {
+      mRackRenameTextBox->SetShowing(false);
+      mRackRenameTextBox->ClearInput();
+      mRackRenameTextBox->ClearActiveKeyboardFocus(false);
+      if (element != nullptr)
+      {
+          mSelectedRackElement->SetRenameState(false);
+      }
+
+   }
+}
+
+void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
+{
+   mRightClickDropdownElementContext = element;
+}
+void SongCanvas::SetSelectedRackElement(SongCanvasRackElement* element)
+{
+   if (element != mSelectedRackElement && mSelectedRackElement != nullptr)
+   {
+      SetRackElementRenameState(mSelectedRackElement,false);
+   }
+   mSelectedRackElement = element;
+   mCanvas->SetAllowElementPlacement(true);
+}
+
+void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
+{
+   auto res = GetAllCanvasElementsOfRack(element);
+   for (auto re : res)
+   {
+      mCanvas->RemoveElement(re);
+   }
+   mRackGrid->RemoveElement(element);
+}
+std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
+{
+   std::vector<SongCanvasRackElement*> output;
+   auto elms = mRackGrid->GetAllElements();
+   for (int i = 0; i < elms.size(); ++i)
+   {
+      auto relm = dynamic_cast<SongCanvasRackElement*>(elms[i]);
+      output.push_back(relm);
+   }
+   return output;
+}
+
+void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
+{
+   switch (mRackElementRightClickIndex)
+   {
+      case enumNothing: break;
+      case enumRename:
+      {
+         SetRackElementRenameState(mRightClickDropdownElementContext, true);
+      }
+      break;
+      case enumDelete:
+      {
+         mRackRenameTextBox->SetPosition(-500, -500);
+         mRackRenameTextBox->ClearInput();
+         mRackRenameTextBox->ClearActiveKeyboardFocus(false);
+         DeleteRackElement(mRightClickDropdownElementContext);
+         mCanvas->SetAllowElementPlacement(false);
+      }
+      break;
+   }
+   return;
 }

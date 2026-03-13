@@ -37,6 +37,8 @@ public:
    PatchCableSource* GetPulserCable() { return mPulserCable; }
    int mInternalRackID;
 
+
+
    DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector; }
 
    SongCanvasElementVariant mVariantType;
@@ -45,7 +47,7 @@ private:
    PatchCableSource* mEnablerCable;
    PatchCableSource* mPulserCable;
    std::string* mElementName;
-   SongCanvas* mSSParent;
+   SongCanvas* mSongCanvas;
    DropdownList* mIntervalSelector{ nullptr };
    NoteInterval mPulserInterval = kInterval_8n;
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
@@ -56,7 +58,9 @@ private:
    float mExciteConstant{ 0 };
    float mExciteDrag{ 0 };
    float mVariantExtraWidth{ 0 };
+   double mLastClickTime{ 0 };
 
+   int mDebugClick{0};
    int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
 };

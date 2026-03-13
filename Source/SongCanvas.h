@@ -81,11 +81,13 @@ public:
    void TextEntryComplete(TextEntry* entry) override;
    void ReloadMeasures(bool overrideAutoFit);
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
+   void ProcessRackElementRightClickDropdown(DropdownList* list);
    void ButtonClicked(ClickButton* button, double time) override;
    void CheckboxUpdated(Checkbox* checkbox, double time) override;
    bool MouseMoved(float x, float y) override;
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
+   void SetRackElementRenameState(SongCanvasRackElement* element, bool state);
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetSelectedRackElement(SongCanvasRackElement* element);

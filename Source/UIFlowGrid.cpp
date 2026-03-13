@@ -96,7 +96,6 @@ void UIFlowGrid::MouseReleased()
       //mLastHoveredElement = nullptr;
       mDragging = false;
    }
-   mLastHoveredElement = nullptr;
    IUIControl::MouseReleased();
 }
 bool UIFlowGrid::MouseMoved(float x, float y)
@@ -268,7 +267,6 @@ void UIFlowGrid::LoadState(FileStreamIn& in, bool shouldSetValue)
 void UIFlowGrid::AddElement(UIFlowGridElement* newElement, int row)
 {
    newElement->SetFlowGrid(this);
-
 
    if (row != -1)
    {

@@ -2,6 +2,7 @@
 // Created by kendo on 13/03/2026.
 //
 #pragma once
+#include "ModularSynth.h"
 #include "SongCanvas.h"
 
 std::string TruncateString(std::string str, size_t width, bool show_ellipsis = true)
@@ -40,9 +41,9 @@ SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasEle
 : UIFlowGridElement(preferredWidth, overrideColor)
 {
    mElementName = new std::string(name);
-   mSSParent = owner;
+   mSongCanvas = owner;
    mVariantType = variantType;
-   mInternalRackID = mSSParent->GetInternalRackId();
+   mInternalRackID = mSongCanvas->GetInternalRackId();
    switch (variantType)
    {
       case SongCanvasElementVariant::Enabler:
@@ -72,19 +73,19 @@ SongCanvasRackElement::~SongCanvasRackElement()
    switch (mVariantType)
    {
       case SongCanvasElementVariant::Enabler:
-         mSSParent->RemovePatchCableSource(mEnablerCable);
+         mSongCanvas->RemovePatchCableSource(mEnablerCable);
          break;
       case SongCanvasElementVariant::Pulser:
-         mSSParent->RemovePatchCableSource(mPulserCable);
+         mSongCanvas->RemovePatchCableSource(mPulserCable);
          TheTransport->RemoveListener(this);
-         mSSParent->DisposeElement(mIntervalSelector);
+         mSongCanvas->DisposeElement(mIntervalSelector);
          mIntervalSelector->Delete();
          break;
       case SongCanvasElementVariant::LFO:
          break;
       case SongCanvasElementVariant::Sampler: break;
       case SongCanvasElementVariant::OnePulse:
-         mSSParent->RemovePatchCableSource(mPulserCable);
+         mSongCanvas->RemovePatchCableSource(mPulserCable);
          break;
       default:;
    }
@@ -188,7 +189,6 @@ void SongCanvasRackElement::Draw()
 
    if (mRenameActive)
    {
-
       //mElementRenameTextBox->SetPosition(rPos.x, rPos.y + mHeight / 2);
       ofPushMatrix();
       ofTranslate(-pos.x, -pos.y);
@@ -203,6 +203,11 @@ void SongCanvasRackElement::Draw()
       SetPreferredSize(90 + form + mVariantExtraWidth);
 
       GetFlowGrid()->RecalculateElements();
+
+      if (mElementRenameTextBox->GetActiveKeyboardFocus() != mElementRenameTextBox)
+      {
+         mSongCanvas->SetRackElementRenameState(this, false);
+      }
    }
    else
    {
@@ -231,16 +236,24 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
    if (rightClick)
    {
       auto p = GetRelativePosition();
-      mSSParent->SetNewRackDropdownContext(this);
-      mSSParent->GetRackRightClickDropdown()->SetPosition(p.x, p.y);
-      mSSParent->GetRackRightClickDropdown()->OnClicked(1, 1, false);
-      mSSParent->GetRackRightClickDropdown()->SetPosition(-500, -500);
+      mSongCanvas->SetNewRackDropdownContext(this);
+      mSongCanvas->GetRackRightClickDropdown()->SetPosition(p.x, p.y);
+      mSongCanvas->GetRackRightClickDropdown()->OnClicked(1, 1, false);
+      mSongCanvas->GetRackRightClickDropdown()->SetPosition(-500, -500);
    }
    else
    {
-      mSSParent->SetSelectedRackElement(this);
-   } //Todo, double click to rename
-   //mElementName = "Clicked!";
+      mSongCanvas->SetSelectedRackElement(this);
+      if (TheSynth->GetGlobalTime() < mLastClickTime + 0.5)
+      {
+         mSongCanvas->SetRackElementRenameState(this, true);
+         mLastClickTime = 0;
+      }
+      else
+      {
+         mLastClickTime = TheSynth->GetGlobalTime();
+      }
+   }
 }
 void SongCanvasRackElement::SetName(std::string newName) const
 {
@@ -250,7 +263,7 @@ void SongCanvasRackElement::SetName(std::string newName) const
 void SongCanvasRackElement::OnEnter()
 {
    mActive = true;
-   double time = NextBufferTime(mSSParent);
+   double time = NextBufferTime(mSongCanvas);
    switch (mVariantType)
    {
       case SongCanvasElementVariant::Enabler:
@@ -308,7 +321,7 @@ void SongCanvasRackElement::OnExit()
    switch (mVariantType)
    {
       case SongCanvasElementVariant::Enabler:
-         mEnablerCable->AddHistoryEvent(NextBufferTime(mSSParent), false, 0);
+         mEnablerCable->AddHistoryEvent(NextBufferTime(mSongCanvas), false, 0);
          SetExciteConstant(0);
 
          for (auto* cable : mEnablerCable->GetPatchCables())
@@ -316,7 +329,7 @@ void SongCanvasRackElement::OnExit()
             IUIControl* uicontrol = dynamic_cast<IUIControl*>(cable->GetTarget());
             if (uicontrol)
             {
-               uicontrol->SetValue(0, NextBufferTime(mSSParent));
+               uicontrol->SetValue(0, NextBufferTime(mSongCanvas));
             }
          }
          break;
@@ -330,7 +343,7 @@ void SongCanvasRackElement::OnExit()
 
 void SongCanvasRackElement::OnTimeEvent(double time)
 {
-   if (IsActive() && mSSParent->IsEnabled())
+   if (IsActive() && mSongCanvas->IsEnabled())
    {
       const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
       mPulserCable->AddHistoryEvent(time, true, 0);
