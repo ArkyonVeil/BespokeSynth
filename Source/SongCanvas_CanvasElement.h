@@ -39,7 +39,10 @@ private:
 
    ofColor mCurrentColor;
    ofColor mCurrentColorGrad;
-   const ofColor mEnablerColor = ofColor(150, 150, 150);
+   const ofColor mEnablerColor = ofColor(180, 180, 180);
+   const ofColor mEnablerColor2 = ofColor(100, 100, 100);
+   const ofColor mEnablerInvertColor = ofColor(100, 100, 100);
+   const ofColor mEnablerInvertColor2 = ofColor(50, 50, 50);
    const ofColor mPulserColor = ofColor(180, 180, 0);
    const ofColor mLFOColor = ofColor::purple;
    const ofColor mSamplerColor = ofColor::green;

@@ -123,6 +123,7 @@ public:
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }
    void SetColor(ofColor color);
+   void SetColorOutline(ofColor color);
    void SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor);
    ofVec2f GetRelativePosition();
    virtual void OnMouseClick(bool rightClick) {}

@@ -27,6 +27,14 @@ void UIFlowGridElement::SetColor(ofColor color)
    mHighlightOutlineColor = color;
    mHighlightOutlineColor.a = 130;
 }
+void UIFlowGridElement::SetColorOutline(ofColor color)
+{
+   mOutlineColor = color;
+   mOutlineColor.a = 100;
+
+   mHighlightOutlineColor = color;
+   mHighlightOutlineColor.a = 130;
+}
 
 void UIFlowGridElement::SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor)
 {

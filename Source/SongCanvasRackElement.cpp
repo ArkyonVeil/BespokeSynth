@@ -48,6 +48,7 @@ SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasEle
    {
       case SongCanvasElementVariant::Enabler:
          SetColor(ofColor::white);
+         mRackPartRightClickOptions.push_back(DropdownListElement{ "invert", 10 });
          break;
       case SongCanvasElementVariant::Pulser:
          SetColor(ofColor::yellow);
@@ -106,7 +107,6 @@ void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
          mPulserCable->SetAllowMultipleTargets(true);
 
          mIntervalSelector = new DropdownList(owner, "interval", 75, 2, (int*)(&mPulserInterval));
-
          mIntervalSelector->AddLabel("16", kInterval_16);
          mIntervalSelector->AddLabel("8", kInterval_8);
          mIntervalSelector->AddLabel("4", kInterval_4);
@@ -235,11 +235,7 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
 {
    if (rightClick)
    {
-      auto p = GetRelativePosition();
-      mSongCanvas->SetNewRackDropdownContext(this);
-      mSongCanvas->GetRackRightClickDropdown()->SetPosition(p.x, p.y);
-      mSongCanvas->GetRackRightClickDropdown()->OnClicked(1, 1, false);
-      mSongCanvas->GetRackRightClickDropdown()->SetPosition(-500, -500);
+      mSongCanvas->OpenRightClickRackMenu(this);
    }
    else
    {
@@ -268,7 +264,8 @@ void SongCanvasRackElement::OnEnter()
    {
       case SongCanvasElementVariant::Enabler:
 
-         mEnablerCable->AddHistoryEvent(time, true, 0);
+            mEnablerCable->AddHistoryEvent(time, true, 0);
+
          Excite(1);
          SetExciteConstant(0.6);
          for (auto* cable : mEnablerCable->GetPatchCables())
@@ -276,7 +273,7 @@ void SongCanvasRackElement::OnEnter()
             IUIControl* uicontrol = dynamic_cast<IUIControl*>(cable->GetTarget());
             if (uicontrol)
             {
-               uicontrol->SetValue(1, time);
+               uicontrol->SetValue(!mEnablerInverted, time);
             }
          }
 
@@ -318,10 +315,13 @@ void SongCanvasRackElement::OnProcess()
 void SongCanvasRackElement::OnExit()
 {
    mActive = false;
+   double time = NextBufferTime(mSongCanvas);
    switch (mVariantType)
    {
       case SongCanvasElementVariant::Enabler:
-         mEnablerCable->AddHistoryEvent(NextBufferTime(mSongCanvas), false, 0);
+
+         mEnablerCable->AddHistoryEvent(time, false, 0);
+
          SetExciteConstant(0);
 
          for (auto* cable : mEnablerCable->GetPatchCables())
@@ -329,7 +329,33 @@ void SongCanvasRackElement::OnExit()
             IUIControl* uicontrol = dynamic_cast<IUIControl*>(cable->GetTarget());
             if (uicontrol)
             {
-               uicontrol->SetValue(0, NextBufferTime(mSongCanvas));
+               uicontrol->SetValue(mEnablerInverted, time);
+            }
+         }
+         break;
+      case SongCanvasElementVariant::Pulser: break;
+      case SongCanvasElementVariant::LFO: break;
+      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::OnePulse: break;
+      default:;
+   }
+}
+void SongCanvasRackElement::HandleRightClickDropdown(int optionValue)
+{
+   switch (mVariantType)
+   {
+      case SongCanvasElementVariant::Enabler:
+         if (optionValue == 10)
+         {
+            mEnablerInverted = !mEnablerInverted;
+            if (mEnablerInverted)
+            {
+               SetColor(ofColor(40, 40, 40));
+               SetColorOutline(ofColor(255, 255, 255));
+            }
+            else
+            {
+               SetColor(ofColor(255, 255, 255));
             }
          }
          break;

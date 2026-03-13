@@ -26,6 +26,7 @@ public:
    void OnExit();
    void SetActive(bool newState) { mActive = newState; }
    bool IsActive() { return mActive; }
+   void HandleRightClickDropdown(int optionValue);
    NoteInterval GetInterval() { return mPulserInterval; }
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
 
@@ -37,9 +38,14 @@ public:
    PatchCableSource* GetPulserCable() { return mPulserCable; }
    int mInternalRackID;
 
-
-
+   std::vector<DropdownListElement> mRackPartRightClickOptions {};
    DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector; }
+
+   //Enabler
+   bool mEnablerInverted{ false };
+   //Sampler
+   float mSamplerPitch { 0 };
+   float mSamplerVolume { 0 };
 
    SongCanvasElementVariant mVariantType;
 
@@ -59,6 +65,7 @@ private:
    float mExciteDrag{ 0 };
    float mVariantExtraWidth{ 0 };
    double mLastClickTime{ 0 };
+
 
    int mDebugClick{0};
    int mInternalID{ 0 };

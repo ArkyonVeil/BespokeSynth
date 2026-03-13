@@ -96,6 +96,7 @@ public:
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element) const;
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
+   void OpenRightClickRackMenu(SongCanvasRackElement* element);
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackElementWithID(int id);
@@ -296,13 +297,13 @@ private:
    SongCanvasRackElement* mSelectedRackElement;
 
 
-   enum RackElementRightClickOptions
+   enum class RackElementRightClickBaseOptions
    {
-      enumNothing,
-      enumRename,
-      enumDelete,
+      enumNothing = 0,
+      enumRename = 1,
+      enumDelete = 2,
    };
-   RackElementRightClickOptions mRackElementRightClickIndex;
+   int mRackElementRightClickIndex;
 
    enum RackAddNewElementOptions
    {

@@ -24,10 +24,7 @@ void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
       case SongCanvasElementVariant::Enabler:
       {
          mCurrentColor = mEnablerColor;
-         mCurrentColorGrad = ofColor(
-         MAX(0, mCurrentColor.r - 30),
-         MAX(0, mCurrentColor.g - 30),
-         MAX(0, mCurrentColor.b - 30));
+         mCurrentColorGrad = mEnablerColor2;
       }
       break;
       case SongCanvasElementVariant::Pulser:
@@ -82,10 +79,11 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
    rect.y += (fullHeight - rect.height) * .5f;
    if (rect.width > 0)
    {
+      float addedTextYOffset = 0;
       bool isActive = mSongCanvas->IsEnabled() && mSongCanvas->IsLayerActive(mRow);
       int eDiv = 1;//Enabled Divisor
       if (isActive)
-         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
+         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(rect.width/2,rect.y+rect.height*0.66), ofVec2f(rect.width/2,rect.y+rect.height));
       else
       {
          eDiv = 2;
@@ -94,12 +92,29 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
          ofSetColorGradient(colA2, colA1, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
       }
       //ofSetColor(mCurrentColor);
-      ofRect(rect, 0);
+      ofRect(rect, 2);
 
       switch (mElementVariant)
       {
          case SongCanvasElementVariant::Enabler:
          {
+            if (mRackParent->mEnablerInverted)
+            {
+               mCurrentColor = mEnablerInvertColor;
+               mCurrentColorGrad = mEnablerInvertColor2;
+
+               ofRectangle seamRect = rect;
+               seamRect.height = MIN(rect.y,3);
+               ofSetColor(ofColor(200/eDiv, 200/eDiv, 200/eDiv)); //Draw a seam.
+
+               ofRect(seamRect, 0);
+               addedTextYOffset += 3;
+            }
+            else
+            {
+               mCurrentColor = mEnablerColor;
+               mCurrentColorGrad = mEnablerColor2;
+            }
          }
          break;
          case SongCanvasElementVariant::Pulser:
@@ -170,7 +185,7 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
       }
 
 
-      DrawTextNormal(mDisplayName, rect.x + mTextDrawXOffset, rect.y + 9, 9);
+      DrawTextNormal(mDisplayName, rect.x + mTextDrawXOffset, rect.y + 9+addedTextYOffset, 9);
    }
 
 

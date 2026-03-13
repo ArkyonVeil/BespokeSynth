@@ -166,8 +166,6 @@ void SongCanvas::CreateUIControls()
    mRackAddNewDropdown->AddLabel("OnePulse", RackAddNewElementOptions::enumOnePulse);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
-   mRackElementRightClickDropdown->AddLabel("Delete", RackElementRightClickOptions::enumDelete);
-   mRackElementRightClickDropdown->AddLabel("Rename", RackElementRightClickOptions::enumRename);
 
    mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
@@ -1807,23 +1805,50 @@ std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
    return output;
 }
 
+void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
+{
+   auto p = element->GetRelativePosition();
+   SetNewRackDropdownContext(element);
+
+   mRackElementRightClickDropdown->Clear();
+
+   auto rackPartOptions = element->mRackPartRightClickOptions;
+
+   for (int i = 0; i < rackPartOptions.size(); ++i)
+   {
+      mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel,rackPartOptions[i].mValue);
+   }
+   mRackElementRightClickDropdown->AddLabel("rename",(int)RackElementRightClickBaseOptions::enumRename);
+   mRackElementRightClickDropdown->AddLabel("---",0);
+   mRackElementRightClickDropdown->AddLabel("delete",(int)RackElementRightClickBaseOptions::enumDelete);
+
+   mRackElementRightClickDropdown->SetPosition(p.x, p.y);
+   mRackElementRightClickDropdown->OnClicked(1, 1, false);
+   mRackElementRightClickDropdown->SetPosition(-500, -500);
+}
+
 void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
 {
    switch (mRackElementRightClickIndex)
    {
-      case enumNothing: break;
-      case enumRename:
+      case RackElementRightClickBaseOptions::enumNothing: break;
+      case RackElementRightClickBaseOptions::enumRename:
       {
          SetRackElementRenameState(mRightClickDropdownElementContext, true);
       }
       break;
-      case enumDelete:
+      case RackElementRightClickBaseOptions::enumDelete:
       {
          mRackRenameTextBox->SetPosition(-500, -500);
          mRackRenameTextBox->ClearInput();
          mRackRenameTextBox->ClearActiveKeyboardFocus(false);
          DeleteRackElement(mRightClickDropdownElementContext);
          mCanvas->SetAllowElementPlacement(false);
+      }
+      default:
+      {
+         //Handle additional options here.
+         mRightClickDropdownElementContext->HandleRightClickDropdown(mRackElementRightClickIndex);
       }
       break;
    }
