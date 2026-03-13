@@ -683,10 +683,12 @@ target_sources(BespokeSynth PRIVATE
     Snapshots.h
     SongBuilder.cpp
     SongBuilder.h
-        SongCanvas.cpp
-        SongCanvas.h
-        SongCanvas_CanvasElement.cpp
-        SongCanvas_CanvasElement.h
+    SongCanvas.cpp
+    SongCanvas.h
+    SongCanvas_CanvasElement.cpp
+    SongCanvas_CanvasElement.h
+    SongCanvasRackElement.cpp
+    SongCanvasRackElement.h
     SpaceMouseControl.cpp
     SpaceMouseControl.h
     SpectralDisplay.cpp
