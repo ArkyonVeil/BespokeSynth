@@ -144,8 +144,7 @@ public:
 private:
    struct SongCanvasLayer
    {
-      ofColor baseColor;
-      float offset;
+      int baseColor;
       bool enabled;
       std::string layerName;
    };
@@ -162,6 +161,8 @@ private:
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
    void ReloadHeader();
+
+
 
 
    Canvas* mCanvas{ nullptr };
@@ -207,6 +208,8 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
+
+
    bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
    int mMeasureCount{ 0 };
@@ -230,9 +233,22 @@ private:
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
 
-   int GetRackGridStartYOffset() const
+   int GetHeaderSingleRowMinSpace()
    {
-      return mOffsetFromTopSpacing + mCanvas->GetHeight() + 8;
+      int val = 400+(mShowRealTime ? 120 : 0) + (mLocalMode ? 0 : 100);
+      return val;
+   };
+
+   int GetCanvasYOffset()
+   {
+      if (mWidth < GetHeaderSingleRowMinSpace())
+         return mOffsetFromTopSpacing  + 24;
+      return mOffsetFromTopSpacing;
+   }
+
+   int GetRackGridStartYOffset()
+   {
+      return GetCanvasYOffset() + mCanvas->GetHeight() + 8;
    }
 
    int mInternalRackIDCounter = 0;
