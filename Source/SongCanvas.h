@@ -43,10 +43,10 @@
 #include "ClickButton.h"
 #include "DropdownList.h"
 #include "IAudioProcessor.h"
-#include "ISignalListener.h"
+#include "IFlowGridListener.h"
 #include "SongCanvas_CanvasElement.h"
 #include "TextEntry.h"
-#include "UIFlowGrid.h"
+#include "FlowGrid.h"
 #include "SongCanvasRackElement.h"
 #include "SwitchAndRamp.h"
 
@@ -61,7 +61,7 @@ class SongCanvas : public IAudioSource,
                    public IButtonListener,
                    public IDropdownListener,
                    public IAudioPoller,
-                   public ISignalListener,
+                   public IFlowGridListener,
                    public ITimeListener,
                    public ICanvasTimelineListener
 {
@@ -120,8 +120,7 @@ public:
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void OnTransportAdvanced(float amount) override;
-   void ReceiveSignal(SignalId signalID) override;
-   void ReceiveSignal(SignalGeneric signalComplex) override {}
+   void FlowGridResizeRequest(float newBoundsX, float newBoundsY) override;
    void DisposeElement(IClickable* element);
 
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
@@ -210,7 +209,7 @@ private:
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
-   UIFlowGrid* mRackGrid;
+   FlowGrid* mRackGrid;
    CanvasTimeline* mCanvasTimeline;
 
    static constexpr int MaxLayers = 101; //Further increasing this may cause crashes.

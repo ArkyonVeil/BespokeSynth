@@ -42,7 +42,7 @@ std::string RemoveNonNumericalChars(const std::string& input)
 
 
 SongCanvasRackElement::SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor)
-: UIFlowGridElement(overrideColor)
+: FlowGridElement(overrideColor)
 {
    mElementName = new std::string(name);
    mSongCanvas = owner;
@@ -155,7 +155,7 @@ void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
 
 void SongCanvasRackElement::Draw()
 {
-   UIFlowGridElement::Draw();
+   FlowGridElement::Draw();
 
    ofPushStyle();
    ofSetColor(ofColor::white);

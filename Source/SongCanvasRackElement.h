@@ -6,7 +6,7 @@ class SongCanvas;
 
 class PatchCableSource;
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
-class SongCanvasRackElement : public UIFlowGridElement, public ITimeListener, public IButtonListener
+class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
    SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor = ofColor::white);

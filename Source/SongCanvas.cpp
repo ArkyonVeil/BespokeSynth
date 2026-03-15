@@ -140,7 +140,7 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
 
-   mRackGrid = new UIFlowGrid("partrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   mRackGrid = new FlowGrid("partrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
@@ -1382,19 +1382,17 @@ void SongCanvas::OnTransportAdvanced(float amount)
       }
    }
 }
-void SongCanvas::ReceiveSignal(SignalId signalID)
+void SongCanvas::FlowGridResizeRequest(float newBoundsX, float newBoundsY)
 {
-   if (signalID == SignalId::ResizeRequest)
-   {
-      mFlowGridRows = mRackGrid->GetRowCount();
+   mFlowGridRows = mRackGrid->GetRowCount();
 
-      float bWSize;
-      float bHSize;
-      mRackAddNewButton->GetDimensions(bWSize, bHSize);
+   float bWSize;
+   float bHSize;
+   mRackAddNewButton->GetDimensions(bWSize, bHSize);
 
-      mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
-   }
+   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
 }
+
 void SongCanvas::DisposeElement(IClickable* element)
 {
    RemoveUIControl(static_cast<IUIControl*>(element));

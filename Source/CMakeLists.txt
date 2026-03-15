@@ -251,7 +251,7 @@ target_sources(BespokeSynth PRIVATE
     IAudioSource.h
     IClickable.cpp
     IClickable.h
-	ISignalListener.h
+        IFlowGridListener.h
     IControlVisualizer.h
     IDrawableModule.cpp
     IDrawableModule.h
@@ -734,8 +734,8 @@ target_sources(BespokeSynth PRIVATE
     UIControlMacros.h
     UIGrid.cpp
     UIGrid.h
-	UIFlowGrid.cpp
-	UIFlowGrid.h
+        FlowGrid.cpp
+        FlowGrid.h
 	UIFlowGridElement.cpp
     UnstableModWheel.cpp
     UnstableModWheel.h

@@ -1,12 +1,14 @@
 ﻿#pragma once
-#include "ISignalListener.h"
+#include "IFlowGridListener.h"
 #include "IUIControl.h"
 
-class UIFlowGridElement;
-class UIFlowGrid : public IUIControl
+//Docs in FlowGrid.cpp
+
+class FlowGridElement;
+class FlowGrid : public IUIControl
 {
 public:
-   UIFlowGrid(std::string name, int x, int y, int w, int h, int rows, IClickable* parent, ISignalListener* signalListener);
+   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IClickable* parent, IFlowGridListener* signalListener);
    void Render() override;
    void MouseReleased() override;
    bool MouseMoved(float x, float y) override;
@@ -27,17 +29,16 @@ public:
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, bool shouldSetValue) override;
 
-   void AddElement(UIFlowGridElement* newElement, int row = -1);
+   void AddElement(FlowGridElement* newElement, int row = -1);
    void RecalculateElements();
-   void RemoveElement(UIFlowGridElement* element);
-   std::vector<UIFlowGridElement*> GetAllElements() { return mElementList; }
+   void RemoveElement(FlowGridElement* element);
+   std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
 
    void AddRow();
    void RemoveRow(int row);
    void SetDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
 
 protected:
-   ~UIFlowGrid();
    void AddRowSilent();
 
 private:
@@ -56,11 +57,11 @@ private:
    FlowGridDirection mSortDirection{ Left };
 
 
-   UIFlowGridElement* mSelectedElement{ nullptr };
-   UIFlowGridElement* mLastHoveredElement{ nullptr };
-   ISignalListener* mListener;
-   std::vector<UIFlowGridElement*> mElementList;
-   std::vector<std::vector<UIFlowGridElement*>> mRows;
+   FlowGridElement* mSelectedElement{ nullptr };
+   FlowGridElement* mLastHoveredElement{ nullptr };
+   IFlowGridListener* mListener;
+   std::vector<FlowGridElement*> mElementList;
+   std::vector<std::vector<FlowGridElement*>> mRows;
    float mRowScalingSize[30];
 
    float mWidth{ 200 };
@@ -91,11 +92,11 @@ private:
 };
 
 
-class UIFlowGridElement
+class FlowGridElement
 {
 public:
-   UIFlowGridElement(ofColor baseColor,float preferredWidth = 80);
-   virtual ~UIFlowGridElement();
+   FlowGridElement(ofColor baseColor,float preferredWidth = 80);
+   virtual ~FlowGridElement();
    void SetPreferredPosition(int row, float positionPercent);
 
    void SetPosition(int x, int y)
@@ -113,8 +114,8 @@ public:
    int GetWidth() const { return mWidth; }
    int GetHeight() const { return mHeight; }
 
-   void SetFlowGrid(UIFlowGrid* parent) { mFlowGridParent = parent; }
-   UIFlowGrid* GetFlowGrid() const { return mFlowGridParent; }
+   void SetFlowGrid(FlowGrid* parent) { mFlowGridParent = parent; }
+   FlowGrid* GetFlowGrid() const { return mFlowGridParent; }
 
    void SetHovered(bool hovered) { mHovered = hovered; }
    bool GetHovered() { return mHovered; }
@@ -151,5 +152,5 @@ private:
    bool mHovered = false;
    int mPreferredRow = -1;
    float mPreferredWidth = 90;
-   UIFlowGrid* mFlowGridParent;
+   FlowGrid* mFlowGridParent;
 };

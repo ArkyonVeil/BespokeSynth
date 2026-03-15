@@ -32,11 +32,11 @@
 /// Created by ArkyonVeil
 ///
 
-#include "UIFlowGrid.h"
+#include "FlowGrid.h"
 #include "ModularSynth.h"
 
 
-UIFlowGrid::UIFlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, ISignalListener* signalListener)
+FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, IFlowGridListener* signalListener)
 {
    SetName(name.c_str());
    SetPosition(x, y);
@@ -49,7 +49,7 @@ UIFlowGrid::UIFlowGrid(std::string name, int x, int y, int w, int rowHeight, int
    mRowYSize = rowHeight;
 }
 
-void UIFlowGrid::Render()
+void FlowGrid::Render()
 {
    ofPushMatrix();
    ofTranslate(mX, mY);
@@ -83,7 +83,7 @@ void UIFlowGrid::Render()
    ofPopStyle();
    ofPopMatrix();
 }
-void UIFlowGrid::OnClicked(float x, float y, bool right)
+void FlowGrid::OnClicked(float x, float y, bool right)
 {
    if (mHovered && mLastHoveredElement != nullptr)
    {
@@ -101,7 +101,7 @@ void UIFlowGrid::OnClicked(float x, float y, bool right)
    }
 }
 
-void UIFlowGrid::MouseReleased()
+void FlowGrid::MouseReleased()
 {
    mDragToken = false;
    mPressed = false;
@@ -133,7 +133,7 @@ void UIFlowGrid::MouseReleased()
    }
    IUIControl::MouseReleased();
 }
-bool UIFlowGrid::MouseMoved(float x, float y)
+bool FlowGrid::MouseMoved(float x, float y)
 {
    float rX = x;
    float rY = y;
@@ -265,41 +265,37 @@ bool UIFlowGrid::MouseMoved(float x, float y)
 
    return IUIControl::MouseMoved(x, y);
 }
-bool UIFlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
+bool FlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
 {
    return IUIControl::MouseScrolled(x, y, scrollX, scrollY, isSmoothScroll, isInvertedScroll);
 }
-void UIFlowGrid::SetHighlightCol(double time, int col)
+void FlowGrid::SetHighlightCol(double time, int col)
 {
 }
-int UIFlowGrid::GetHighlightCol(double time) const
+int FlowGrid::GetHighlightCol(double time) const
 {
    return 0;
 }
-void UIFlowGrid::SetDimensions(float width, float height)
+void FlowGrid::SetDimensions(float width, float height)
 {
    mWidth = width;
    mHeight = height;
    RecalculateElements();
 }
 
-UIFlowGrid::~UIFlowGrid()
+void FlowGrid::SetFromMidiCC(float slider, double time, bool setViaModulator)
 {
 }
-
-void UIFlowGrid::SetFromMidiCC(float slider, double time, bool setViaModulator)
+void FlowGrid::SetValue(float value, double time, bool forceUpdate)
 {
 }
-void UIFlowGrid::SetValue(float value, double time, bool forceUpdate)
+void FlowGrid::SaveState(FileStreamOut& out)
 {
 }
-void UIFlowGrid::SaveState(FileStreamOut& out)
+void FlowGrid::LoadState(FileStreamIn& in, bool shouldSetValue)
 {
 }
-void UIFlowGrid::LoadState(FileStreamIn& in, bool shouldSetValue)
-{
-}
-void UIFlowGrid::AddElement(UIFlowGridElement* newElement, int row)
+void FlowGrid::AddElement(FlowGridElement* newElement, int row)
 {
    newElement->SetFlowGrid(this);
 
@@ -344,7 +340,7 @@ void UIFlowGrid::AddElement(UIFlowGridElement* newElement, int row)
    RecalculateElements();
 }
 
-void UIFlowGrid::RecalculateElements()
+void FlowGrid::RecalculateElements()
 {
 
    float maxRowWidth = mWidth;
@@ -382,7 +378,7 @@ void UIFlowGrid::RecalculateElements()
       rowYOffset += mHeight / GetRowCount();
    }
 }
-void UIFlowGrid::RemoveElement(UIFlowGridElement* element)
+void FlowGrid::RemoveElement(FlowGridElement* element)
 {
    //TheSynth->LogEvent("Tried to delete an element.",LogEventType::kLogEventType_Verbose);
    auto& row = mRows[0];
@@ -393,21 +389,21 @@ void UIFlowGrid::RemoveElement(UIFlowGridElement* element)
    RecalculateElements();
 }
 
-void UIFlowGrid::AddRow()
+void FlowGrid::AddRow()
 {
    //mRows.push_back(std::vector<UIFlowGridElement*>());
    mRows.emplace_back();
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
-   mListener->ReceiveSignal(SignalId::ResizeRequest);
+   mListener->FlowGridResizeRequest(0,0);//TODO
 }
 
-void UIFlowGrid::AddRowSilent()
+void FlowGrid::AddRowSilent()
 {
    mRows.emplace_back();
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
 }
-void UIFlowGrid::RemoveRow(int row)
+void FlowGrid::RemoveRow(int row)
 {
 }

@@ -1,20 +1,20 @@
-﻿#include "UIFlowGrid.h"
+﻿#include "FlowGrid.h"
 
 
-UIFlowGridElement::UIFlowGridElement(ofColor baseColor,float preferredWidth)
+FlowGridElement::FlowGridElement(ofColor baseColor,float preferredWidth)
 {
    mPreferredWidth = preferredWidth;
    mWidth = preferredWidth;
    SetColor(baseColor);
 }
-UIFlowGridElement::~UIFlowGridElement()
+FlowGridElement::~FlowGridElement()
 {
 }
-void UIFlowGridElement::SetPreferredPosition(int row, float positionPercent)
+void FlowGridElement::SetPreferredPosition(int row, float positionPercent)
 {
    throw std::logic_error("Not implemented");//todo
 }
-void UIFlowGridElement::SetColor(ofColor color)
+void FlowGridElement::SetColor(ofColor color)
 {
    mMainColor = color;
    mMainColor.a = 20;
@@ -28,7 +28,7 @@ void UIFlowGridElement::SetColor(ofColor color)
    mHighlightOutlineColor = color;
    mHighlightOutlineColor.a = 130;
 }
-void UIFlowGridElement::SetColorOutline(ofColor color)
+void FlowGridElement::SetColorOutline(ofColor color)
 {
    mOutlineColor = color;
    mOutlineColor.a = 100;
@@ -37,7 +37,7 @@ void UIFlowGridElement::SetColorOutline(ofColor color)
    mHighlightOutlineColor.a = 130;
 }
 
-void UIFlowGridElement::SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor)
+void FlowGridElement::SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor)
 {
    mMainColor = mainColor;
    mOutlineColor = outlineColor;
@@ -45,16 +45,16 @@ void UIFlowGridElement::SetColorsManually(ofColor mainColor, ofColor outlineColo
    mHighlightOutlineColor = highlightOutlineColor;
 }
 
-ofVec2f UIFlowGridElement::GetRelativePosition()
+ofVec2f FlowGridElement::GetRelativePosition()
 {
    auto pos = mFlowGridParent->GetPosition(true);
    return ofVec2f(pos.x + mX, pos.y + mY);
 }
-void UIFlowGridElement::MouseMove(float x, float y)
+void FlowGridElement::MouseMove(float x, float y)
 {
 }
 
-void UIFlowGridElement::Draw()
+void FlowGridElement::Draw()
 {
    ofPushMatrix();
    ofTranslate(mX, mY);
