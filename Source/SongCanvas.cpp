@@ -140,7 +140,8 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
 
-   mRackGrid = new FlowGrid("partrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   mRackGrid = new FlowGrid("part rack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   AddUIControl(mRackGrid);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
@@ -1158,7 +1159,7 @@ void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
 bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
-   mRackGrid->MouseMoved(x, y);
+   //mRackGrid->MouseMoved(x, y);
    return false;
 }
 void SongCanvas::OnClicked(float x, float y, bool right)

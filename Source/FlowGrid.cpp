@@ -36,11 +36,11 @@
 #include "ModularSynth.h"
 
 
-FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, IFlowGridListener* signalListener)
+FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, IFlowGridListener* listener)
 {
    SetName(name.c_str());
    SetPosition(x, y);
-   mListener = signalListener;
+   mListener = listener;
    SetParent(parent);
    for (int i = 0; i < rows; i++)
       AddRowSilent();
@@ -135,10 +135,10 @@ void FlowGrid::MouseReleased()
 }
 bool FlowGrid::MouseMoved(float x, float y)
 {
-   float rX = x;
-   float rY = y;
-   x -= mX;
-   y -= mY;
+   CheckHover(x, y);
+   float rX = x+mX;
+   float rY = y+mY;
+
    bool isMouseOver = (x >= 0 && x < mWidth && y >= 0 && y < mHeight);
 
    //TheSynth->LogEvent("MouseMove "+std::to_string(mDebugIter),kLogEventType_Verbose);

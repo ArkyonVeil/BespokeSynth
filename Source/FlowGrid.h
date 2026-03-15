@@ -8,7 +8,7 @@ class FlowGridElement;
 class FlowGrid : public IUIControl
 {
 public:
-   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IClickable* parent, IFlowGridListener* signalListener);
+   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IClickable* parent, IFlowGridListener* listener);
    void Render() override;
    void MouseReleased() override;
    bool MouseMoved(float x, float y) override;
