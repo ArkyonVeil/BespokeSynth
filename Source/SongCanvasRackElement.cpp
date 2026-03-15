@@ -4,6 +4,10 @@
 #pragma once
 #include "ModularSynth.h"
 #include "SongCanvas.h"
+#include "Sample.h"
+
+#include "juce_audio_formats/juce_audio_formats.h"
+using namespace juce;
 
 std::string TruncateString(std::string str, size_t width, bool show_ellipsis = true)
 {
@@ -37,8 +41,8 @@ std::string RemoveNonNumericalChars(const std::string& input)
 }
 
 
-SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor)
-: UIFlowGridElement(preferredWidth, overrideColor)
+SongCanvasRackElement::SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor)
+: UIFlowGridElement(overrideColor)
 {
    mElementName = new std::string(name);
    mSongCanvas = owner;
@@ -47,21 +51,25 @@ SongCanvasRackElement::SongCanvasRackElement(float preferredWidth, SongCanvasEle
    switch (variantType)
    {
       case SongCanvasElementVariant::Enabler:
+         SetPreferredSize(PreferredWidthEnabler);
          SetColor(ofColor::white);
          mRackPartRightClickOptions.push_back(DropdownListElement{ "invert", 10 });
          break;
       case SongCanvasElementVariant::Pulser:
+         SetPreferredSize(PreferredWidthPulser);
          SetColor(ofColor::yellow);
          mVariantExtraWidth = 50;
          mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
          break;
       case SongCanvasElementVariant::LFO:
-
+         SetPreferredSize(PreferredWidthLFO);
          break;
       case SongCanvasElementVariant::Sampler:
-
+         SetPreferredSize(PreferredWidthSampler);
+         SetColor(ofColor::green);
          break;
       case SongCanvasElementVariant::OnePulse:
+         SetPreferredSize(PreferredWidthOnePulse);
          SetColor(ofColor(150, 150, 0));
          break;
    }
@@ -84,7 +92,9 @@ SongCanvasRackElement::~SongCanvasRackElement()
          break;
       case SongCanvasElementVariant::LFO:
          break;
-      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::Sampler:
+      mSongCanvas->DisposeElement(mSampleLoaderButton);
+         break;
       case SongCanvasElementVariant::OnePulse:
          mSongCanvas->RemovePatchCableSource(mPulserCable);
          break;
@@ -126,7 +136,9 @@ void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
          mIntervalSelector->AddLabel("div", kInterval_CustomDivisor);
          break;
       case SongCanvasElementVariant::LFO: break;
-      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::Sampler:
+         mSampleLoaderButton = new ClickButton(owner,"sample",60,2,ButtonDisplayStyle::kText);
+         break;
       case SongCanvasElementVariant::OnePulse:
          mPulserCable = new PatchCableSource(owner, kConnectionType_Pulse);
          owner->AddPatchCableSource(mPulserCable);
@@ -181,6 +193,11 @@ void SongCanvasRackElement::Draw()
       case SongCanvasElementVariant::LFO:
          break;
       case SongCanvasElementVariant::Sampler:
+      ofPushMatrix();
+      ofTranslate(-pos.x, -pos.y);
+         mSampleLoaderButton->SetPosition(rPos.x + 12 + GetStringWidth(*mElementName), rPos.y + 7);
+         mSampleLoaderButton->Draw();
+      ofPopMatrix();
          break;
       case SongCanvasElementVariant::OnePulse:
          mPulserCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
@@ -279,12 +296,15 @@ void SongCanvasRackElement::OnEnter()
 
          break;
       case SongCanvasElementVariant::Pulser:
-
          break;
-
-
       case SongCanvasElementVariant::LFO: break;
-      case SongCanvasElementVariant::Sampler: break;
+      case SongCanvasElementVariant::Sampler:
+         if (!mSample->IsSampleLoading())
+         {
+            Excite(1);
+            mSongCanvas->PlaySample();
+         }
+         break;
       case SongCanvasElementVariant::OnePulse:
          const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
          mPulserCable->AddHistoryEvent(time, true, 0);
@@ -295,6 +315,7 @@ void SongCanvasRackElement::OnEnter()
          break;
    }
 }
+//Triggered on every Transport advance
 void SongCanvasRackElement::OnProcess()
 {
    switch (mVariantType)
@@ -377,5 +398,38 @@ void SongCanvasRackElement::OnTimeEvent(double time)
       Excite(1);
       for (auto* receiver : receivers)
          receiver->OnPulse(time, 1, 0);
+   }
+}
+
+void SongCanvasRackElement::LoadFile()
+{
+   auto file_pattern = TheSynth->GetAudioFormatManager().getWildcardForAllFormats();
+   if (File::areFileNamesCaseSensitive())
+      file_pattern += ";" + file_pattern.toUpperCase();
+   FileChooser chooser("Load sample", File(ofToSamplePath("")),
+                       file_pattern, true, false, TheSynth->GetFileChooserParent());
+   if (chooser.browseForFileToOpen())
+   {
+      auto file = chooser.getResult();
+
+      Sample* sample = new Sample();
+      if (file.existsAsFile())
+         sample->Read(file.getFullPathName().toStdString().c_str());
+      UpdateSample(sample);
+   }
+}
+
+void SongCanvasRackElement::UpdateSample(Sample* sample)
+{
+   mSample = sample;
+   mSongCanvas->DebugSetSample(mSample);
+   sample->SetPlayPosition(0);
+   mSampleLoaderButton->SetOverrideDisplayName(mSample->Name());
+}
+void SongCanvasRackElement::ButtonClicked(ClickButton* button, double time)
+{
+   if (button == mSampleLoaderButton)
+   {
+      LoadFile();
    }
 }

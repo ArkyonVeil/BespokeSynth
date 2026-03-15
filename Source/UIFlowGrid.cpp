@@ -1,5 +1,40 @@
-﻿#include "UIFlowGrid.h"
+﻿/// UI Rules:
+/// Elements are tossed into the element in vector order. From top left.
+/// For an example see the SongCanvas's rack.
+///
+/// Elements may have two states: Free, Manual
+/// Newly created elements are free by default and abide by the following rules:
+/// 1. If a row has free space left with all elements maximized, it will allocate to that row, even if it needs to squeeze to fit.
+/// 2. If a row has no free space left, it will repeat the check in the row below.
+///
+/// Manual have the following rules:
+/// 1. They were moved directly by a user.
+/// 2. They will not respect row maximization rules, they will slot into that row no matter how compressed it is.
+/// 3. If an element is manually moved in a row. All elements in that row are considered manual (this should prevent elements going loose when loading/reloading)
+/// 3.1. Free Elements that are successfully placed later in that row do not inherit the manual state.
+///
+/// The panel itself also has these features:
+/// 1. If an element is being moved, an additional row is automatically made visible.
+/// 2. Alternatively, a number of available rows by default can be also specified.
+/// 3. If an element is selected, it resizes to its preferred size (within the bounds of the row), squeezing others further if needed.
+/// 4. If that element is unselected, (by say, clicking another element or the empty rack, it will squeeze back.
+///
+/// Elements support two size definitions:
+/// 1. Minimum: The minimum possible size it will squeeze into. If all elements of a row are at their minimum size from overpacking, new elements may not be moved to that row.
+/// Please note, this is the minimum size before the row starts to block further additions due to overpacking. It may still get slightly smaller than this depending on various scenarios.
+/// 2. Preferred: The default size of an element. If room is available, they will use as much as possible before packing.
+/// In the case they are squeezed however, a selected element will always use its preferred size.
+///
+/// If the FlowGrid itself is resized, elements are reslotted in akin to reloading the panel.
+/// Optionally the developer may read the panel's current minimum size, which is based on the most packed row. To prevent overpacking.
+///
+///
+/// Created by ArkyonVeil
+///
+
+#include "UIFlowGrid.h"
 #include "ModularSynth.h"
+
 
 UIFlowGrid::UIFlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, ISignalListener* signalListener)
 {

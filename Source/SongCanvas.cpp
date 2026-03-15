@@ -35,6 +35,8 @@
 
 #include "SongCanvas.h"
 #include "ModularSynth.h"
+#include "Profiler.h"
+#include "Sample.h"
 
 #include <cstring>
 
@@ -63,9 +65,8 @@ std::array<ofColor, 4> SongCanvas::ESTransColours{
    ofColor(245, 171, 182)
 };
 
-SongCanvas::SongCanvas()
+SongCanvas::SongCanvas(): mWriteBuffer(gBufferSize)
 {
-
    mRowColors.push_back(ofColor::black);
    seqLayers.reserve(MaxLayers + 1);
    mTransportPriority = kTransportPriorityVeryEarly;
@@ -139,7 +140,7 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
 
-   mRackGrid = new UIFlowGrid("playrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   mRackGrid = new UIFlowGrid("partrack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
@@ -161,13 +162,14 @@ void SongCanvas::CreateUIControls()
    //HACK, but this is just to avoid having to do further changes to the dropdown element.
    //TL DR: Don't draw it, but send over the events with the button.
    mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mRackGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
-   mRackAddNewDropdown->AddLabel("Enabler", RackAddNewElementOptions::enumEnabler);
-   mRackAddNewDropdown->AddLabel("Pulser", RackAddNewElementOptions::enumPulser);
-   mRackAddNewDropdown->AddLabel("OnePulse", RackAddNewElementOptions::enumOnePulse);
+   mRackAddNewDropdown->AddLabel("Enabler", enumEnabler);
+   mRackAddNewDropdown->AddLabel("Pulser", enumPulser);
+   mRackAddNewDropdown->AddLabel("OnePulse", enumOnePulse);
+   mRackAddNewDropdown->AddLabel("Sampler", enumSample);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
 
-   mListDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
+   mLayerDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
 
    int headerYOffset = 8;
    int mHeaderOffset = 4;
@@ -225,7 +227,7 @@ void SongCanvas::CreateUIControls()
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
+      mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }
@@ -970,15 +972,17 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       switch (mRackAddNewElementIndex)
       {
          case enumEnabler:
-            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::Enabler, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, newPartName, this));
             break;
          case enumPulser:
-            mRackGrid->AddElement(new SongCanvasRackElement(140, SongCanvasElementVariant::Pulser, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Pulser, newPartName, this));
             break;
          case enumModulator: break;
-         case enumSample: break;
+         case enumSample:
+            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Sampler, newPartName, this));
+            break;
          case enumOnePulse:
-            mRackGrid->AddElement(new SongCanvasRackElement(90, SongCanvasElementVariant::OnePulse, newPartName, this));
+            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::OnePulse, newPartName, this));
             break;
          default:;
       }
@@ -990,7 +994,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       ProcessRackElementRightClickDropdown(list);
       return;
    }
-   if (list == mListDropdownOptions)
+   if (list == mLayerDropdownOptions)
    {
       int idx = mLayerDropdownOptionButtonIndex;
       if (mLayerDropDownOptions == LayerDropDownOptions::enumLDPMoveUp)
@@ -1032,7 +1036,9 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
       mAlteredIntervalFlag = true;
       ReloadMeasures(false);
+      return;
    }
+   //Assume it's a dropdown that belongs to a rack element
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
    {
       auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
@@ -1107,33 +1113,38 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
       mSyncButton->SetEnabled(false);
       return;
    }
-
+   //All this pointless iteration may result in a tiny bit of lag.
    for (int i = 0; i < seqLayers.size(); ++i)
    {
       if (button == mLayerSettingsButton[i])
       {
          mLayerDropdownOptionButtonIndex = i;
-         mListDropdownOptions->Clear();
+         mLayerDropdownOptions->Clear();
          if (i > 0)
-            mListDropdownOptions->AddLabel("Move up", LayerDropDownOptions::enumLDPMoveUp);
+            mLayerDropdownOptions->AddLabel("Move up", LayerDropDownOptions::enumLDPMoveUp);
          if (i + 1 < seqLayers.size())
-            mListDropdownOptions->AddLabel("Move down", LayerDropDownOptions::enumLDPMoveDown);
+            mLayerDropdownOptions->AddLabel("Move down", LayerDropDownOptions::enumLDPMoveDown);
 
          if (seqLayers.size() + 1 < MaxLayers)
-            mListDropdownOptions->AddLabel("Add new layer", LayerDropDownOptions::enumLDPAddNewLayerBelow);
+            mLayerDropdownOptions->AddLabel("Add new layer", LayerDropDownOptions::enumLDPAddNewLayerBelow);
 
          if (seqLayers.size() > 1)
          {
-            mListDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing); //Spacer, makes it a little harder to butter finger deleting a layer full of content.
-            mListDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
+            mLayerDropdownOptions->AddLabel("---", LayerDropDownOptions::enumLDPNothing); //Spacer, makes it a little harder to butter finger deleting a layer full of content.
+            mLayerDropdownOptions->AddLabel("Delete", LayerDropDownOptions::enumLDPDelete);
          }
 
          auto rp = mLayerSettingsButton[i]->GetPosition(true);
-         mListDropdownOptions->SetPosition(rp.x, rp.y);
-         mListDropdownOptions->OnClicked(1, 1, false);
-         mListDropdownOptions->SetPosition(-2000, -2000);
+         mLayerDropdownOptions->SetPosition(rp.x, rp.y);
+         mLayerDropdownOptions->OnClicked(1, 1, false);
+         mLayerDropdownOptions->SetPosition(-2000, -2000);
          return;
       }
+   }
+   for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
+   {
+      auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
+      e->ButtonClicked(button,time);
    }
 }
 void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
@@ -1235,6 +1246,7 @@ void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
       mCanvasTimeline->SetBaseColour(ofColor(180, 0, 0));
    }
 }
+
 void SongCanvas::OnTransportAdvanced(float amount)
 {
    if (!mLocalMode || (mLocalMode && mLocalSynced && mOnEndMeasure == enumOEMLoop))
@@ -1579,7 +1591,6 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       in >> eRackId;
 
       auto nrm = new SongCanvasRackElement(
-      ePrefSize,
       static_cast<SongCanvasElementVariant>(eVariantType),
       eName,
       this);
@@ -1818,9 +1829,9 @@ void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
    {
       mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel,rackPartOptions[i].mValue);
    }
-   mRackElementRightClickDropdown->AddLabel("rename",(int)RackElementRightClickBaseOptions::enumRename);
+   mRackElementRightClickDropdown->AddLabel("rename",(int)RackElementRightClickBaseOptions::Rename);
    mRackElementRightClickDropdown->AddLabel("---",0);
-   mRackElementRightClickDropdown->AddLabel("delete",(int)RackElementRightClickBaseOptions::enumDelete);
+   mRackElementRightClickDropdown->AddLabel("delete",(int)RackElementRightClickBaseOptions::Delete);
 
    mRackElementRightClickDropdown->SetPosition(p.x, p.y);
    mRackElementRightClickDropdown->OnClicked(1, 1, false);
@@ -1831,13 +1842,13 @@ void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
 {
    switch (mRackElementRightClickIndex)
    {
-      case RackElementRightClickBaseOptions::enumNothing: break;
-      case RackElementRightClickBaseOptions::enumRename:
+      case RackElementRightClickBaseOptions::Nothing: break;
+      case RackElementRightClickBaseOptions::Rename:
       {
          SetRackElementRenameState(mRightClickDropdownElementContext, true);
       }
       break;
-      case RackElementRightClickBaseOptions::enumDelete:
+      case RackElementRightClickBaseOptions::Delete:
       {
          mRackRenameTextBox->SetPosition(-500, -500);
          mRackRenameTextBox->ClearInput();
@@ -1852,5 +1863,71 @@ void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
       }
       break;
    }
-   return;
+}
+
+////////////////////
+///Sample Playing///
+////////////////////
+
+void SongCanvas::Process(double time)
+{
+   PROFILER(SongCanvas);
+
+   if (mSample == nullptr)
+      return;
+   IAudioReceiver* target = GetTarget();
+
+   if (!mEnabled || target == nullptr)
+      return;
+
+   int numChannels = 2;
+
+   ComputeSliders(0);
+   SyncOutputBuffer(numChannels);
+   mWriteBuffer.SetNumActiveChannels(numChannels);
+
+   int bufferSize = target->GetBuffer()->BufferSize();
+   assert(bufferSize == gBufferSize);
+
+   mWriteBuffer.Clear();
+
+   if (mPlayingSample)
+   {
+      if (mSample->ConsumeData(time, &mWriteBuffer, bufferSize, true))
+      {
+         /*
+         for (int ch = 0; ch < gWorkChannelBuffer.NumActiveChannels(); ++ch)
+         {
+            for (int i = 0; i < bufferSize; ++i)
+               gWorkChannelBuffer.GetChannel(ch)[i] *= 0.9f * mAdsr.Value(time + i * gInvSampleRateMs);
+         }*/
+      }
+      else
+      {
+         gWorkChannelBuffer.Clear();
+         mPlayingSample = false;
+         mSample->SetPlayPosition(0);
+         mAdsr.Stop(time);
+      }
+   }
+   else
+   {
+      gWorkChannelBuffer.Clear();
+   }
+
+   for (int ch = 0; ch < mWriteBuffer.NumActiveChannels(); ++ch)
+   {
+      GetVizBuffer()->WriteChunk(mWriteBuffer.GetChannel(ch), mWriteBuffer.BufferSize(), ch);
+      Add(target->GetBuffer()->GetChannel(ch), mWriteBuffer.GetChannel(ch), gBufferSize);
+   }
+}
+
+void SongCanvas::PlaySample()
+{
+   if (mSample != nullptr)
+   {
+      mPlayingSample = true;
+      mAdsr.Clear();
+      mAdsr.Start(NextBufferTime(true) * gInvSampleRateMs, 1);
+   }
 }

@@ -19,9 +19,18 @@
 //  SongCanvas.h
 //  Bespoke
 //
-//  Module assembled by ArkyonVeil on April/24.
+//  Module assembled by ArkyonVeil on April/24. Reheated in March/26
 //
-//
+//         ██
+//         ▓▓
+// █▓      ██      ▓█
+//   ▒█▒        ▒█▒
+//        █▯█
+//        █▯█
+//   ▒█▒        ▒█▒
+// █▓      ██      ▓█
+//         ▓▓
+//         ██
 
 #pragma once
 
@@ -33,16 +42,19 @@
 #include "Slider.h"
 #include "ClickButton.h"
 #include "DropdownList.h"
+#include "IAudioProcessor.h"
 #include "ISignalListener.h"
 #include "SongCanvas_CanvasElement.h"
 #include "TextEntry.h"
 #include "UIFlowGrid.h"
 #include "SongCanvasRackElement.h"
+#include "SwitchAndRamp.h"
 
 
 class SongCanvas_CanvasElement;
 class SongCanvasRackElement;
-class SongCanvas : public IDrawableModule,
+class SongCanvas : public IAudioSource,
+                   public IDrawableModule,
                    public ICanvasListener,
                    public ITextEntryListener,
                    public IFloatSliderListener,
@@ -101,6 +113,7 @@ public:
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackElementWithID(int id);
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
+   void Process(double time) override;
 
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled;}
 
@@ -144,6 +157,13 @@ public:
    static std::array<ofColor,3> ESRGBColours;
    static std::array<ofColor,6> ESPrideColours;
    static std::array<ofColor,4> ESTransColours;
+
+   //Audio Sample Methods
+   void DebugSetSample(Sample* newSample)
+   {
+      mSample = newSample;
+   }
+   void PlaySample();
 
 private:
    struct SongCanvasLayer
@@ -277,12 +297,6 @@ private:
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
    std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
    std::array<ClickButton*, MaxLayers> mLayerSettingsButton = {};
-   /*
-   ClickButton* mLayerSettingsButton1;
-   ClickButton* mLayerSettingsButton2;
-   ClickButton* mLayerSettingsButton3;
-   ClickButton* mLayerSettingsButton4;
-   ClickButton* mLayerSettingsButton5;*/
 
    std::vector<SongCanvasLayer> seqLayers{};
    std::vector<SongCanvasLayer> layerBuffer{}; //The reason for this is clumsy <>3
@@ -291,7 +305,7 @@ private:
 
    DropdownList* mRackAddNewDropdown;
    DropdownList* mRackElementRightClickDropdown;
-   DropdownList* mListDropdownOptions;
+   DropdownList* mLayerDropdownOptions;
 
    SongCanvasRackElement* mRightClickDropdownElementContext;
    SongCanvasRackElement* mSelectedRackElement;
@@ -299,9 +313,9 @@ private:
 
    enum class RackElementRightClickBaseOptions
    {
-      enumNothing = 0,
-      enumRename = 1,
-      enumDelete = 2,
+      Nothing = 0,
+      Rename = 1,
+      Delete = 2,
    };
    int mRackElementRightClickIndex;
 
@@ -346,6 +360,13 @@ private:
 
    //Expert variables
    bool expertPanelEnabled = false;
+
+   //Audio/Sample stuff
+   Sample* mSample{ nullptr };
+   bool mPlayingSample {false};
+   ::ADSR mAdsr{ 10, 1, 1, 10 };
+   SwitchAndRamp mSwitchAndRamp;
+   ChannelBuffer mWriteBuffer;
 };
 
 enum class SongCanvasElementVariant

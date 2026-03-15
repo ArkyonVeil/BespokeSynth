@@ -44,6 +44,7 @@ void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
       case SongCanvasElementVariant::Sampler:
       {
          mCurrentColor = mSamplerColor;
+         mCurrentColorGrad = mSamplerColor2;
       }
       break;
       case SongCanvasElementVariant::OnePulse:
@@ -102,13 +103,12 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
             {
                mCurrentColor = mEnablerInvertColor;
                mCurrentColorGrad = mEnablerInvertColor2;
-
                ofRectangle seamRect = rect;
-               seamRect.height = MIN(rect.y,3);
+               seamRect.height = MIN(rect.y,2);
                ofSetColor(ofColor(200/eDiv, 200/eDiv, 200/eDiv)); //Draw a seam.
 
                ofRect(seamRect, 0);
-               addedTextYOffset += 3;
+               addedTextYOffset += 2;
             }
             else
             {
@@ -131,7 +131,7 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
          break;
          case SongCanvasElementVariant::OnePulse:
             ofRectangle seamRect = rect;
-            seamRect.width = MIN(rect.x, 3);
+            seamRect.width = MIN(rect.x, 2);
             ofSetColor(ofColor(180/eDiv, 180/eDiv, 0/eDiv)); //Draw a seam.
 
             ofRect(seamRect, 0);
@@ -190,11 +190,6 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
 
 
    ofPopStyle();
-}
-
-namespace
-{
-   const int kNCESaveStateRev = 0;
 }
 
 void SongCanvas_CanvasElement::SaveState(FileStreamOut& out)

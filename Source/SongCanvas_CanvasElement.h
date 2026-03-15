@@ -45,6 +45,7 @@ private:
    const ofColor mEnablerInvertColor2 = ofColor(50, 50, 50);
    const ofColor mPulserColor = ofColor(180, 180, 0);
    const ofColor mLFOColor = ofColor::purple;
-   const ofColor mSamplerColor = ofColor::green;
+   const ofColor mSamplerColor = ofColor(40,180,40);
+   const ofColor mSamplerColor2 = ofColor(20,70,20);
    const ofColor mOnePulseColor = ofColor(100, 100, 0);
 };

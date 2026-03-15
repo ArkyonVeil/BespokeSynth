@@ -18,6 +18,7 @@
 //
 //  ADSR.h
 //  additiveSynth
+//  ADSR -> Attack Decay Sustain Release
 //
 //  Created by Ryan Challinor on 11/19/12.
 //

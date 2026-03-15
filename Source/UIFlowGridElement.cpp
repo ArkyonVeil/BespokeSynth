@@ -1,7 +1,7 @@
 ﻿#include "UIFlowGrid.h"
 
 
-UIFlowGridElement::UIFlowGridElement(float preferredWidth, ofColor baseColor)
+UIFlowGridElement::UIFlowGridElement(ofColor baseColor,float preferredWidth)
 {
    mPreferredWidth = preferredWidth;
    mWidth = preferredWidth;
@@ -12,6 +12,7 @@ UIFlowGridElement::~UIFlowGridElement()
 }
 void UIFlowGridElement::SetPreferredPosition(int row, float positionPercent)
 {
+   throw std::logic_error("Not implemented");//todo
 }
 void UIFlowGridElement::SetColor(ofColor color)
 {

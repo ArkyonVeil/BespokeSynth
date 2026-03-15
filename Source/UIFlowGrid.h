@@ -94,7 +94,7 @@ private:
 class UIFlowGridElement
 {
 public:
-   UIFlowGridElement(float preferredWidth, ofColor baseColor);
+   UIFlowGridElement(ofColor baseColor,float preferredWidth = 80);
    virtual ~UIFlowGridElement();
    void SetPreferredPosition(int row, float positionPercent);
 

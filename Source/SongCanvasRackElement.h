@@ -2,15 +2,14 @@
 // Created by ArkyonVeil on 13/03/2026.
 //
 
-
 class SongCanvas;
 
 class PatchCableSource;
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
-class SongCanvasRackElement : public UIFlowGridElement, public ITimeListener
+class SongCanvasRackElement : public UIFlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
-   SongCanvasRackElement(float preferredWidth, SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor = ofColor::white);
+   SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor = ofColor::white);
    void Draw() override;
    void CreateUIControls(SongCanvas* owner);
    void OnMouseClick(bool rightClick) override;
@@ -34,6 +33,10 @@ public:
    void SetRenameState(bool newState) { mRenameActive = newState; }
    ~SongCanvasRackElement();
    void OnTimeEvent(double time) override;
+   void LoadFile();
+   void UpdateSample(Sample* sample);
+   void ButtonClicked(ClickButton* button, double time) override;
+
    PatchCableSource* GetEnablerCable() { return mEnablerCable; }
    PatchCableSource* GetPulserCable() { return mPulserCable; }
    int mInternalRackID;
@@ -44,14 +47,23 @@ public:
    //Enabler
    bool mEnablerInverted{ false };
    //Sampler
+   Sample* mSample {};
    float mSamplerPitch { 0 };
    float mSamplerVolume { 0 };
+   ClickButton* mSampleLoaderButton {};
+
+   static constexpr int PreferredWidthEnabler { 90 };
+   static constexpr int PreferredWidthPulser { 150 };
+   static constexpr int PreferredWidthOnePulse { 90 };
+   static constexpr int PreferredWidthSampler { 275 };
+   static constexpr int PreferredWidthLFO { 90 };
 
    SongCanvasElementVariant mVariantType;
 
 private:
    PatchCableSource* mEnablerCable;
    PatchCableSource* mPulserCable;
+   PatchCableSource* mSamplerCable;
    std::string* mElementName;
    SongCanvas* mSongCanvas;
    DropdownList* mIntervalSelector{ nullptr };
@@ -65,6 +77,7 @@ private:
    float mExciteDrag{ 0 };
    float mVariantExtraWidth{ 0 };
    double mLastClickTime{ 0 };
+
 
 
    int mDebugClick{0};
