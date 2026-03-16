@@ -41,10 +41,10 @@ std::string RemoveNonNumericalChars(const std::string& input)
 }
 
 
-SongCanvasRackElement::SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor)
-: FlowGridElement(overrideColor)
+SongCanvasRackElement::SongCanvasRackElement(SongCanvasElementVariant variantType, std::string partName, SongCanvas* owner)
+: FlowGridElement(mFlowGridParent)
 {
-   mElementName = new std::string(name);
+   mElementName = new std::string(partName);
    mSongCanvas = owner;
    mVariantType = variantType;
    mInternalRackID = mSongCanvas->GetInternalRackId();
@@ -75,6 +75,24 @@ SongCanvasRackElement::SongCanvasRackElement(SongCanvasElementVariant variantTyp
    }
    CreateUIControls(owner);
    mHighlightOutlineColor = ofColor(0, 150, 255);
+}
+std::string SongCanvasRackElement::GetPreferredName()
+{
+   switch (mVariantType)
+   {
+      case SongCanvasElementVariant::Enabler:
+         return "enabler";
+      case SongCanvasElementVariant::Pulser:
+         return "pulser";
+      case SongCanvasElementVariant::LFO:
+         return "lfo";
+      case SongCanvasElementVariant::Sampler:
+         return "sampler";
+      case SongCanvasElementVariant::OnePulse:
+         return "onepulse";
+      default:
+         return "unknownRackElement";
+   }
 }
 
 SongCanvasRackElement::~SongCanvasRackElement()
@@ -268,7 +286,7 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
       }
    }
 }
-void SongCanvasRackElement::SetName(std::string newName) const
+void SongCanvasRackElement::SetPartName(std::string newName) const
 {
    *mElementName = newName;
 }

@@ -36,11 +36,12 @@
 #include "ModularSynth.h"
 
 
-FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IClickable* parent, IFlowGridListener* listener)
+FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IDrawableModule* parent, IFlowGridListener* listener)
 {
    SetName(name.c_str());
    SetPosition(x, y);
    mListener = listener;
+   mOwner = parent;
    SetParent(parent);
    for (int i = 0; i < rows; i++)
       AddRowSilent();
@@ -144,7 +145,7 @@ bool FlowGrid::MouseMoved(float x, float y)
    //TheSynth->LogEvent("MouseMove "+std::to_string(mDebugIter),kLogEventType_Verbose);
    //mDebugIter++;
    //See which element we're hovering over...
-
+/*
    if (mPressed)
    {
       if (ofDistSquared(rX, rY, mStartDragMouse.x, mStartDragMouse.y) > mDragDistance && !mDragging && mDragToken)
@@ -262,7 +263,7 @@ bool FlowGrid::MouseMoved(float x, float y)
       }
    }
    mHovered = isMouseOver;
-
+*/
    return IUIControl::MouseMoved(x, y);
 }
 bool FlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
@@ -298,6 +299,15 @@ void FlowGrid::LoadState(FileStreamIn& in, bool shouldSetValue)
 void FlowGrid::AddElement(FlowGridElement* newElement, int row)
 {
    newElement->SetFlowGrid(this);
+
+   //Get a name.
+   auto n = GetInternalNameForFlowElement(newElement->GetPreferredName());
+   newElement->NameData = n;
+   newElement->SetName(n->internalName.c_str());
+   newElement->SetOverrideDisplayName(n->displayName);
+
+   //Add it to the pipeline
+   mOwner->AddUIControl(newElement);
 
    if (row != -1)
    {
@@ -385,7 +395,7 @@ void FlowGrid::RemoveElement(FlowGridElement* element)
    row.erase(std::find(row.begin(), row.end(), element));
    //mRows[0] = row;
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   delete element;
+   mOwner->RemoveUIControl(element);
    RecalculateElements();
 }
 
@@ -404,6 +414,53 @@ void FlowGrid::AddRowSilent()
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
 }
+
+FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
+{
+   FlowNameRecord* record = nullptr;
+   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
+   {
+      if (mFlowNameRecords[i].name == name)
+      {
+         record = &mFlowNameRecords[i];
+      }
+   }
+   if (record == nullptr)
+   {
+      mFlowNameRecords.push_back(FlowNameRecord{
+      name,0,{}});
+      return new FlowNameAssigment{name+ofToString(0),name,0};
+   }
+
+   int idx;
+   if (!record->freeIndexes.empty())
+   {
+      idx = record->freeIndexes.back();
+      record->freeIndexes.pop_back();
+   }
+   else
+   {
+      record->index++;
+      idx = record->index;
+   }
+
+   return new FlowNameAssigment{ name+ofToString(idx),name,idx};
+}
+
+void FlowGrid::DisposeElement(FlowGridElement* element)
+{
+   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
+   {
+      if (mFlowNameRecords[i].name == element->NameData->displayName)
+      {
+         mFlowNameRecords[i].freeIndexes.push_back(element->NameData->index);
+         return;
+      }
+   }
+
+   element->RemoveFromOwner();
+}
+
 void FlowGrid::RemoveRow(int row)
 {
 }

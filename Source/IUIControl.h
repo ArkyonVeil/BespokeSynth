@@ -103,6 +103,8 @@ public:
    virtual IModulator* GetModulator() { return nullptr; }
    void SetControlVisualizer(IControlVisualizer* visualizer) { mControlVisualizer = visualizer; }
    IControlVisualizer* GetControlVisualizer() const { return mControlVisualizer; }
+   virtual std::string& GetDynamicTooltip() {return mDynamicTooltip;};
+   virtual bool DisplayBasicTooltip() { return true;}
 
    static void SetNewManualHoverViaTab(int direction);
    static void SetNewManualHoverViaArrow(ofVec2f direction);
@@ -123,6 +125,7 @@ protected:
    bool mSnapshotHighlight{ false };
    bool mIsDeleted{ false };
    IControlVisualizer* mControlVisualizer{ nullptr };
+   std::string mDynamicTooltip;
 
    static IUIControl* sLastHoveredUIControl;
    static bool sLastUIHoverWasSetManually;

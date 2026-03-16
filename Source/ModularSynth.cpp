@@ -789,15 +789,18 @@ void ModularSynth::Draw()
       else if (hasValidHoveredControl && !gHoveredUIControl->IsMouseDown())
       {
          tooltip = helpDisplay->GetUIControlTooltip(gHoveredUIControl);
+         if (!tooltip.empty())
+         {
          tooltipContainer = gHoveredUIControl->GetModuleParent()->GetOwningContainer();
          tooltipPos.x = gHoveredUIControl->GetRect().getMaxX() + 10;
          tooltipPos.y = GetMouseY(tooltipContainer) + 18;
+         }
       }
    }
 
    mNextDrawTooltip = "";
 
-   if (tooltip != "" && tooltipContainer != nullptr)
+   if (!tooltip.empty() && tooltipContainer != nullptr)
    {
       if (tooltipPos.x == FLT_MAX)
       {

@@ -437,6 +437,7 @@ void SongCanvas::DrawModule()
    }
    //Draw the canvas.
 
+
    for (int i = 0; i < mCanvas->GetNumVisibleRows(); ++i)
    {
       ofColor color = GetRowColor(i + mCanvas->GetRowOffset());
@@ -856,7 +857,7 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
 {
    if (entry == mRackRenameTextBox)
    {
-      mSelectedRackElement->SetName(mRackRenameTextBox->GetText());
+      mSelectedRackElement->SetPartName(mRackRenameTextBox->GetText());
       SetRackElementRenameState(mSelectedRackElement,false);
       mRackRenameTextBox->SetPosition(-500, -500);
       mRackRenameTextBox->CheckHover(-500, -500);
@@ -1170,14 +1171,13 @@ void SongCanvas::OnClicked(float x, float y, bool right)
 void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
-   mRackGrid->MouseReleased();
 }
 
 void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
    element->Setup(mSelectedRackElement);
 }
-void SongCanvas::ElementAdditionSuppressed(float posX, float posY)
+void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 {
    mFlashRackStartTime = ofGetGlobalTime();
 }

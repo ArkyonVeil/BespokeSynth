@@ -736,7 +736,7 @@ target_sources(BespokeSynth PRIVATE
     UIGrid.h
         FlowGrid.cpp
         FlowGrid.h
-	UIFlowGridElement.cpp
+        FlowGridElement.cpp
     UnstableModWheel.cpp
     UnstableModWheel.h
     UnstablePitch.cpp

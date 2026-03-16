@@ -45,7 +45,7 @@ public:
    virtual ~ICanvasListener() {}
    virtual void CanvasUpdated(Canvas* canvas) = 0;
    virtual void ElementRemoved(CanvasElement* element) {}
-   virtual void ElementAdditionSuppressed(float posX, float posY){};
+   virtual void CanvasElementAdditionSuppressed(float posX, float posY){};
 };
 
 struct CanvasCoord

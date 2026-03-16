@@ -931,6 +931,7 @@ void IDrawableModule::KeyReleased(int key)
 
 void IDrawableModule::AddUIControl(IUIControl* control)
 {
+
    try
    {
       std::string name = control->Name();

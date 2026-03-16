@@ -258,7 +258,7 @@ void Canvas::OnClicked(float x, float y, bool right)
             else
             {
                if (mListener)
-                  mListener->ElementAdditionSuppressed(x, y);
+                  mListener->CanvasElementAdditionSuppressed(x, y);
             }
          }
          else if (GetKeyModifiers() & kModifier_Alt)

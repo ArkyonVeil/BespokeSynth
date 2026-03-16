@@ -104,7 +104,7 @@ public:
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetSelectedRackElement(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element);
-   void ElementAdditionSuppressed(float posX, float posY) override;
+   void CanvasElementAdditionSuppressed(float posX, float posY) override;
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element) const;
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.

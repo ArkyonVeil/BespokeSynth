@@ -1,14 +1,14 @@
 ﻿#include "FlowGrid.h"
 
 
-FlowGridElement::FlowGridElement(ofColor baseColor,float preferredWidth)
+
+FlowGridElement::FlowGridElement(FlowGrid* grid)
 {
-   mPreferredWidth = preferredWidth;
-   mWidth = preferredWidth;
-   SetColor(baseColor);
+   mFlowGridParent = grid;
 }
 FlowGridElement::~FlowGridElement()
 {
+   delete NameData;
 }
 void FlowGridElement::SetPreferredPosition(int row, float positionPercent)
 {
@@ -50,10 +50,16 @@ ofVec2f FlowGridElement::GetRelativePosition()
    auto pos = mFlowGridParent->GetPosition(true);
    return ofVec2f(pos.x + mX, pos.y + mY);
 }
-void FlowGridElement::MouseMove(float x, float y)
-{
-}
 
+bool FlowGridElement::MouseMoved(float x, float y)
+{
+   CheckHover(x, y);
+   return false;
+}
+void FlowGridElement::MouseReleased()
+{
+
+}
 void FlowGridElement::Draw()
 {
    ofPushMatrix();

@@ -4,11 +4,19 @@
 
 //Docs in FlowGrid.cpp
 
+struct FlowNameAssigment
+{
+   std::string internalName;
+   std::string displayName;
+   int index;
+};
+
 class FlowGridElement;
+
 class FlowGrid : public IUIControl
 {
 public:
-   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IClickable* parent, IFlowGridListener* listener);
+   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IDrawableModule* parent, IFlowGridListener* listener);
    void Render() override;
    void MouseReleased() override;
    bool MouseMoved(float x, float y) override;
@@ -33,14 +41,24 @@ public:
    void RecalculateElements();
    void RemoveElement(FlowGridElement* element);
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
-
    void AddRow();
    void RemoveRow(int row);
    void SetDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
 
 protected:
    void AddRowSilent();
+   FlowNameAssigment* GetInternalNameForFlowElement(std::string name);
+   void DisposeElement(FlowGridElement* element);
 
+   struct FlowNameRecord
+   {
+      std::string name;
+      int index;
+      std::vector<int> freeIndexes {};
+   };
+
+
+   std::vector<FlowNameRecord> mFlowNameRecords;
 private:
    void GetDimensions(float& width, float& height) override
    {
@@ -69,13 +87,14 @@ private:
    bool mAllowDragAndDrop = { true }; //If it allows elements to be dragged around the gridspace by the user.
    float mRowYSize = {};
 
-   float mDragDistance = { 12 }; //How far to drag in px before it considers a movement a "dragging" operation.
+   float const mDragDistance { 12 }; //How far to drag in px before it considers a movement a "dragging" operation.
 
    float mElementSpacing = { 4 }; //The amount of space between each element.
    float mRowXBorderOffset = 2;
    float mRowYBorderOffset = 2;
    ofColor mBackgroundColor = { 0, 0, 0, 75 };
 
+   int mElementNameIndex = 0;
    int mSnapDragIndex;
    int mSnapDragRow;
    bool mHovered{ false };
@@ -85,19 +104,29 @@ private:
    int mDragElementRow;
    ofVec2f mStartDragMouse;
    ofVec2f mStartDragElementPos;
+   IDrawableModule* mOwner;
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
 
+
    int mDebugIter = 0;
+
+
+
 };
 
 
-class FlowGridElement
+class FlowGridElement: public IUIControl
 {
 public:
-   FlowGridElement(ofColor baseColor,float preferredWidth = 80);
+   FlowGridElement(FlowGrid* grid);
    virtual ~FlowGridElement();
+
+   //Due to single internal name compliance (which is also used for tooltips). FlowGrids automatically allocate names,
+   //so the desired one is seen by the user, while the internal one does all the bookkeeping.
+   virtual std::string GetPreferredName() = 0;
    void SetPreferredPosition(int row, float positionPercent);
+   FlowNameAssigment* NameData;
 
    void SetPosition(int x, int y)
    {
@@ -109,6 +138,7 @@ public:
       mWidth = width;
       mHeight = height;
    }
+
    void SetPreferredSize(int width) { mPreferredWidth = width; }
    float GetPreferredWidth() const { return mPreferredWidth; }
    int GetWidth() const { return mWidth; }
@@ -120,7 +150,6 @@ public:
    void SetHovered(bool hovered) { mHovered = hovered; }
    bool GetHovered() { return mHovered; }
 
-
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }
    void SetColor(ofColor color);
@@ -129,8 +158,25 @@ public:
    ofVec2f GetRelativePosition();
    virtual void OnMouseClick(bool rightClick) {}
    virtual void OnMouseRelease() {}
-   void MouseMove(float x, float y);
+   virtual bool MouseMoved(float x, float y) override;
+   virtual void MouseReleased() override;
    virtual void Draw();
+
+   FlowGrid* mFlowGridParent;
+
+
+   //IUIControl
+   void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
+   void SetValue(float value, double time, bool forceUpdate = false) override {}
+   void KeyPressed(int key, bool isRepeat) override {};
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, bool shouldSetValue = true) override {};
+   bool IsSliderControl() override { return false; }
+   bool IsButtonControl() override { return false; }
+   bool GetNoHover() const override { return true; }
+   bool CanBeTargetedBy(PatchCableSource* source) const override {return false;};
+   bool ShouldSerializeForSnapshot() const override { return true; }
+
 
 protected:
    int mHeight = 0;
@@ -145,12 +191,12 @@ protected:
    ofColor mHighlightOutlineColor;
 
    float mOutlineThickness{ 0.8F };
-
 private:
-   float mPreferredPosition = -1;
    bool mHighlighted = false;
    bool mHovered = false;
    int mPreferredRow = -1;
+   float mMinWidth = 30;
    float mPreferredWidth = 90;
-   FlowGrid* mFlowGridParent;
+
+
 };

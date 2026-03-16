@@ -343,12 +343,23 @@ std::string HelpDisplay::GetUIControlTooltip(IUIControl* control)
    std::string name = control->Name();
    std::string tooltip;
 
-   UIControlTooltipInfo* controlInfo = FindControlInfo(control);
-   if (controlInfo && controlInfo->tooltip.size() > 0)
-      tooltip = controlInfo->tooltip;
-   else
-      tooltip = "[no tooltip found]";
+   if (control->DisplayBasicTooltip())
+   {
+      UIControlTooltipInfo* controlInfo = FindControlInfo(control);
+      if (controlInfo && controlInfo->tooltip.size() > 0)
+         tooltip = controlInfo->tooltip;
+      else
+         tooltip = "[no tooltip found]";
 
+      if (!control->GetDynamicTooltip().empty())
+      {
+         tooltip += control->GetDynamicTooltip();
+      }
+   }
+   else
+   {
+      return control->GetDynamicTooltip();
+   }
    return name + ": " + tooltip;
 }
 

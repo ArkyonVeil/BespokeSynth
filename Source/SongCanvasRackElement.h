@@ -9,11 +9,12 @@ class PatchCableSource;
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
-   SongCanvasRackElement(SongCanvasElementVariant variantType, std::string name, SongCanvas* owner, const ofColor& overrideColor = ofColor::white);
+   SongCanvasRackElement(SongCanvasElementVariant variantType, std::string partName, SongCanvas* owner);
+   std::string GetPreferredName() override;
    void Draw() override;
    void CreateUIControls(SongCanvas* owner);
    void OnMouseClick(bool rightClick) override;
-   void SetName(std::string newName) const;
+   void SetPartName(std::string newName) const;
    void Excite(float excitePower)
    {
       if (mExcitePower < excitePower)
@@ -28,7 +29,6 @@ public:
    void HandleRightClickDropdown(int optionValue);
    NoteInterval GetInterval() { return mPulserInterval; }
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
-
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
    ~SongCanvasRackElement();
@@ -36,6 +36,7 @@ public:
    void LoadFile();
    void UpdateSample(Sample* sample);
    void ButtonClicked(ClickButton* button, double time) override;
+
 
    PatchCableSource* GetEnablerCable() { return mEnablerCable; }
    PatchCableSource* GetPulserCable() { return mPulserCable; }
