@@ -53,14 +53,13 @@ ofVec2f FlowGridElement::GetRelativePosition()
 
 bool FlowGridElement::MouseMoved(float x, float y)
 {
-   CheckHover(x, y);
    return false;
 }
 void FlowGridElement::MouseReleased()
 {
 
 }
-void FlowGridElement::Draw()
+void FlowGridElement::DrawModule()
 {
    ofPushMatrix();
    ofTranslate(mX, mY);

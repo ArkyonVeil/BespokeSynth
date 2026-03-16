@@ -306,9 +306,6 @@ private:
    DropdownList* mRackElementRightClickDropdown;
    DropdownList* mLayerDropdownOptions;
 
-   SongCanvasRackElement* mRightClickDropdownElementContext;
-   SongCanvasRackElement* mSelectedRackElement;
-
 
    enum class RackElementRightClickBaseOptions
    {
@@ -367,13 +364,3 @@ private:
    SwitchAndRamp mSwitchAndRamp;
    ChannelBuffer mWriteBuffer;
 };
-
-enum class SongCanvasElementVariant
-{
-   Enabler = 0,
-   Pulser = 1,
-   LFO = 2,
-   Sampler = 3,
-   OnePulse = 4,
-};
-

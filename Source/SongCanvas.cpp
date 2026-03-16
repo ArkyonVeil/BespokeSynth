@@ -141,7 +141,7 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetTextAlpha(0);
 
    mRackGrid = new FlowGrid("part rack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
-   AddUIControl(mRackGrid);
+   AddChild(mRackGrid);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
@@ -228,7 +228,7 @@ void SongCanvas::CreateUIControls()
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
+      mRackGrid->AddFlowElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, "Part " + std::to_string(dPartIter), this), 0);
       dPartIter++;
       IncrementInternalRackId();
    }
@@ -974,17 +974,17 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       switch (mRackAddNewElementIndex)
       {
          case enumEnabler:
-            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, newPartName, this));
+            mRackGrid->AddFlowElement(new SongCanvasRackElement(SongCanvasElementVariant::Enabler, newPartName, this));
             break;
          case enumPulser:
-            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Pulser, newPartName, this));
+            mRackGrid->AddFlowElement(new SongCanvasRackElement(SongCanvasElementVariant::Pulser, newPartName, this));
             break;
          case enumModulator: break;
          case enumSample:
-            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::Sampler, newPartName, this));
+            mRackGrid->AddFlowElement(new SongCanvasRackElement(SongCanvasElementVariant::Sampler, newPartName, this));
             break;
          case enumOnePulse:
-            mRackGrid->AddElement(new SongCanvasRackElement(SongCanvasElementVariant::OnePulse, newPartName, this));
+            mRackGrid->AddFlowElement(new SongCanvasRackElement(SongCanvasElementVariant::OnePulse, newPartName, this));
             break;
          default:;
       }
@@ -1166,7 +1166,6 @@ bool SongCanvas::MouseMoved(float x, float y)
 void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
-   mRackGrid->OnClicked(x - mRackGrid->GetPosition().x, y - mRackGrid->GetPosition().y, right);
 }
 void SongCanvas::MouseReleased()
 {
@@ -1593,7 +1592,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       static_cast<SongCanvasElementVariant>(eVariantType),
       eName,
       this);
-      mRackGrid->AddElement(nrm);
+      mRackGrid->AddFlowElement(nrm);
       nrm->mInternalRackID = eRackId;
 
       switch ((SongCanvasElementVariant)eVariantType)
@@ -1801,7 +1800,7 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
    {
       mCanvas->RemoveElement(re);
    }
-   mRackGrid->RemoveElement(element);
+   mRackGrid->RemoveFlowElement(element);
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {

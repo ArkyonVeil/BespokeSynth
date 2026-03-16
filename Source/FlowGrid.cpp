@@ -53,7 +53,6 @@ FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int row
 void FlowGrid::Render()
 {
    ofPushMatrix();
-   ofTranslate(mX, mY);
    ofPushStyle();
    /*
    if (!mHovered)
@@ -88,7 +87,6 @@ void FlowGrid::OnClicked(float x, float y, bool right)
 {
    if (mHovered && mLastHoveredElement != nullptr)
    {
-      IUIControl::OnClicked(x, y, right);
       if (mSelectedElement != nullptr)
          mSelectedElement->SetHighlight(false);
       mSelectedElement = mLastHoveredElement;
@@ -132,11 +130,11 @@ void FlowGrid::MouseReleased()
       //mLastHoveredElement = nullptr;
       mDragging = false;
    }
-   IUIControl::MouseReleased();
+
 }
 bool FlowGrid::MouseMoved(float x, float y)
 {
-   CheckHover(x, y);
+
    float rX = x+mX;
    float rY = y+mY;
 
@@ -264,11 +262,11 @@ bool FlowGrid::MouseMoved(float x, float y)
    }
    mHovered = isMouseOver;
 */
-   return IUIControl::MouseMoved(x, y);
+   return false;
 }
 bool FlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
 {
-   return IUIControl::MouseScrolled(x, y, scrollX, scrollY, isSmoothScroll, isInvertedScroll);
+   return false;
 }
 void FlowGrid::SetHighlightCol(double time, int col)
 {
@@ -284,19 +282,12 @@ void FlowGrid::SetDimensions(float width, float height)
    RecalculateElements();
 }
 
-void FlowGrid::SetFromMidiCC(float slider, double time, bool setViaModulator)
+void FlowGrid::DrawModule()
 {
+
 }
-void FlowGrid::SetValue(float value, double time, bool forceUpdate)
-{
-}
-void FlowGrid::SaveState(FileStreamOut& out)
-{
-}
-void FlowGrid::LoadState(FileStreamIn& in, bool shouldSetValue)
-{
-}
-void FlowGrid::AddElement(FlowGridElement* newElement, int row)
+
+void FlowGrid::AddFlowElement(FlowGridElement* newElement, int row)
 {
    newElement->SetFlowGrid(this);
 
@@ -307,7 +298,7 @@ void FlowGrid::AddElement(FlowGridElement* newElement, int row)
    newElement->SetOverrideDisplayName(n->displayName);
 
    //Add it to the pipeline
-   mOwner->AddUIControl(newElement);
+   AddChild(newElement);
 
    if (row != -1)
    {
@@ -388,14 +379,14 @@ void FlowGrid::RecalculateElements()
       rowYOffset += mHeight / GetRowCount();
    }
 }
-void FlowGrid::RemoveElement(FlowGridElement* element)
+void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 {
    //TheSynth->LogEvent("Tried to delete an element.",LogEventType::kLogEventType_Verbose);
    auto& row = mRows[0];
    row.erase(std::find(row.begin(), row.end(), element));
    //mRows[0] = row;
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   mOwner->RemoveUIControl(element);
+   DisposeElement(element);
    RecalculateElements();
 }
 
@@ -457,10 +448,10 @@ void FlowGrid::DisposeElement(FlowGridElement* element)
          return;
       }
    }
-
-   element->RemoveFromOwner();
+   RemoveChild(element);
 }
 
 void FlowGrid::RemoveRow(int row)
 {
+
 }

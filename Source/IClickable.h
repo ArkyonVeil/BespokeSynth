@@ -100,7 +100,7 @@ public:
 
 protected:
    virtual void OnClicked(float x, float y, bool right) {}
-   virtual bool MouseMoved(float x, float y) { return false; }
+   virtual bool MouseMoved(float x, float y) { return false; }//Return bool is unused.
    virtual bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll) { return false; }
    virtual void UpdateWidth() {}
 

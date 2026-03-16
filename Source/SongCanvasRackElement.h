@@ -9,10 +9,9 @@ class PatchCableSource;
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
-   SongCanvasRackElement(SongCanvasElementVariant variantType, std::string partName, SongCanvas* owner);
+   SongCanvasRackElement(std::string partName, SongCanvas* songCanvas);
+   ~SongCanvasRackElement();
    std::string GetPreferredName() override;
-   void Draw() override;
-   void CreateUIControls(SongCanvas* owner);
    void OnMouseClick(bool rightClick) override;
    void SetPartName(std::string newName) const;
    void Excite(float excitePower)
@@ -21,67 +20,139 @@ public:
          mExcitePower = excitePower;
    } //Make it dance
    void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; } //Make it do a base level of dancing, handy for long events.
-   void OnEnter();
-   void OnProcess();
-   void OnExit();
-   void SetActive(bool newState) { mActive = newState; }
-   bool IsActive() { return mActive; }
-   void HandleRightClickDropdown(int optionValue);
-   NoteInterval GetInterval() { return mPulserInterval; }
-   void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
+
+   virtual void CreateUIControls(SongCanvas* owner);
+   virtual void OnEnter() = 0;
+   virtual void OnProcess(){};
+   virtual void OnExit() = 0;
+   virtual void SetEnabled(bool newState) { enabled = newState; }
+   bool IsEnabled() { return enabled; }
+   virtual int GetPreferredWidth() = 0;
+   virtual void HandleRightClickDropdown(int optionValue) {};
+   virtual std::vector<DropdownListElement> GetRightClickOptions() {return {};};
+   virtual void DrawRackGraphics() = 0;
+
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
-   ~SongCanvasRackElement();
    void OnTimeEvent(double time) override;
-   void LoadFile();
-   void UpdateSample(Sample* sample);
    void ButtonClicked(ClickButton* button, double time) override;
 
-
-   PatchCableSource* GetEnablerCable() { return mEnablerCable; }
-   PatchCableSource* GetPulserCable() { return mPulserCable; }
    int mInternalRackID;
 
-   std::vector<DropdownListElement> mRackPartRightClickOptions {};
-   DropdownList* GetPulserIntervalDropdown() const { return mIntervalSelector; }
-
-   //Enabler
-   bool mEnablerInverted{ false };
-   //Sampler
-   Sample* mSample {};
-   float mSamplerPitch { 0 };
-   float mSamplerVolume { 0 };
-   ClickButton* mSampleLoaderButton {};
-
-   static constexpr int PreferredWidthEnabler { 90 };
-   static constexpr int PreferredWidthPulser { 150 };
-   static constexpr int PreferredWidthOnePulse { 90 };
-   static constexpr int PreferredWidthSampler { 275 };
-   static constexpr int PreferredWidthLFO { 90 };
-
-   SongCanvasElementVariant mVariantType;
-
-private:
-   PatchCableSource* mEnablerCable;
-   PatchCableSource* mPulserCable;
-   PatchCableSource* mSamplerCable;
-   std::string* mElementName;
+protected:
    SongCanvas* mSongCanvas;
-   DropdownList* mIntervalSelector{ nullptr };
-   NoteInterval mPulserInterval = kInterval_8n;
-   TransportListenerInfo* mTransportListenerInfo{ nullptr };
+private:
+   std::string* mElementName;
 
-   bool mActive{ false };
+   void DrawModule() override;
+   bool enabled{ false };
    bool mRenameActive = false;
    float mExcitePower{ 0 };
    float mExciteConstant{ 0 };
    float mExciteDrag{ 0 };
-   float mVariantExtraWidth{ 0 };
    double mLastClickTime{ 0 };
-
-
 
    int mDebugClick{0};
    int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
+};
+
+/////////////
+///Enabler///
+/////////////
+
+class SongCanvasRackEnabler:SongCanvasRackElement
+{
+public:
+   SongCanvasRackEnabler(const std::string& partName, SongCanvas* owner);
+   ~SongCanvasRackEnabler();
+   int GetPreferredWidth() override { return  90; };
+   bool mEnablerInverted{ false };
+   void OnEnter() override;
+   void OnExit() override;
+   void HandleRightClickDropdown(int optionValue) override;
+   void DrawRackGraphics() override;
+
+   std::vector<DropdownListElement> GetRightClickOptions() override;
+private:
+   PatchCableSource* mEnablerCable;
+};
+
+/////////////
+///Pulser///
+/////////////
+
+class SongCanvasRackPulser:SongCanvasRackElement , IDropdownListener
+{
+public:
+   SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
+   ~SongCanvasRackPulser();
+   void OnEnter();
+   void OnExit();
+   void OnTimeEvent(double time);
+   void HandleRightClickDropdown(int optionValue);
+   void DrawRackGraphics() override;
+   PatchCableSource* mPulserCable;
+   NoteInterval GetInterval() { return mPulserInterval; }
+   void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
+   int GetPreferredWidth() override { return  150; };
+
+   bool mOnePulseMode{ false };
+private:
+   DropdownList* mIntervalSelector{ nullptr };
+   NoteInterval mPulserInterval = kInterval_8n;
+   TransportListenerInfo* mTransportListenerInfo{ nullptr };
+};
+
+///////////
+///Keyer///
+///////////
+
+class SongCanvasRackKeyer:SongCanvasRackElement
+{
+public:
+   int GetPreferredWidth() override { return  150; };
+private:
+   PatchCableSource* mKeyerCable;
+   SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
+   void OnEnter();
+   void OnExit();
+   void DrawRackGraphics() override;
+};
+
+/////////////
+///Sampler///
+/////////////
+
+class SongCanvasRackSampler:SongCanvasRackElement
+{
+public:
+   SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
+   ~SongCanvasRackSampler();
+   void OnEnter();
+   void OnExit();
+   void LoadFileSample();
+   void UpdateSample(Sample* sample);
+   void ButtonClicked(ClickButton* button, double time);
+   void SetSample(Sample* sample);
+   void DrawRackGraphics() override;
+   int GetPreferredWidth() override {return 150;};
+private:
+   Sample* mSample {};
+   float mSamplerPitch { 0 };
+   float mSamplerVolume { 0 };
+   ClickButton* mSampleLoaderButton {};
+   PatchCableSource* mSamplerCable;
+};
+
+/////////
+///LFO///
+/////////
+
+class SongCanvasRackLFO:SongCanvasRackElement
+{
+   int GetPreferredWidth() override {return 90;};
+   SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
+   void OnEnter();
+   void OnExit();
 };

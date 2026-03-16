@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "IDrawableModule.h"
 #include "IFlowGridListener.h"
 #include "IUIControl.h"
 
@@ -13,7 +14,7 @@ struct FlowNameAssigment
 
 class FlowGridElement;
 
-class FlowGrid : public IUIControl
+class FlowGrid : public IDrawableModule
 {
 public:
    FlowGrid(std::string name, int x, int y, int w, int h, int rows, IDrawableModule* parent, IFlowGridListener* listener);
@@ -31,15 +32,12 @@ public:
    void SetDimensions(float width, float height);
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
-   void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
-   void SetValue(float value, double time, bool forceUpdate) override;
-   void SaveState(FileStreamOut& out) override;
-   void LoadState(FileStreamIn& in, bool shouldSetValue) override;
+   void DrawModule() override;
 
-   void AddElement(FlowGridElement* newElement, int row = -1);
+   void AddFlowElement(FlowGridElement* newElement, int row = -1);
    void RecalculateElements();
-   void RemoveElement(FlowGridElement* element);
+   void RemoveFlowElement(FlowGridElement* element);
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
    void AddRow();
    void RemoveRow(int row);
@@ -56,7 +54,6 @@ protected:
       int index;
       std::vector<int> freeIndexes {};
    };
-
 
    std::vector<FlowNameRecord> mFlowNameRecords;
 private:
@@ -82,7 +79,7 @@ private:
    std::vector<std::vector<FlowGridElement*>> mRows;
    float mRowScalingSize[30];
 
-   float mWidth{ 200 };
+   float mWidth{ 400 };
    float mHeight{ 200 };
    bool mAllowDragAndDrop = { true }; //If it allows elements to be dragged around the gridspace by the user.
    float mRowYSize = {};
@@ -116,7 +113,7 @@ private:
 };
 
 
-class FlowGridElement: public IUIControl
+class FlowGridElement: public IDrawableModule
 {
 public:
    FlowGridElement(FlowGrid* grid);
@@ -141,8 +138,9 @@ public:
 
    void SetPreferredSize(int width) { mPreferredWidth = width; }
    float GetPreferredWidth() const { return mPreferredWidth; }
-   int GetWidth() const { return mWidth; }
-   int GetHeight() const { return mHeight; }
+   float GetWidth() const { return mWidth; }
+   float GetHeight() const { return mHeight; }
+   void GetDimensions(float& width, float& height) override {width = mWidth; height = mHeight;};
 
    void SetFlowGrid(FlowGrid* parent) { mFlowGridParent = parent; }
    FlowGrid* GetFlowGrid() const { return mFlowGridParent; }
@@ -158,29 +156,15 @@ public:
    ofVec2f GetRelativePosition();
    virtual void OnMouseClick(bool rightClick) {}
    virtual void OnMouseRelease() {}
-   virtual bool MouseMoved(float x, float y) override;
-   virtual void MouseReleased() override;
-   virtual void Draw();
+   bool MouseMoved(float x, float y) override;
+   void MouseReleased() override;
+   void DrawModule() override;
 
    FlowGrid* mFlowGridParent;
 
-
-   //IUIControl
-   void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
-   void SetValue(float value, double time, bool forceUpdate = false) override {}
-   void KeyPressed(int key, bool isRepeat) override {};
-   void SaveState(FileStreamOut& out) override {};
-   void LoadState(FileStreamIn& in, bool shouldSetValue = true) override {};
-   bool IsSliderControl() override { return false; }
-   bool IsButtonControl() override { return false; }
-   bool GetNoHover() const override { return true; }
-   bool CanBeTargetedBy(PatchCableSource* source) const override {return false;};
-   bool ShouldSerializeForSnapshot() const override { return true; }
-
-
 protected:
-   int mHeight = 0;
-   int mWidth = 0;
+   float mHeight = 0;
+   float mWidth = 0;
 
    int mX = 0;
    int mY = 0;

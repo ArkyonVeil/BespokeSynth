@@ -3,7 +3,6 @@
 
 
 class SongCanvas;
-enum class SongCanvasElementVariant;
 class SongCanvasRackElement;
 class SongCanvas_CanvasElement : public CanvasElement
 {
@@ -21,12 +20,8 @@ public:
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }
 
-   SongCanvasElementVariant GetVariantType() { return mElementVariant; }
-
 private:
    void DrawContents(bool clamp, bool wrapped, ofVec2f offset) override;
-
-   SongCanvasElementVariant mElementVariant;
 
    SongCanvasRackElement* mRackParent;
    int mRackParentID;
