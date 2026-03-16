@@ -1,5 +1,5 @@
 ﻿#include "FlowGrid.h"
-
+#include "ModularSynth.h"
 
 
 FlowGridElement::FlowGridElement(FlowGrid* grid)
@@ -49,6 +49,11 @@ ofVec2f FlowGridElement::GetRelativePosition()
 {
    auto pos = mFlowGridParent->GetPosition(true);
    return ofVec2f(pos.x + mX, pos.y + mY);
+}
+
+void FlowGridElement::OnMouseClick(bool rightClick)
+{
+   mFlowGridParent->SetSelectedGridElement(this);
 }
 
 bool FlowGridElement::MouseMoved(float x, float y)

@@ -1,6 +1,8 @@
 ﻿//
 // Created by ArkyonVeil on 13/03/2026.
 //
+#pragma once
+#include "FlowGrid.h"
 
 class SongCanvas;
 
@@ -31,6 +33,8 @@ public:
    virtual void HandleRightClickDropdown(int optionValue) {};
    virtual std::vector<DropdownListElement> GetRightClickOptions() {return {};};
    virtual void DrawRackGraphics() = 0;
+   void SaveState(FileStreamOut& out) override = 0;
+   void LoadState(FileStreamIn& in, int rev) override = 0;
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -41,8 +45,8 @@ public:
 
 protected:
    SongCanvas* mSongCanvas;
-private:
    std::string* mElementName;
+private:
 
    void DrawModule() override;
    bool enabled{ false };
@@ -61,7 +65,7 @@ private:
 ///Enabler///
 /////////////
 
-class SongCanvasRackEnabler:SongCanvasRackElement
+class SongCanvasRackEnabler: public SongCanvasRackElement
 {
 public:
    SongCanvasRackEnabler(const std::string& partName, SongCanvas* owner);
@@ -70,10 +74,13 @@ public:
    bool mEnablerInverted{ false };
    void OnEnter() override;
    void OnExit() override;
-   void HandleRightClickDropdown(int optionValue) override;
    void DrawRackGraphics() override;
 
+   void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, int rev) override {};
+
 private:
    PatchCableSource* mEnablerCable;
 };
@@ -82,7 +89,7 @@ private:
 ///Pulser///
 /////////////
 
-class SongCanvasRackPulser:SongCanvasRackElement , IDropdownListener
+class SongCanvasRackPulser:public SongCanvasRackElement , IDropdownListener
 {
 public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
@@ -90,7 +97,6 @@ public:
    void OnEnter();
    void OnExit();
    void OnTimeEvent(double time);
-   void HandleRightClickDropdown(int optionValue);
    void DrawRackGraphics() override;
    PatchCableSource* mPulserCable;
    NoteInterval GetInterval() { return mPulserInterval; }
@@ -98,6 +104,13 @@ public:
    int GetPreferredWidth() override { return  150; };
 
    bool mOnePulseMode{ false };
+   void HandleRightClickDropdown(int optionValue) override;
+   std::vector<DropdownListElement> GetRightClickOptions() override;
+   void DropdownUpdated(DropdownList* list, int oldVal, double time) override;//TODO
+   void UpdateMode();
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, int rev) override {};
+
 private:
    DropdownList* mIntervalSelector{ nullptr };
    NoteInterval mPulserInterval = kInterval_8n;
@@ -108,35 +121,38 @@ private:
 ///Keyer///
 ///////////
 
-class SongCanvasRackKeyer:SongCanvasRackElement
+class SongCanvasRackKeyer:public SongCanvasRackElement
 {
 public:
+   SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
    int GetPreferredWidth() override { return  150; };
 private:
    PatchCableSource* mKeyerCable;
-   SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
-   void OnEnter();
-   void OnExit();
+   void OnEnter() override {};
+   void OnExit() override {};
    void DrawRackGraphics() override;
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, int rev) override {};
 };
 
 /////////////
 ///Sampler///
 /////////////
 
-class SongCanvasRackSampler:SongCanvasRackElement
+class SongCanvasRackSampler:public SongCanvasRackElement
 {
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackSampler();
-   void OnEnter();
-   void OnExit();
+   void OnEnter() override;
+   void OnExit() override;
    void LoadFileSample();
-   void UpdateSample(Sample* sample);
    void ButtonClicked(ClickButton* button, double time);
    void SetSample(Sample* sample);
    void DrawRackGraphics() override;
-   int GetPreferredWidth() override {return 150;};
+   int GetPreferredWidth() override { return 150; }
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, int rev) override {};
 private:
    Sample* mSample {};
    float mSamplerPitch { 0 };
@@ -149,10 +165,14 @@ private:
 ///LFO///
 /////////
 
-class SongCanvasRackLFO:SongCanvasRackElement
+class SongCanvasRackLFO:public SongCanvasRackElement
 {
    int GetPreferredWidth() override {return 90;};
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
-   void OnEnter();
-   void OnExit();
+   void OnEnter() override {};
+   void OnExit() override {};
+
+   void DrawRackGraphics() override {};
+   void SaveState(FileStreamOut& out) override {};
+   void LoadState(FileStreamIn& in, int rev) override {};
 };

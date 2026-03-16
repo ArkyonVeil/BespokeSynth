@@ -5,6 +5,7 @@
 #include "ModularSynth.h"
 #include "SongCanvas.h"
 #include "Sample.h"
+#include "exprtk.hpp"
 
 #include "juce_audio_formats/juce_audio_formats.h"
 using namespace juce;
@@ -41,14 +42,14 @@ std::string RemoveNonNumericalChars(const std::string& input)
 }
 
 
-SongCanvasRackElement::SongCanvasRackElement( std::string partName, SongCanvas* songCanvas)
+SongCanvasRackElement::SongCanvasRackElement(std::string partName, SongCanvas* songCanvas)
 : FlowGridElement(mFlowGridParent)
 {
    mElementName = new std::string(partName);
    mSongCanvas = songCanvas;
    mInternalRackID = mSongCanvas->GetInternalRackId();
-   CreateUIControls(songCanvas);
    mHighlightOutlineColor = ofColor(0, 150, 255);
+   CreateUIControls(songCanvas);
 }
 
 
@@ -60,13 +61,14 @@ void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
 
 void SongCanvasRackElement::OnMouseClick(bool rightClick)
 {
+   FlowGridElement::OnMouseClick(rightClick);
+
    if (rightClick)
    {
       mSongCanvas->OpenRightClickRackMenu(this);
    }
    else
    {
-      mSongCanvas->SetSelectedRackElement(this);
       if (TheSynth->GetGlobalTime() < mLastClickTime + 0.5)
       {
          mSongCanvas->SetRackElementRenameState(this, true);
@@ -102,11 +104,6 @@ void SongCanvasRackElement::DrawModule()
 
    auto rPos = GetRelativePosition();
    auto pos = GetFlowGrid()->GetPosition(true);
-   float compressRefit = 12; //Offset so it's not at the element edge.
-   if (mWidth < 90)
-   { //Compensate for high compression
-      compressRefit *= mWidth / 90;
-   }
 
    //Unique rack graphics are drawn here...
    DrawRackGraphics();
@@ -124,8 +121,7 @@ void SongCanvasRackElement::DrawModule()
       int form = (static_cast<std::string>(mElementRenameTextBox->GetText()).size() - 10) * 6;
       if (form < 0)
          form = 0;
-      SetPreferredSize(90 + form + mVariantExtraWidth);
-
+      SetPreferredSize(90 + form);
       GetFlowGrid()->RecalculateElements();
 
       if (mElementRenameTextBox->GetActiveKeyboardFocus() != mElementRenameTextBox)
@@ -162,8 +158,6 @@ SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCa
 : SongCanvasRackElement(partName, songCanvas)
 {
    SetColor(ofColor::white);
-   mRackPartRightClickOptions.push_back(DropdownListElement{ "invert", 10 });
-
    mEnablerCable = new PatchCableSource(this, kConnectionType_UIControl);
    this->AddPatchCableSource(mEnablerCable);
    mEnablerCable->SetAllowMultipleTargets(true);
@@ -222,9 +216,13 @@ void SongCanvasRackEnabler::HandleRightClickDropdown(int optionValue)
       }
    }
 }
+std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
+{
+   return std::vector{DropdownListElement{"invert",10}};
+}
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
-   mEnablerCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
+   mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
 }
 
 /////////////
@@ -235,11 +233,9 @@ void SongCanvasRackEnabler::DrawRackGraphics()
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, songCanvas)
 {
-
-      SetColor(ofColor::yellow);
+   SetColor(ofColor::yellow);
    if (mOnePulseMode)
-   {  //TODO Probably need more setup here
-      SetPreferredSize(PreferredWidthOnePulse);
+   {
       SetColor(ofColor(150, 150, 0));
    }
    mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
@@ -304,37 +300,67 @@ void SongCanvasRackPulser::OnTimeEvent(double time)
 }
 
 
-
 void SongCanvasRackPulser::HandleRightClickDropdown(int optionValue)
 {
    if (optionValue == 10)
    {
-      mOnePulseMode = !mOnePulseMode;
-      if (mOnePulseMode)
-      {
-         SetColor(ofColor(40, 40, 40));
-         SetColorOutline(ofColor(255, 255, 255));
-      }
-      else
-      {
-         SetColor(ofColor(255, 255, 255));
-      }
+      mOnePulseMode = true;
+
+   }
+   else if (optionValue == 11)
+   {
+      mOnePulseMode = false;
+
+   }
+   UpdateMode();
+}
+
+std::vector<DropdownListElement> SongCanvasRackPulser::GetRightClickOptions()
+{
+   if (mOnePulseMode)
+   {
+      return std::vector{ DropdownListElement{ "one pulse mode", 10 } };
+   }
+   return std::vector{ DropdownListElement{ "interval mode", 11 } };
+}
+void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, double time)
+{
+   if (list == mIntervalSelector)
+   {
+   TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(this);
+   if (transportListenerInfo != nullptr)
+   {
+      transportListenerInfo->mInterval = this->GetInterval();
+      transportListenerInfo->mOffsetInfo = OffsetInfo(0, false);
+   }
    }
 }
+void SongCanvasRackPulser::UpdateMode()
+{
+   if (mOnePulseMode)
+   {
+      SetColor(ofColor(40, 40, 40));
+      SetColorOutline(ofColor(255, 255, 255));
+      mIntervalSelector->SetShowing(false);
+   }
+   else
+   {
+      SetColor(ofColor(255, 255, 255));
+      mIntervalSelector->SetShowing(true);
+   }
+}
+
 void SongCanvasRackPulser::DrawRackGraphics()
 {
    if (!mOnePulseMode)
    {
-   mPulserCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
-   ofPushMatrix();
-   ofTranslate(-pos.x, -pos.y);
-   mIntervalSelector->SetPosition(rPos.x + mWidth - compressRefit - 53, rPos.y + 7);
-   mIntervalSelector->Draw();
-   ofPopMatrix();
+      mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
+      mIntervalSelector->SetPosition(mWidth - 53,  7);
+      mIntervalSelector->Draw();
    }
    else
    {
-      mPulserCable->SetManualPosition(rPos.x + mWidth - compressRefit, rPos.y + mHeight / 2);
+      mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
    }
 }
 
@@ -344,22 +370,13 @@ void SongCanvasRackPulser::DrawRackGraphics()
 
 void SongCanvasRackKeyer::DrawRackGraphics()
 {
-
 }
 SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,songCanvas)
+: SongCanvasRackElement(partName, songCanvas)
 {
 
 }
 
-void SongCanvasRackKeyer::OnEnter()
-{
-
-}
-void SongCanvasRackKeyer::OnExit()
-{
-
-}
 
 /////////////
 ///Sampler///
@@ -376,7 +393,7 @@ SongCanvasRackSampler::~SongCanvasRackSampler()
 {
    mSongCanvas->DisposeElement(mSampleLoaderButton);
 
-   //TODO I have strong suspicious that more will be needed here.
+   //TODO I have strong suspicions that more will be needed here.
 }
 
 
@@ -390,7 +407,6 @@ void SongCanvasRackSampler::OnEnter()
 }
 void SongCanvasRackSampler::OnExit()
 {
-
 }
 
 void SongCanvasRackSampler::LoadFileSample()
@@ -407,16 +423,8 @@ void SongCanvasRackSampler::LoadFileSample()
       Sample* sample = new Sample();
       if (file.existsAsFile())
          sample->Read(file.getFullPathName().toStdString().c_str());
-      UpdateSample(sample);
+      SetSample(sample);
    }
-}
-
-void SongCanvasRackSampler::UpdateSample(Sample* sample)
-{
-   mSample = sample;
-   mSongCanvas->DebugSetSample(mSample);
-   sample->SetPlayPosition(0);
-   mSampleLoaderButton->SetOverrideDisplayName(mSample->Name());
 }
 
 void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
@@ -426,13 +434,17 @@ void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
       LoadFileSample();
    }
 }
+void SongCanvasRackSampler::SetSample(Sample* sample)
+{
+   mSample = sample;
+   mSongCanvas->DebugSetSample(mSample);
+   sample->SetPlayPosition(0);
+   mSampleLoaderButton->SetOverrideDisplayName(mSample->Name());
+}
 void SongCanvasRackSampler::DrawRackGraphics()
 {
-   ofPushMatrix();
-   ofTranslate(-pos.x, -pos.y);
-   mSampleLoaderButton->SetPosition(rPos.x + 12 + GetStringWidth(*mElementName), rPos.y + 7);
+   mSampleLoaderButton->SetPosition(12 + GetStringWidth(*mElementName), 7);
    mSampleLoaderButton->Draw();
-   ofPopMatrix();
 }
 
 /////////
@@ -440,16 +452,8 @@ void SongCanvasRackSampler::DrawRackGraphics()
 /////////
 
 SongCanvasRackLFO::SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,songCanvas)
+: SongCanvasRackElement(partName, songCanvas)
 {
-//TODO
+   //TODO
 }
 
-void SongCanvasRackLFO::OnEnter()
-{
-
-}
-void SongCanvasRackLFO::OnExit()
-{
-
-}

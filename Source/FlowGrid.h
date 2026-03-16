@@ -1,7 +1,5 @@
 ﻿#pragma once
 #include "IDrawableModule.h"
-#include "IFlowGridListener.h"
-#include "IUIControl.h"
 
 //Docs in FlowGrid.cpp
 
@@ -13,6 +11,16 @@ struct FlowNameAssigment
 };
 
 class FlowGridElement;
+
+class IFlowGridListener
+{
+public:
+   virtual ~IFlowGridListener() = default;
+
+   virtual void onFlowGridNewSelection(FlowGridElement* element);
+   virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
+};
+
 
 class FlowGrid : public IDrawableModule
 {
@@ -35,13 +43,16 @@ public:
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule() override;
 
-   void AddFlowElement(FlowGridElement* newElement, int row = -1);
+   void AddFlowElement(FlowGridElement* newElement);
    void RecalculateElements();
    void RemoveFlowElement(FlowGridElement* element);
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
    void AddRow();
-   void RemoveRow(int row);
+   void PopRow();
    void SetDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
+   void SetSelectedGridElement(FlowGridElement* element);
+
+   FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
 
 protected:
    void AddRowSilent();
@@ -154,7 +165,7 @@ public:
    void SetColorOutline(ofColor color);
    void SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor);
    ofVec2f GetRelativePosition();
-   virtual void OnMouseClick(bool rightClick) {}
+   virtual void OnMouseClick(bool rightClick);
    virtual void OnMouseRelease() {}
    bool MouseMoved(float x, float y) override;
    void MouseReleased() override;

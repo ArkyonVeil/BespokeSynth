@@ -287,7 +287,7 @@ void FlowGrid::DrawModule()
 
 }
 
-void FlowGrid::AddFlowElement(FlowGridElement* newElement, int row)
+void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 {
    newElement->SetFlowGrid(this);
 
@@ -396,7 +396,13 @@ void FlowGrid::AddRow()
    mRows.emplace_back();
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
-   mListener->FlowGridResizeRequest(0,0);//TODO
+   mListener->onFlowGridResize(0, 0); //TODO
+}
+
+//Removes the last row.
+void FlowGrid::PopRow()
+{
+
 }
 
 void FlowGrid::AddRowSilent()
@@ -451,7 +457,8 @@ void FlowGrid::DisposeElement(FlowGridElement* element)
    RemoveChild(element);
 }
 
-void FlowGrid::RemoveRow(int row)
+void FlowGrid::SetSelectedGridElement(FlowGridElement* element)
 {
-
+   mSelectedElement = element;
+   mListener->onFlowGridNewSelection(element);
 }

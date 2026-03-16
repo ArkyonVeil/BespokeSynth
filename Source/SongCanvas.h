@@ -43,7 +43,6 @@
 #include "ClickButton.h"
 #include "DropdownList.h"
 #include "IAudioProcessor.h"
-#include "IFlowGridListener.h"
 #include "SongCanvas_CanvasElement.h"
 #include "TextEntry.h"
 #include "FlowGrid.h"
@@ -99,7 +98,7 @@ public:
    bool MouseMoved(float x, float y) override;
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
-   void SetRackElementRenameState(SongCanvasRackElement* element, bool state);
+   void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetSelectedRackElement(SongCanvasRackElement* element);
@@ -111,7 +110,9 @@ public:
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
-   SongCanvasRackElement* GetRackElementWithID(int id);
+   SongCanvasRackElement* GetRackPartWithID(int id);
+   SongCanvasRackElement* GetSelectedRackPart() const;
+
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
 
@@ -120,8 +121,13 @@ public:
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void OnTransportAdvanced(float amount) override;
-   void FlowGridResizeRequest(float newBoundsX, float newBoundsY) override;
+
+   void onFlowGridResize(float newBoundsX, float newBoundsY) override;
+   void onFlowGridNewSelection(FlowGridElement* element) override;
+
    void DisposeElement(IClickable* element);
+
+
 
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
 
@@ -156,6 +162,9 @@ public:
    static std::array<ofColor,3> ESRGBColours;
    static std::array<ofColor,6> ESPrideColours;
    static std::array<ofColor,4> ESTransColours;
+
+   SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
+
 
    //Audio Sample Methods
    void DebugSetSample(Sample* newSample)
