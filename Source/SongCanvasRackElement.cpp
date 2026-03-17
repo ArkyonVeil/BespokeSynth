@@ -1,6 +1,16 @@
 ﻿//
-// Created by kendo on 13/03/2026.
+// Created by ArkyonVeil on 13/03/2026.
 //
+///
+/// How this works in a nutshell:
+///
+/// Rack Parts exist as overrides of FlowGrid elements
+/// Each Rack part consists of its own subclass, akin to submodules of the Song Canvas
+///
+/// SongCanvas_CanvasElements are the parts as present in the canvas.
+/// They all derive from the same class, but have their behavior customized by calling custom setups/drawing of their rack counterparts.
+/// This means that you only really need to mostly work on the Rack Elements for new behavior! <>]
+
 #pragma once
 #include "ModularSynth.h"
 #include "SongCanvas.h"
@@ -217,11 +227,38 @@ void SongCanvasRackEnabler::HandleRightClickDropdown(int optionValue)
 }
 std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 {
-   return std::vector{DropdownListElement{"invert",10}};
+   return std::vector{ DropdownListElement{ "invert", 10 } };
 }
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
    mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
+}
+
+void SongCanvasRackEnabler::SetupCanvasPart(SongCanvas_CanvasElement* element)
+{
+   if (mEnablerInverted)
+   {
+      element->mCurrentColor = mCanvasEnablerInvertColor;
+      element->mCurrentColorGrad = mCanvasEnablerInvertColor2;
+      element->mTextDrawYOffset = 2;
+   }
+
+   else
+   {
+      element->mCurrentColor = mCanvasEnablerColor;
+      element->mCurrentColorGrad = mCanvasEnablerColor2;
+      element->mTextDrawYOffset = 0;
+   }
+}
+void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+{
+   if (mEnablerInverted)
+   {
+      ofRectangle seamRect = rect;
+      seamRect.height = MIN(rect.y, 2);
+      ofSetColor(ofColor(200, 200, 200)); //Draw a seam.
+      ofRect(seamRect, 0);
+   }
 }
 
 /////////////
@@ -282,7 +319,6 @@ void SongCanvasRackPulser::OnEnter()
 }
 void SongCanvasRackPulser::OnExit()
 {
-
 }
 
 void SongCanvasRackPulser::OnTimeEvent(double time)
@@ -299,17 +335,36 @@ void SongCanvasRackPulser::OnTimeEvent(double time)
 }
 
 
+void SongCanvasRackPulser::SetupCanvasPart(SongCanvas_CanvasElement* element)
+{
+   if (!mOnePulseMode)
+   {
+      element->mCurrentColor = mCanvasPulserColor;
+      element->mCurrentColorGrad = ofColor(
+      MAX(0, element->mCurrentColor.r - 90),
+      MAX(0, element->mCurrentColor.g - 90),
+      MAX(0, element->mCurrentColor.b - 90));
+   }
+   else
+   {
+      element->mCurrentColor = mCanvasOnePulseColor;
+      element->mTextDrawXOffset = 4;
+      element->mCurrentColorGrad = ofColor(
+      MAX(0, element->mCurrentColor.r - 30),
+      MAX(0, element->mCurrentColor.g - 30),
+      MAX(0, element->mCurrentColor.b - 30));
+   }
+}
+
 void SongCanvasRackPulser::HandleRightClickDropdown(int optionValue)
 {
    if (optionValue == 10)
    {
       mOnePulseMode = true;
-
    }
    else if (optionValue == 11)
    {
       mOnePulseMode = false;
-
    }
    UpdateMode();
 }
@@ -326,12 +381,12 @@ void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, doubl
 {
    if (list == mIntervalSelector)
    {
-   TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(this);
-   if (transportListenerInfo != nullptr)
-   {
-      transportListenerInfo->mInterval = this->GetInterval();
-      transportListenerInfo->mOffsetInfo = OffsetInfo(0, false);
-   }
+      TransportListenerInfo* transportListenerInfo = TheTransport->GetListenerInfo(this);
+      if (transportListenerInfo != nullptr)
+      {
+         transportListenerInfo->mInterval = this->GetInterval();
+         transportListenerInfo->mOffsetInfo = OffsetInfo(0, false);
+      }
    }
 }
 void SongCanvasRackPulser::UpdateMode()
@@ -354,7 +409,7 @@ void SongCanvasRackPulser::DrawRackGraphics()
    if (!mOnePulseMode)
    {
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
-      mIntervalSelector->SetPosition(mWidth - 53,  7);
+      mIntervalSelector->SetPosition(mWidth - 53, 7);
       mIntervalSelector->Draw();
    }
    else
@@ -373,7 +428,6 @@ void SongCanvasRackKeyer::DrawRackGraphics()
 SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, songCanvas)
 {
-
 }
 
 
@@ -445,6 +499,11 @@ void SongCanvasRackSampler::DrawRackGraphics()
    mSampleLoaderButton->SetPosition(12 + GetStringWidth(*mElementName), 7);
    mSampleLoaderButton->Draw();
 }
+void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
+{
+   element->mCurrentColor = mCanvasSamplerColor;
+   element->mCurrentColorGrad = mCanvasSamplerColor2;
+}
 
 /////////
 ///LFO///
@@ -455,4 +514,7 @@ SongCanvasRackLFO::SongCanvasRackLFO(const std::string& partName, SongCanvas* so
 {
    //TODO
 }
-
+void SongCanvasRackLFO::SetupCanvasPart(SongCanvas_CanvasElement* element)
+{
+   element->mCurrentColor = mCanvasLFOColor;
+}

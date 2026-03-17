@@ -1153,7 +1153,7 @@ void SongCanvas::MouseReleased()
 
 void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
 {
-   element->Setup(GetSelectedRackPart());
+   element->SetupBase(GetSelectedRackPart());
 }
 void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 {

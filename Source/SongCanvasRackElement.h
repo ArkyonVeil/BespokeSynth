@@ -33,6 +33,10 @@ public:
    virtual void HandleRightClickDropdown(int optionValue) {};
    virtual std::vector<DropdownListElement> GetRightClickOptions() {return {};};
    virtual void DrawRackGraphics() = 0;
+
+   virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) {};
+   virtual void SetupCanvasPart(SongCanvas_CanvasElement* element) {};
+
    void SaveState(FileStreamOut& out) override = 0;
    void LoadState(FileStreamIn& in, int rev) override = 0;
 
@@ -46,6 +50,17 @@ public:
 protected:
    SongCanvas* mSongCanvas;
    std::string* mElementName;
+
+   //Canvas part colours here for consistency and ease of comparison.
+   const ofColor mCanvasEnablerColor = ofColor(180, 180, 180);
+   const ofColor mCanvasEnablerColor2 = ofColor(100, 100, 100);
+   const ofColor mCanvasEnablerInvertColor = ofColor(100, 100, 100);
+   const ofColor mCanvasEnablerInvertColor2 = ofColor(50, 50, 50);
+   const ofColor mCanvasPulserColor = ofColor(180, 180, 0);
+   const ofColor mCanvasLFOColor = ofColor::purple;
+   const ofColor mCanvasSamplerColor = ofColor(40,180,40);
+   const ofColor mCanvasSamplerColor2 = ofColor(20,70,20);
+   const ofColor mCanvasOnePulseColor = ofColor(100, 100, 0);
 private:
 
    void DrawModule() override;
@@ -59,6 +74,8 @@ private:
    int mDebugClick{0};
    int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
+
+
 };
 
 /////////////
@@ -75,6 +92,9 @@ public:
    void OnEnter() override;
    void OnExit() override;
    void DrawRackGraphics() override;
+
+   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
+   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
 
    void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
@@ -102,6 +122,8 @@ public:
    NoteInterval GetInterval() { return mPulserInterval; }
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
    int GetPreferredWidth() override { return  150; };
+
+   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
    bool mOnePulseMode{ false };
    void HandleRightClickDropdown(int optionValue) override;
@@ -151,6 +173,9 @@ public:
    void SetSample(Sample* sample);
    void DrawRackGraphics() override;
    int GetPreferredWidth() override { return 150; }
+
+   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
+
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
 private:
@@ -171,6 +196,8 @@ class SongCanvasRackLFO:public SongCanvasRackElement
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
    void OnEnter() override {};
    void OnExit() override {};
+
+   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
    void DrawRackGraphics() override {};
    void SaveState(FileStreamOut& out) override {};

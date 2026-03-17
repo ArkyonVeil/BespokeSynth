@@ -6,66 +6,25 @@
 SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length)
 : CanvasElement(canvas, col, row, offset, length)
 {
-   //canvas->SetZoomSpeed(10);
    mLength *= 4;
    mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
    mSongCanvas->SetupCanvasElement(this);
 }
 
-void SongCanvas_CanvasElement::Setup(SongCanvasRackElement* templateElement)
+void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
 {
-   mElementVariant = templateElement->mVariantType;
    mName = templateElement->GetName();
    mNameCache = *mName;
-   mRackParent = templateElement;
-   mRackParentID = mRackParent->mInternalRackID;
-   switch (templateElement->mVariantType)
-   {
-      case SongCanvasElementVariant::Enabler:
-      {
-         mCurrentColor = mEnablerColor;
-         mCurrentColorGrad = mEnablerColor2;
-      }
-      break;
-      case SongCanvasElementVariant::Pulser:
-      {
-         mCurrentColor = mPulserColor;
-         mCurrentColorGrad = ofColor(
-         MAX(0, mCurrentColor.r - 90),
-         MAX(0, mCurrentColor.g - 90),
-         MAX(0, mCurrentColor.b - 90));
-      }
-      break;
-      case SongCanvasElementVariant::LFO:
-      {
-         mCurrentColor = mLFOColor;
-      }
-      break;
-      case SongCanvasElementVariant::Sampler:
-      {
-         mCurrentColor = mSamplerColor;
-         mCurrentColorGrad = mSamplerColor2;
-      }
-      break;
-      case SongCanvasElementVariant::OnePulse:
-      {
-         mCurrentColor = mOnePulseColor;
-         mTextDrawXOffset = 4;
-         mCurrentColorGrad = ofColor(
-         MAX(0, mCurrentColor.r - 30),
-         MAX(0, mCurrentColor.g - 30),
-         MAX(0, mCurrentColor.b - 30));
-      }
-      break;
-      default:;
-   }
+   mRackPart = templateElement;
+   mRackParentID = mRackPart->mInternalRackID;
+   mRackPart->SetupCanvasPart(this);
+
+
 }
 
 CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const
 {
    SongCanvas_CanvasElement* element = new SongCanvas_CanvasElement(mCanvas, mCol, mRow, mOffset, mLength / 4);
-   //element->mVelocity = mVelocity;
-   //element->mVoiceIdx = mVoiceIdx;
    return element;
 }
 
@@ -95,59 +54,21 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
       //ofSetColor(mCurrentColor);
       ofRect(rect, 2);
 
-      switch (mElementVariant)
-      {
-         case SongCanvasElementVariant::Enabler:
-         {
-            if (mRackParent->mEnablerInverted)
-            {
-               mCurrentColor = mEnablerInvertColor;
-               mCurrentColorGrad = mEnablerInvertColor2;
-               ofRectangle seamRect = rect;
-               seamRect.height = MIN(rect.y,2);
-               ofSetColor(ofColor(200/eDiv, 200/eDiv, 200/eDiv)); //Draw a seam.
+      //Draw unique rack based graphics for the canvas element
+      mRackPart->DrawCanvasPartGraphics(this,rect);
 
-               ofRect(seamRect, 0);
-               addedTextYOffset += 2;
-            }
-            else
-            {
-               mCurrentColor = mEnablerColor;
-               mCurrentColorGrad = mEnablerColor2;
-            }
-         }
-         break;
-         case SongCanvasElementVariant::Pulser:
-         {
-         }
-         break;
-         case SongCanvasElementVariant::LFO:
-         {
-         }
-         break;
-         case SongCanvasElementVariant::Sampler:
-         {
-         }
-         break;
-         case SongCanvasElementVariant::OnePulse:
-            ofRectangle seamRect = rect;
-            seamRect.width = MIN(rect.x, 2);
-            ofSetColor(ofColor(180/eDiv, 180/eDiv, 0/eDiv)); //Draw a seam.
-
-            ofRect(seamRect, 0);
-            break;
-      }
       if (isActive)
          ofSetColor(ofColor::white);
       else
          ofSetColor(ofColor(125,125,125));
 
+
+      //If the name differs, redo the size calcs.
       if (mNameCache != *mName)
       {
          mNameCache = *mName;
          mCachedNameSize = -1;
       }
-
       if (mCachedNameSize != rect.width)
       {
          float maxTextSize = rect.width - 8;
