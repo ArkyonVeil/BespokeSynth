@@ -124,7 +124,7 @@ void FlowGrid::MouseReleased()
 
       inRow.insert(inRow.begin() + mSnapDragIndex, mSelectedElement);
 
-      RecalculateElements();
+      RecalculateFlowGrid();
 
       //mSelectedElement = nullptr;
       //mLastHoveredElement = nullptr;
@@ -279,7 +279,7 @@ void FlowGrid::SetDimensions(float width, float height)
 {
    mWidth = width;
    mHeight = height;
-   RecalculateElements();
+   RecalculateFlowGrid();
 }
 
 void FlowGrid::DrawModule()
@@ -325,64 +325,71 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
    //No slots found, can we make a new row?
    if (mRows.size() == -1 || mRows.size() < mMaxRows)
    {
-
+      //We can make one there.
+      return mRows.size();
    }
-
+   if (nonMaxed!=-1)
+   {
+      //We're capped, but there's still vacant space.
+      return nonMaxed;
+   }
+   //DISASTER, nothing available, are you trying to stress test this or something?
+   return -1;
 }
 
 //Checks if the row is overfilled, thus blocking new modules from moving in.
-bool FlowGrid::IsRowTooFull(int row)
+bool FlowGrid::IsRowOverfilled(int row)
 {
-
+   //Hey Ark! Don't forget to update this.
+   if (mRows[row].isOverfilled)
+      return true;
 }
 
-//Please check if there's a slot available first, or problems may occur.
+
+//Please check with TryGetSlot to see if it's possible to add first, or it WILL crash.
 void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 {
    newElement->SetFlowGrid(this);
 
-   //Get a name.
-   auto n = GetInternalNameForFlowElement(newElement->GetPreferredName());
-   newElement->NameData = n;
-   newElement->SetName(n->internalName.c_str());
-   newElement->SetOverrideDisplayName(n->displayName);
+   int r = TryGetSlot();
+
+   assert(r != -1);//If you fail this, the grid has been specified to not have enough room, but no check was done to prevent this.
+   //Now we have a rogue class object and nowhere to put it . <>(
+   if (r==-1)
+   {
+      throw std::exception("Error: Tried to push in a new element to an already full FlowGrid.");
+   }
 
    //Add it to the pipeline
    AddChild(newElement);
    mElementList.push_back(newElement);
 
-
-
-   float maxSpace = mWidth;
-   //Verify if there's room in any Row
-   for (int x = 0; x < mRows.size(); ++x)
-   {
-      float rowOccupiedSpace = 4;
-      auto row = mRows[x];
-
-      for (int y = 0; y < row.size(); ++y)
-      {
-         rowOccupiedSpace += row[y]->GetWidth() + mElementSpacing;
-      }
-
-      if (rowOccupiedSpace + newElement->GetPreferredWidth() <= maxSpace)
-      {
-         mRows[x].push_back(newElement);
-         mElementList.push_back(newElement);
-         break;
-      }
-      //If we are about to run out of room, add another row.
-      if (x + 1 == mRows.size())
-      {
-         AddRow();
-      }
-   }
-
-
-   RecalculateElements();
+   AddToRow(newElement, r);
 }
 
-void FlowGrid::RecalculateElements()
+void FlowGrid::AddToRow(FlowGridElement* element, int row)
+{
+   if (mRows.size()<=row)
+   {
+      AddRowSilent();
+   }
+
+   mRows[row].elements.push_back(element);
+   UpdateRow(row);
+}
+void FlowGrid::InsertToRow(FlowGridElement* element, int row, int index)
+{
+
+   UpdateRow(row);
+}
+
+void FlowGrid::UpdateRow(int index)
+{
+
+}
+
+
+void FlowGrid::RecalculateFlowGrid()
 {
 
    float maxRowWidth = mWidth;
@@ -422,81 +429,40 @@ void FlowGrid::RecalculateElements()
 }
 void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 {
-   //TheSynth->LogEvent("Tried to delete an element.",LogEventType::kLogEventType_Verbose);
-   auto& row = mRows[0];
-   row.erase(std::find(row.begin(), row.end(), element));
-   //mRows[0] = row;
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   DisposeElement(element);
-   RecalculateElements();
+   RemoveChild(element);
+   RecalculateFlowGrid();
 }
 
 void FlowGrid::AddRow()
 {
-   //mRows.push_back(std::vector<UIFlowGridElement*>());
-   mRows.push_back()
+   mRows.push_back(FlowGridRow{false,false});
+   ResizeFlowgrid();
+}
+
+//Removes the last row. Any flow elements in it WILL be deleted.
+void FlowGrid::PopRow()
+{
+   if (mRows.size()==0)
+      return;
+
+   for (int i = 0; i < mRows.back().elements.size(); ++i)
+   {
+      auto e = mRows.back().elements[i];
+      mElementList.erase(std::find(mElementList.begin(), mElementList.end(), e));
+      RemoveChild(e);
+   }
+   mRows.pop_back();
+   ResizeFlowgrid();
+}
+
+void FlowGrid::ResizeFlowgrid()
+{
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
    mListener->onFlowGridResize(0, 0); //TODO
 }
 
-//Removes the last row.
-void FlowGrid::PopRow()
-{
-
-}
-
-void FlowGrid::AddRowSilent()
-{
-   mRows.emplace_back();
-
-   SetDimensions(mWidth, mRows.size() * mRowYSize);
-}
-
-FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
-{
-   FlowNameRecord* record = nullptr;
-   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
-   {
-      if (mFlowNameRecords[i].name == name)
-      {
-         record = &mFlowNameRecords[i];
-      }
-   }
-   if (record == nullptr)
-   {
-      mFlowNameRecords.push_back(FlowNameRecord{
-      name,0,{}});
-      return new FlowNameAssigment{name+ofToString(0),name,0};
-   }
-
-   int idx;
-   if (!record->freeIndexes.empty())
-   {
-      idx = record->freeIndexes.back();
-      record->freeIndexes.pop_back();
-   }
-   else
-   {
-      record->index++;
-      idx = record->index;
-   }
-
-   return new FlowNameAssigment{ name+ofToString(idx),name,idx};
-}
-
-void FlowGrid::DisposeElement(FlowGridElement* element)
-{
-   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
-   {
-      if (mFlowNameRecords[i].name == element->NameData->displayName)
-      {
-         mFlowNameRecords[i].freeIndexes.push_back(element->NameData->index);
-         return;
-      }
-   }
-   RemoveChild(element);
-}
 
 void FlowGrid::SetSelectedGridElement(FlowGridElement* element)
 {

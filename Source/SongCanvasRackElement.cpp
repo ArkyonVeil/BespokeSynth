@@ -131,7 +131,7 @@ void SongCanvasRackElement::DrawModule()
       if (form < 0)
          form = 0;
       SetPreferredSize(90 + form);
-      GetFlowGrid()->RecalculateElements();
+      GetFlowGrid()->RecalculateFlowGrid();
 
       if (mElementRenameTextBox->GetActiveKeyboardFocus() != mElementRenameTextBox)
       {

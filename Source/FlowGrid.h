@@ -30,7 +30,7 @@ public:
    void OnClicked(float x, float y, bool right) override;
 
    bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll) override;
-   int GetRowCount() { return mRows.size(); }
+   int GetRowCount() const { return mRows.size(); }
 
    void SetHighlightCol(double time, int col);
    int GetHighlightCol(double time) const;
@@ -40,19 +40,20 @@ public:
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule() override;
-   int TryGetSlot(int targetRow);
-   bool IsRowTooFull(int row);
-   int TryGetSlot();
+
 
    void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
 
    void AddFlowElement(FlowGridElement* newElement);
-   void RecalculateElements();
+   void UpdateRow(int index);
+   void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
-   std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
    void AddRow();
    void PopRow();
-   void SetDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
+   void ResizeFlowgrid();
+   std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
+
+   void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
@@ -66,8 +67,13 @@ public:
    std::vector<FlowGridRow> mRows;
 
 protected:
+   int TryGetSlot(int targetRow);
+   bool IsRowOverfilled(int row);
+
+   void AddToRow(FlowGridElement* element, int row);
+   void InsertToRow(FlowGridElement* element, int row, int index);
+
    void AddRowSilent();
-   void DisposeElement(FlowGridElement* element);
 
 private:
    void GetDimensions(float& width, float& height) override

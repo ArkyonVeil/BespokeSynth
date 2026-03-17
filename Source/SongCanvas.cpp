@@ -746,7 +746,7 @@ void SongCanvas::Resize(float w, float h)
    int xEndRackSpacing = 46;
    mRackGrid->SetPosition(8, GetRackGridStartYOffset());
    mRackGrid->SetDimensions(mWidth - xEndRackSpacing, mFlowGridRows * FlowGridRowHeightSize);
-   mRackGrid->RecalculateElements();
+   mRackGrid->RecalculateFlowGrid();
    mRackAddNewButton->SetPosition(8 + mWidth - xEndRackSpacing, GetRackGridStartYOffset());
    mRackAddNewButton->SetDimensions(28, mFlowGridRows * FlowGridRowHeightSize);
 
@@ -1579,7 +1579,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    float bHSize;
    mRackAddNewButton->GetDimensions(bWSize, bHSize);
    mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
-   mRackGrid->RecalculateElements();
+   mRackGrid->RecalculateFlowGrid();
    auto mgp = mRackGrid->GetPosition(true);
    mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
    mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth(), mgp.y);
