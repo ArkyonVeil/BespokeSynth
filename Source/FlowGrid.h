@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "IDrawableModule.h"
+#include "FlowGridElement.h"
 
 //Docs in FlowGrid.cpp
 
@@ -10,8 +11,6 @@ struct FlowNameAssigment
    int index;
 };
 
-class FlowGridElement;
-
 class IFlowGridListener
 {
 public:
@@ -20,7 +19,6 @@ public:
    virtual void onFlowGridNewSelection(FlowGridElement* element);
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
 };
-
 
 class FlowGrid : public IDrawableModule
 {
@@ -42,6 +40,11 @@ public:
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule() override;
+   int TryGetSlot(int targetRow);
+   bool IsRowTooFull(int row);
+   int TryGetSlot();
+
+   void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
 
    void AddFlowElement(FlowGridElement* newElement);
    void RecalculateElements();
@@ -54,19 +57,18 @@ public:
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
 
+   struct FlowGridRow
+   {
+      bool isOverfilled;//No more elements allowed to be moved.
+      bool isFilled;//Currently packed, free elements cannot be moved there automatically.
+      std::vector<FlowGridElement*> elements;
+   };
+   std::vector<FlowGridRow> mRows;
+
 protected:
    void AddRowSilent();
-   FlowNameAssigment* GetInternalNameForFlowElement(std::string name);
    void DisposeElement(FlowGridElement* element);
 
-   struct FlowNameRecord
-   {
-      std::string name;
-      int index;
-      std::vector<int> freeIndexes {};
-   };
-
-   std::vector<FlowNameRecord> mFlowNameRecords;
 private:
    void GetDimensions(float& width, float& height) override
    {
@@ -87,7 +89,6 @@ private:
    FlowGridElement* mLastHoveredElement{ nullptr };
    IFlowGridListener* mListener;
    std::vector<FlowGridElement*> mElementList;
-   std::vector<std::vector<FlowGridElement*>> mRows;
    float mRowScalingSize[30];
 
    float mWidth{ 400 };
@@ -116,82 +117,6 @@ private:
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
 
-
+   int mMaxRows = -1;
    int mDebugIter = 0;
-
-
-
-};
-
-
-class FlowGridElement: public IDrawableModule
-{
-public:
-   FlowGridElement(FlowGrid* grid);
-   virtual ~FlowGridElement();
-
-   //Due to single internal name compliance (which is also used for tooltips). FlowGrids automatically allocate names,
-   //so the desired one is seen by the user, while the internal one does all the bookkeeping.
-   virtual std::string GetPreferredName() = 0;
-   void SetPreferredPosition(int row, float positionPercent);
-   FlowNameAssigment* NameData;
-
-   void SetPosition(int x, int y)
-   {
-      mX = x;
-      mY = y;
-   }
-   void SetSize(int width, int height)
-   {
-      mWidth = width;
-      mHeight = height;
-   }
-
-   void SetPreferredSize(int width) { mPreferredWidth = width; }
-   float GetPreferredWidth() const { return mPreferredWidth; }
-   float GetWidth() const { return mWidth; }
-   float GetHeight() const { return mHeight; }
-   void GetDimensions(float& width, float& height) override {width = mWidth; height = mHeight;};
-
-   void SetFlowGrid(FlowGrid* parent) { mFlowGridParent = parent; }
-   FlowGrid* GetFlowGrid() const { return mFlowGridParent; }
-
-   void SetHovered(bool hovered) { mHovered = hovered; }
-   bool GetHovered() { return mHovered; }
-
-   void SetHighlight(bool highlight) { mHighlighted = highlight; }
-   bool GetHighlighted() const { return mHighlighted; }
-   void SetColor(ofColor color);
-   void SetColorOutline(ofColor color);
-   void SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor);
-   ofVec2f GetRelativePosition();
-   virtual void OnMouseClick(bool rightClick);
-   virtual void OnMouseRelease() {}
-   bool MouseMoved(float x, float y) override;
-   void MouseReleased() override;
-   void DrawModule() override;
-
-   FlowGrid* mFlowGridParent;
-
-protected:
-   float mHeight = 0;
-   float mWidth = 0;
-
-   int mX = 0;
-   int mY = 0;
-
-   ofColor mMainColor;
-   ofColor mHighlightColor;
-   ofColor mOutlineColor;
-   ofColor mHighlightOutlineColor;
-
-   float mOutlineThickness{ 0.8F };
-private:
-   bool mHighlighted = false;
-   bool mHovered = false;
-   int mPreferredRow = -1;
-   float mMinWidth = 30;
-   float mPreferredWidth = 90;
-
-
 };

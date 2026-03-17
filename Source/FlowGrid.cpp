@@ -287,6 +287,56 @@ void FlowGrid::DrawModule()
 
 }
 
+//Tries to find an available slot in the grid, returns -1 if none available. Otherwise, returns the row.
+//Specify a row for a manually moved element.
+int FlowGrid::TryGetSlot(int targetRow = -1)
+{
+   int nonMaxed = -1;//Used for emergencies.
+   for (int i = 0; i < mRows.size(); ++i)
+   {
+      if (nonMaxed == -1)
+      {
+         if (!mRows[i].isOverfilled)
+         {
+            nonMaxed = i;
+            //If we later find we can't add any more rows, we can allow it here.
+         }
+      }
+      if (targetRow == i)//Manual placement
+      {
+         if (mRows[i].isOverfilled)
+         {
+            return -1;//None available in desired slot.
+         }
+         else//Available, return the slot number
+         {
+            return i;
+         }
+      }
+      else
+      {
+         if (!mRows[i].isFilled)
+         {
+            return i;//Can put it here.
+         }
+         //nope, keep going.
+      }
+   }
+   //No slots found, can we make a new row?
+   if (mRows.size() == -1 || mRows.size() < mMaxRows)
+   {
+
+   }
+
+}
+
+//Checks if the row is overfilled, thus blocking new modules from moving in.
+bool FlowGrid::IsRowTooFull(int row)
+{
+
+}
+
+//Please check if there's a slot available first, or problems may occur.
 void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 {
    newElement->SetFlowGrid(this);
@@ -299,18 +349,9 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 
    //Add it to the pipeline
    AddChild(newElement);
+   mElementList.push_back(newElement);
 
-   if (row != -1)
-   {
-      while (mRows.size() <= row)
-      {
-         AddRow();
-      }
-      mRows[row].push_back(newElement);
-      mElementList.push_back(newElement);
-      RecalculateElements();
-      return;
-   }
+
 
    float maxSpace = mWidth;
    //Verify if there's room in any Row
@@ -393,7 +434,7 @@ void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 void FlowGrid::AddRow()
 {
    //mRows.push_back(std::vector<UIFlowGridElement*>());
-   mRows.emplace_back();
+   mRows.push_back()
 
    SetDimensions(mWidth, mRows.size() * mRowYSize);
    mListener->onFlowGridResize(0, 0); //TODO

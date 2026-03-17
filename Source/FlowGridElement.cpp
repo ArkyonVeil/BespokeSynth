@@ -10,10 +10,6 @@ FlowGridElement::~FlowGridElement()
 {
    delete NameData;
 }
-void FlowGridElement::SetPreferredPosition(int row, float positionPercent)
-{
-   throw std::logic_error("Not implemented");//todo
-}
 void FlowGridElement::SetColor(ofColor color)
 {
    mMainColor = color;

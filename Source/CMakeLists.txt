@@ -733,9 +733,10 @@ target_sources(BespokeSynth PRIVATE
     UIControlMacros.h
     UIGrid.cpp
     UIGrid.h
-        FlowGrid.cpp
-        FlowGrid.h
-        FlowGridElement.cpp
+    FlowGrid.cpp
+    FlowGrid.h
+    FlowGridElement.h
+    FlowGridElement.cpp
     UnstableModWheel.cpp
     UnstableModWheel.h
     UnstablePitch.cpp
