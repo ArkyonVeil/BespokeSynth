@@ -5,7 +5,6 @@
 #include "ModularSynth.h"
 #include "SongCanvas.h"
 #include "Sample.h"
-#include "exprtk.hpp"
 
 #include "juce_audio_formats/juce_audio_formats.h"
 using namespace juce;
