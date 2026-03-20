@@ -16,15 +16,16 @@ class IFlowGridListener
 public:
    virtual ~IFlowGridListener() = default;
 
-   virtual void onFlowGridNewSelection(FlowGridElement* element);
+   virtual void onFlowGridNewSelection(FlowGridElement* element) {};
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
 };
 
 class FlowGrid : public IDrawableModule
 {
 public:
-   FlowGrid(std::string name, int x, int y, int w, int h, int rows, IDrawableModule* parent, IFlowGridListener* listener);
-   void Render() override;
+   FlowGrid(std::string name, int x, int y, int w, int h, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener);
+
+   void CreateUIControls() override;
    void MouseReleased() override;
    bool MouseMoved(float x, float y) override;
    void OnClicked(float x, float y, bool right) override;
@@ -40,12 +41,13 @@ public:
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule() override;
-
+   void Render() override;
 
    void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
+   void SetMinRows(int rowNum) {mMinRows = rowNum;}
 
    void AddFlowElement(FlowGridElement* newElement);
-   void UpdateRow(int index);
+   void UpdateRow(int index, bool updateFillState);
    void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
    void AddRow();
@@ -58,6 +60,7 @@ public:
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
 
+
    struct FlowGridRow
    {
       bool isOverfilled;//No more elements allowed to be moved.
@@ -65,6 +68,8 @@ public:
       std::vector<FlowGridElement*> elements;
    };
    std::vector<FlowGridRow> mRows;
+   //IDrawableModule overrides:
+   bool HasTitleBar() const override {return false;}
 
 protected:
    int TryGetSlot(int targetRow);
@@ -73,20 +78,14 @@ protected:
    void AddToRow(FlowGridElement* element, int row);
    void InsertToRow(FlowGridElement* element, int row, int index);
 
-   void AddRowSilent();
-
 private:
-   void GetDimensions(float& width, float& height) override
-   {
-      width = mWidth;
-      height = mHeight;
-   }
    enum FlowGridDirection
    {
       Left,
       Right,
       Center
    };
+
 
    FlowGridDirection mSortDirection{ Left };
 
@@ -97,14 +96,13 @@ private:
    std::vector<FlowGridElement*> mElementList;
    float mRowScalingSize[30];
 
-   float mWidth{ 400 };
-   float mHeight{ 200 };
    bool mAllowDragAndDrop = { true }; //If it allows elements to be dragged around the gridspace by the user.
    float mRowYSize = {};
 
    float const mDragDistance { 12 }; //How far to drag in px before it considers a movement a "dragging" operation.
 
-   float mElementSpacing = { 4 }; //The amount of space between each element.
+   float mElementXSpacing = { 4 }; //The amount of space between each element.
+   float mElementYSpacing = {2};
    float mRowXBorderOffset = 2;
    float mRowYBorderOffset = 2;
    ofColor mBackgroundColor = { 0, 0, 0, 75 };
@@ -124,5 +122,6 @@ private:
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
 
    int mMaxRows = -1;
+   int mMinRows = 2;//Number of rows to always display.
    int mDebugIter = 0;
 };

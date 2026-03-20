@@ -34,55 +34,30 @@
 
 #include "FlowGrid.h"
 #include "ModularSynth.h"
+#include "PatchCableSource.h"
 
 
-FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int rows, IDrawableModule* parent, IFlowGridListener* listener)
+FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener)
 {
    SetName(name.c_str());
    SetPosition(x, y);
    mListener = listener;
-   mOwner = parent;
-   SetParent(parent);
-   for (int i = 0; i < rows; i++)
-      AddRowSilent();
+   mOwner = owner;
+   SetParent(owner);
+   mMinRows = startNumRows;
    mWidth = w;
-   mHeight = rowHeight * rows;
+   mHeight = rowHeight * startNumRows;
    mRowYSize = rowHeight;
-}
 
-void FlowGrid::Render()
+   SetShouldDrawOutline(false);
+}
+void FlowGrid::CreateUIControls()
 {
-   ofPushMatrix();
-   ofPushStyle();
-   /*
-   if (!mHovered)
-      ofSetColor(0, 255, 0);
-   else
-   {
-      ofSetColor(255, 255, 0);
-   }*/
-
-   ofSetColor(mBackgroundColor);
-   ofFill();
-   ofRect(0, 0, mWidth, mHeight);
-
-   if (mDragging)
-   {
-      ofSetColor(255, 255, 255, 100);
-      ofRect(mStartDragElementPos.x - mX, mStartDragElementPos.y - mY, mSelectedElement->GetWidth(), mSelectedElement->GetHeight());
-
-      ofSetColor(ofColor::yellow);
-      ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
-   }
-
-   for (auto elm : mElementList)
-   {
-      elm->Draw();
-   }
-
-   ofPopStyle();
-   ofPopMatrix();
+   IDrawableModule::CreateUIControls();
+   for (int i = mRows.size(); i < mMinRows; i++)
+      AddRow();
 }
+
 void FlowGrid::OnClicked(float x, float y, bool right)
 {
    if (mHovered && mLastHoveredElement != nullptr)
@@ -106,6 +81,7 @@ void FlowGrid::MouseReleased()
    mPressed = false;
    if (mDragging)
    {
+      /*
       //Time for the swaparoo.
       auto& outRow = mRows[mDragElementRow];
       auto& inRow = mRows[mSnapDragRow];
@@ -128,22 +104,22 @@ void FlowGrid::MouseReleased()
 
       //mSelectedElement = nullptr;
       //mLastHoveredElement = nullptr;
-      mDragging = false;
+      mDragging = false;*/
    }
-
 }
 bool FlowGrid::MouseMoved(float x, float y)
 {
+   IDrawableModule::MouseMoved(x, y);
 
-   float rX = x+mX;
-   float rY = y+mY;
+   float rX = x + mX;
+   float rY = y + mY;
 
    bool isMouseOver = (x >= 0 && x < mWidth && y >= 0 && y < mHeight);
 
    //TheSynth->LogEvent("MouseMove "+std::to_string(mDebugIter),kLogEventType_Verbose);
    //mDebugIter++;
    //See which element we're hovering over...
-/*
+   /*
    if (mPressed)
    {
       if (ofDistSquared(rX, rY, mStartDragMouse.x, mStartDragMouse.y) > mDragDistance && !mDragging && mDragToken)
@@ -284,14 +260,45 @@ void FlowGrid::SetDimensions(float width, float height)
 
 void FlowGrid::DrawModule()
 {
+   ofPushStyle();
+   /*
+   if (!mHovered)
+      ofSetColor(0, 255, 0);
+   else
+   {
+      ofSetColor(255, 255, 0);
+   }*/
 
+   ofSetColor(mBackgroundColor);
+   ofFill();
+   ofRect(0, 0, mWidth, mHeight);
+
+   if (mDragging)
+   {
+      ofSetColor(255, 255, 255, 100);
+      ofRect(mStartDragElementPos.x - mX, mStartDragElementPos.y - mY, mSelectedElement->GetWidth(), mSelectedElement->GetHeight());
+
+      ofSetColor(ofColor::yellow);
+      ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
+   }
+
+   for (auto elm : mElementList)
+   {
+      elm->Draw();
+   }
+
+   ofPopStyle();
+}
+void FlowGrid::Render()
+{
+   IDrawableModule::Render();
 }
 
 //Tries to find an available slot in the grid, returns -1 if none available. Otherwise, returns the row.
 //Specify a row for a manually moved element.
 int FlowGrid::TryGetSlot(int targetRow = -1)
 {
-   int nonMaxed = -1;//Used for emergencies.
+   int nonMaxed = -1; //Used for emergencies.
    for (int i = 0; i < mRows.size(); ++i)
    {
       if (nonMaxed == -1)
@@ -302,13 +309,13 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
             //If we later find we can't add any more rows, we can allow it here.
          }
       }
-      if (targetRow == i)//Manual placement
+      if (targetRow == i) //Manual placement
       {
          if (mRows[i].isOverfilled)
          {
-            return -1;//None available in desired slot.
+            return -1; //None available in desired slot.
          }
-         else//Available, return the slot number
+         else //Available, return the slot number
          {
             return i;
          }
@@ -317,7 +324,7 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
       {
          if (!mRows[i].isFilled)
          {
-            return i;//Can put it here.
+            return i; //Can put it here.
          }
          //nope, keep going.
       }
@@ -328,7 +335,7 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
       //We can make one there.
       return mRows.size();
    }
-   if (nonMaxed!=-1)
+   if (nonMaxed != -1)
    {
       //We're capped, but there's still vacant space.
       return nonMaxed;
@@ -340,9 +347,9 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
 //Checks if the row is overfilled, thus blocking new modules from moving in.
 bool FlowGrid::IsRowOverfilled(int row)
 {
-   //Hey Ark! Don't forget to update this.
    if (mRows[row].isOverfilled)
       return true;
+   return false;
 }
 
 
@@ -353,15 +360,17 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 
    int r = TryGetSlot();
 
-   assert(r != -1);//If you fail this, the grid has been specified to not have enough room, but no check was done to prevent this.
+   assert(r != -1); //If you fail this, the grid has been specified to not have enough room, but no check was done to prevent this.
    //Now we have a rogue class object and nowhere to put it . <>(
-   if (r==-1)
+   if (r == -1)
    {
       throw std::exception("Error: Tried to push in a new element to an already full FlowGrid.");
    }
 
    //Add it to the pipeline
    AddChild(newElement);
+   newElement->SetOwningContainer(mOwner->GetOwningContainer());
+   newElement->CreateUIControls();
    mElementList.push_back(newElement);
 
    AddToRow(newElement, r);
@@ -369,62 +378,164 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 
 void FlowGrid::AddToRow(FlowGridElement* element, int row)
 {
-   if (mRows.size()<=row)
+   while (mRows.size() <= row)
    {
-      AddRowSilent();
+      AddRow();
    }
 
    mRows[row].elements.push_back(element);
-   UpdateRow(row);
+   UpdateRow(row, true);
 }
+
 void FlowGrid::InsertToRow(FlowGridElement* element, int row, int index)
 {
-
-   UpdateRow(row);
+   while (mRows.size() > row)
+   {
+      AddRow();
+   }
+   //This might go wrong, up to testing to find out! <>D
+   mRows[row].elements.insert(mRows[row].elements.begin() + index, element);
+   UpdateRow(row, true);
 }
 
-void FlowGrid::UpdateRow(int index)
+//Updates cached data, and visuals. Does not trigger a resize.
+void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
+   if (mRows.size() <= index)
+      return; //???
 
+   if (mRows[index].elements.empty())
+   {
+      mRows[index].isFilled = false;
+      mRows[index].isOverfilled = false;
+      return;
+   }
+
+   FlowGridRow* row = &mRows[index];
+
+   float totalPreferredWidth = 0; //How much we can stuff it before it starts to compress
+   float totalMinimumWidth = 0; //Minimum size to lerp to, not necessarily the smallest possible size.
+   float offset = mRowXBorderOffset;
+   float totalSpacing = 0;
+
+   int selectedIndex = -1; //If one is selected, in the squeeze step if applicable, we set it to its largest possible size.
+   float selectedPreferredSize;
+
+   float maxRowSize = mWidth - mRowXBorderOffset * 2;
+   int yOffset = mRowYBorderOffset + mRowYSize * index + mElementYSpacing * index;
+
+
+   //Get maximum size of all elements.
+   //Also the minimum size.
+   for (int i = 0; i < row->elements.size(); ++i)
+   {
+      auto el = row->elements[i];
+
+      if (mSelectedElement == el)
+      {
+         selectedIndex = i;
+         selectedPreferredSize = el->GetPreferredWidth();
+         totalMinimumWidth += el->GetPreferredWidth(); //If selected, it renders at its maximum size.
+      }
+      else
+      {
+         totalPreferredWidth += el->GetPreferredWidth();
+         totalMinimumWidth += el->GetMinimumWidth();
+         totalSpacing += mElementXSpacing;
+      }
+   }
+
+   if (totalPreferredWidth + totalSpacing < mWidth - mRowXBorderOffset * 2)
+   {
+      //Okay! There's still room.
+
+      row->isFilled = false;
+      row->isOverfilled = false;
+
+      //Set the new positions
+      for (int i = 0; i < row->elements.size(); ++i)
+      {
+         auto el = row->elements[i];
+         row->elements[i]->SetRect(ofRectangle(offset, yOffset, MIN(maxRowSize, el->GetPreferredWidth()), mRowYSize));
+         offset += el->GetPreferredWidth() + mElementXSpacing;
+      }
+      return;
+   }
+   //Okay we'll have to get squeezy.
+
+   //Squeezy is much more complicated, to make it work, we get the oversize ratio and some multiplication.
+
+
+   //First, for convenience's sake, we'll check the worst case scenario first. IE, minimum total is still larger than available row space.
+   if (totalMinimumWidth + totalSpacing > maxRowSize)
+   {
+      //If this happens, we scale evenly down.
+      //IE we start at minimum and down we go.
+      //Don't forget the special case, it still renders at full size even in an overfilled scenario.
+      offset = mRowXBorderOffset;
+      float ratio = totalMinimumWidth / maxRowSize; //TODO, inspect this later, it may be wrong due to assumptions of a full sized selected element.
+      for (int i = 0; i < row->elements.size(); ++i)
+      {
+         auto el = row->elements[i];
+         float eSize;
+         if (mSelectedElement != el)
+         {
+            eSize = el->GetMinimumWidth() / ratio;
+         }
+         else
+         {
+            eSize = el->GetPreferredWidth() / ratio;
+         }
+
+         el->SetRect(ofRectangle(offset, yOffset, eSize, mRowYSize));
+         offset += eSize + mElementXSpacing;
+      }
+
+      if (updateFillState)
+      {
+         row->isFilled = true;
+         row->isOverfilled = true;
+      }
+      return;
+   }
+
+   //TODO Test the block below.
+   //This is the difficult one, where we squeeze items together based on a consistent ratio.
+   //Apply formula: t = (S - (totalMinimumWidth)) / ((totalPreferredWidth - totalMinimumWidth)
+   float availableSpace = maxRowSize - totalSpacing;
+   float t = (availableSpace - totalMinimumWidth) / (totalPreferredWidth - totalMinimumWidth);
+   offset = mRowXBorderOffset;
+   for (int i = 0; i < row->elements.size(); ++i)
+   {
+      auto e = row->elements[i];
+      float eSize;
+      if (mSelectedElement == e)
+      {
+         //Selected element uses its preferred size
+         eSize = e->GetPreferredWidth();
+      }
+      else
+      {
+         //Interpolate between minimum and preferred based on t
+         eSize = e->GetMinimumWidth() + t * (e->GetPreferredWidth() - e->GetMinimumWidth());
+      }
+      e->SetRect(ofRectangle(offset, yOffset, eSize, mRowYSize));
+      offset += eSize + mElementXSpacing;
+   }
+   if (updateFillState)
+   {
+      row->isFilled = true;
+      row->isOverfilled = true;
+   }
 }
 
 
 void FlowGrid::RecalculateFlowGrid()
 {
-
-   float maxRowWidth = mWidth;
-   float YOffsetPerRow = mHeight / GetRowCount() - 4;
-   float rowYOffset = mRowYBorderOffset;
-
-   for (int x = 0; x < mRows.size(); ++x)
+   //Updates ALL rows
+   for (int i = 0; i < mRows.size(); ++i)
    {
-      float rowXOffset = mRowXBorderOffset;
-
-      float spaceOccupied = 4;
-
-      //Add the occupied space, so that we sort if we must.
-      for (size_t y = 0; y < mRows[x].size(); y++)
-      {
-         auto row = mRows[x];
-
-         spaceOccupied += row[y]->GetPreferredWidth() + mElementSpacing;
-      }
-      if (spaceOccupied < 0)
-         spaceOccupied = 1;
-      float sizeMul = MIN(maxRowWidth / spaceOccupied, 1);
-
-      mRowScalingSize[x] = sizeMul;
-
-      for (size_t y = 0; y < mRows[x].size(); ++y)
-      {
-         auto row = mRows[x];
-
-         row[y]->SetPosition(rowXOffset, rowYOffset);
-         row[y]->SetSize(row[y]->GetPreferredWidth() * sizeMul, YOffsetPerRow);
-
-         rowXOffset += row[y]->GetPreferredWidth() * sizeMul + mElementSpacing * sizeMul;
-      }
-      rowYOffset += mHeight / GetRowCount();
+      UpdateRow(i, true);
    }
 }
 void FlowGrid::RemoveFlowElement(FlowGridElement* element)
@@ -436,14 +547,14 @@ void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 
 void FlowGrid::AddRow()
 {
-   mRows.push_back(FlowGridRow{false,false});
+   mRows.push_back(FlowGridRow{ false, false });
    ResizeFlowgrid();
 }
 
 //Removes the last row. Any flow elements in it WILL be deleted.
 void FlowGrid::PopRow()
 {
-   if (mRows.size()==0)
+   if (mRows.size() == 0)
       return;
 
    for (int i = 0; i < mRows.back().elements.size(); ++i)
@@ -458,9 +569,8 @@ void FlowGrid::PopRow()
 
 void FlowGrid::ResizeFlowgrid()
 {
-
    SetDimensions(mWidth, mRows.size() * mRowYSize);
-   mListener->onFlowGridResize(0, 0); //TODO
+   mListener->onFlowGridResize(mWidth, mRows.size() * mRowYSize);
 }
 
 

@@ -51,7 +51,7 @@ public:
       mY += moveY;
    }
    virtual bool TestClick(float x, float y, bool right, bool testOnly = false);
-   IClickable* GetParent() const { return mParent; }
+   IClickable* GetParent() const { return mParent; }//Usually returns null if it's the base module.
    void SetParent(IClickable* parent) { mParent = parent; }
    bool NotifyMouseMoved(float x, float y);
    bool NotifyMouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll);

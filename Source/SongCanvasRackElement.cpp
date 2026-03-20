@@ -58,13 +58,13 @@ SongCanvasRackElement::SongCanvasRackElement(std::string partName, SongCanvas* s
    mSongCanvas = songCanvas;
    mInternalRackID = mSongCanvas->GetInternalRackId();
    mHighlightOutlineColor = ofColor(0, 150, 255);
-   CreateUIControls(songCanvas);
 }
 
 
-void SongCanvasRackElement::CreateUIControls(SongCanvas* owner)
+void SongCanvasRackElement::CreateUIControls()
 {
-   mElementRenameTextBox = owner->GetRackRenameTextbox();
+   IDrawableModule::CreateUIControls();
+   mElementRenameTextBox = mSongCanvas->GetRackRenameTextbox();
 }
 
 
@@ -111,21 +111,14 @@ void SongCanvasRackElement::DrawModule()
    mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 12);
    mOutlineThickness = 0.8F + mExciteDrag * 1.2;
 
-   auto rPos = GetRelativePosition();
-   auto pos = GetFlowGrid()->GetPosition(true);
-
    //Unique rack graphics are drawn here...
    DrawRackGraphics();
 
    if (mRenameActive)
    {
       //mElementRenameTextBox->SetPosition(rPos.x, rPos.y + mHeight / 2);
-      ofPushMatrix();
-      ofTranslate(-pos.x, -pos.y);
-      mElementRenameTextBox->SetPosition(rPos.x + 4, rPos.y + 7);
+      mElementRenameTextBox->SetPosition( 4, 7);
       mElementRenameTextBox->Draw();
-
-      ofPopMatrix();
 
       int form = (static_cast<std::string>(mElementRenameTextBox->GetText()).size() - 10) * 6;
       if (form < 0)
@@ -154,7 +147,7 @@ void SongCanvasRackElement::DrawModule()
       }
 
       if (mWidth > 20)
-         DrawTextNormal(displayString, mX + 8, mY + mHeight / 2 + 5.5);
+         DrawTextNormal(displayString,8, mHeight / 2 + 5.5);
    }
    ofPopStyle();
 }
@@ -167,14 +160,19 @@ SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCa
 : SongCanvasRackElement(partName, songCanvas)
 {
    SetColor(ofColor::white);
-   mEnablerCable = new PatchCableSource(this, kConnectionType_UIControl);
-   this->AddPatchCableSource(mEnablerCable);
-   mEnablerCable->SetAllowMultipleTargets(true);
 }
 SongCanvasRackEnabler::~SongCanvasRackEnabler()
 {
    mSongCanvas->RemovePatchCableSource(mEnablerCable);
 }
+void SongCanvasRackEnabler::CreateUIControls()
+{
+   SongCanvasRackElement::CreateUIControls();
+   mEnablerCable = new PatchCableSource(this, kConnectionType_UIControl);
+   this->AddPatchCableSource(mEnablerCable);
+   mEnablerCable->SetAllowMultipleTargets(true);
+}
+
 
 void SongCanvasRackEnabler::OnEnter()
 {
@@ -231,6 +229,9 @@ std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 }
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
+   //int oX = mX+mFlowGridParent->GetRect(true).x;
+   //int oY = mY+mFlowGridParent->GetRect(true).y;
+
    mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
 }
 
@@ -274,7 +275,18 @@ SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanv
    {
       SetColor(ofColor(150, 150, 0));
    }
-   mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
+}
+SongCanvasRackPulser::~SongCanvasRackPulser()
+{
+   mSongCanvas->RemovePatchCableSource(mPulserCable);
+   TheTransport->RemoveListener(this);
+   mSongCanvas->DisposeElement(mIntervalSelector);
+   mIntervalSelector->Delete();
+}
+
+void SongCanvasRackPulser::CreateUIControls()
+{
+   SongCanvasRackElement::CreateUIControls();
 
    mPulserCable = new PatchCableSource(this, kConnectionType_Pulse);
    this->AddPatchCableSource(mPulserCable);
@@ -298,13 +310,12 @@ SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanv
    mIntervalSelector->AddLabel("64n", kInterval_64n);
    mIntervalSelector->AddLabel("none", kInterval_None);
    mIntervalSelector->AddLabel("div", kInterval_CustomDivisor);
+
 }
-SongCanvasRackPulser::~SongCanvasRackPulser()
+void SongCanvasRackPulser::Init()
 {
-   mSongCanvas->RemovePatchCableSource(mPulserCable);
-   TheTransport->RemoveListener(this);
-   mSongCanvas->DisposeElement(mIntervalSelector);
-   mIntervalSelector->Delete();
+   SongCanvasRackElement::Init();
+   mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
 }
 
 void SongCanvasRackPulser::OnEnter()
@@ -417,6 +428,7 @@ void SongCanvasRackPulser::DrawRackGraphics()
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
    }
 }
+
 
 ///////////
 ///Keyer///

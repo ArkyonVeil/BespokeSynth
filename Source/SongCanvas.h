@@ -87,7 +87,6 @@ public:
 
    bool IsEnabled() const override { return mEnabled; }
    void CanvasUpdated(Canvas* canvas) override;
-   void ResizeWorkspace(float diff);
    ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
    void TextEntryComplete(TextEntry* entry) override;
    void ReloadMeasures(bool overrideAutoFit);
@@ -101,7 +100,6 @@ public:
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
-   void SetSelectedRackElement(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element);
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
@@ -181,20 +179,15 @@ private:
       std::string layerName;
    };
    void UpdateEndMode();
-   void UpdateNumColumns();
-
 
    //IDrawableModule
    void DrawModule() override;
    void AddNewLayer(int index, SongCanvasLayer layer);
    void DeleteLayer(int index);
-   void SyncCanvasToLayers();
    void MoveLayerTo(int oldIndex, int newIndex);
    bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
    void ElementRemoved(CanvasElement* element) override;
    void ReloadHeader();
-
-
 
 
    Canvas* mCanvas{ nullptr };
@@ -309,7 +302,7 @@ private:
    std::vector<SongCanvasLayer> seqLayers{};
    std::vector<SongCanvasLayer> layerBuffer{}; //The reason for this is clumsy <>3
 
-   ClickButton* mRackAddNewButton;
+   ClickButton* mRackAddNewButton = nullptr;
 
    DropdownList* mRackAddNewDropdown;
    DropdownList* mRackElementRightClickDropdown;

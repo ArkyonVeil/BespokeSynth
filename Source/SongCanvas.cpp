@@ -86,15 +86,6 @@ SongCanvas::~SongCanvas()
    TheTransport->RemoveAudioPoller(this);
 }
 
-void SongCanvas::Init()
-{
-
-
-   IDrawableModule::Init();
-   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
-   TheTransport->AddAudioPoller(this);
-}
-
 void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
@@ -140,7 +131,8 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
 
-   mRackGrid = new FlowGrid("part rack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, 2, this, this);
+   mRackGrid = new FlowGrid("part rack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
+   mRackGrid->CreateUIControls();//Needs to be called, or the IDrawableModule throws a fit later.
    AddChild(mRackGrid);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
@@ -224,6 +216,17 @@ void SongCanvas::CreateUIControls()
    }
    layerBuffer.clear();
 
+   //mCanvas->mViewEnd = mMeasureCount;
+   //mLayerName[0]->SetNoHover(false);
+}
+
+//Module Container is set at this point, so we can continue our setup.
+void SongCanvas::Init()
+{
+   IDrawableModule::Init();
+   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
+   TheTransport->AddAudioPoller(this);
+
    //Parts
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
@@ -234,8 +237,6 @@ void SongCanvas::CreateUIControls()
    }
    UpdateEndMode();
    Resize(mWidth, mHeight);
-   //mCanvas->mViewEnd = mMeasureCount;
-   //mLayerName[0]->SetNoHover(false);
 }
 
 void SongCanvas::ReloadHeader()
@@ -658,17 +659,12 @@ void SongCanvas::DrawModule()
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-   /*
+
    auto canvasRect = mCanvas->GetRect(true);
-   std::string dText = "View Cull: " + ofToString(viewCullMultiplier)+
-      "\nZoomPercent: "+ofToString(measuresVisible)+
-         "\nViewStart: "+ofToString(mCanvas->mViewStart)+
-            "\nViewEnd: "+ofToString(mCanvas->mViewEnd)+
-               "\nCanvas Width: "+ofToString(mCanvas->GetWidth())+
-                  "\nPanel Width: "+ofToString(mWidth)+
-                     "\nCanvas Length(measures): "+ofToString(mCanvas->GetLength())+
-                        "\nCanvas Columns: "+ofToString(mCanvas->GetNumCols());
-   DrawTextNormal(dText,canvasRect.x+4, canvasRect.y+10);*/
+   std::string dText;
+   dText += "mWidth: "+ofToString(mWidth)+"\n";
+   dText += "mHeight: "+ofToString(mHeight)+"\n";
+   DrawTextNormal(dText,canvasRect.x+4, canvasRect.y+10);
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
@@ -1372,13 +1368,10 @@ void SongCanvas::OnTransportAdvanced(float amount)
 }
 void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY)
 {
-   mFlowGridRows = mRackGrid->GetRowCount();
-
-   float bWSize;
-   float bHSize;
-   mRackAddNewButton->GetDimensions(bWSize, bHSize);
-
-   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
+   if (mRackAddNewButton == nullptr)
+      return;//Not yet ready.
+   mRackAddNewButton->GetDimensions(newBoundsX, newBoundsY);
+   mRackAddNewButton->SetDimensions(newBoundsX, mFlowGridRows * FlowGridRowHeightSize);
 }
 void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 {

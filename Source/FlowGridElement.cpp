@@ -1,14 +1,43 @@
 ﻿#include "FlowGrid.h"
 #include "ModularSynth.h"
 
-
 FlowGridElement::FlowGridElement(FlowGrid* grid)
 {
    mFlowGridParent = grid;
+   SetShouldDrawOutline(false);
 }
 FlowGridElement::~FlowGridElement()
 {
    delete NameData;
+}
+void FlowGridElement::Render()
+{//Simplified rendering code for higher performance (and less jank)
+   if (!mShowing)
+      return;
+
+   float w, h;
+   GetDimensions(w, h);
+
+   ofPushMatrix();
+   ofPushStyle();
+
+   ofTranslate(mX, mY, 0);
+
+   DrawModule();
+  // DrawFrame(w, h, true, titleBarHeight, highlight);
+
+   ofFill();
+
+   ofPopMatrix();
+   ofPopStyle();
+
+}
+void FlowGridElement::SetRect(ofRectangle rect)
+{
+   mWidth = rect.width;
+   mHeight = rect.height;
+   mX = rect.x;
+   mY = rect.y;
 }
 void FlowGridElement::SetColor(ofColor color)
 {
@@ -54,6 +83,15 @@ void FlowGridElement::OnMouseClick(bool rightClick)
 
 bool FlowGridElement::MouseMoved(float x, float y)
 {
+   IDrawableModule::MouseMoved(x, y);
+   if (gHoveredModule == this)
+   {
+      mHovered = true;
+   }
+   else
+   {
+      mHovered = false;
+   }
    return false;
 }
 void FlowGridElement::MouseReleased()
@@ -62,8 +100,6 @@ void FlowGridElement::MouseReleased()
 }
 void FlowGridElement::DrawModule()
 {
-   ofPushMatrix();
-   ofTranslate(mX, mY);
    ofPushStyle();
 
    ofFill();
@@ -97,5 +133,4 @@ void FlowGridElement::DrawModule()
    ofRect(0, 0, mWidth, mHeight);
 
    ofPopStyle();
-   ofPopMatrix();
 }

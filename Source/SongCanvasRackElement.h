@@ -12,8 +12,7 @@ class SongCanvasRackElement : public FlowGridElement, public ITimeListener, publ
 {
 public:
    SongCanvasRackElement(std::string partName, SongCanvas* songCanvas);
-   ~SongCanvasRackElement();
-   std::string GetPreferredName() override;
+   ~SongCanvasRackElement() override {};
    void OnMouseClick(bool rightClick) override;
    void SetPartName(std::string newName) const;
    void Excite(float excitePower)
@@ -23,7 +22,7 @@ public:
    } //Make it dance
    void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; } //Make it do a base level of dancing, handy for long events.
 
-   virtual void CreateUIControls(SongCanvas* owner);
+   virtual void CreateUIControls() override;
    virtual void OnEnter() = 0;
    virtual void OnProcess(){};
    virtual void OnExit() = 0;
@@ -42,8 +41,8 @@ public:
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
-   void OnTimeEvent(double time) override;
-   void ButtonClicked(ClickButton* button, double time) override;
+   void OnTimeEvent(double time) override {};
+   void ButtonClicked(ClickButton* button, double time) override {};
 
    int mInternalRackID;
 
@@ -87,6 +86,7 @@ class SongCanvasRackEnabler: public SongCanvasRackElement
 public:
    SongCanvasRackEnabler(const std::string& partName, SongCanvas* owner);
    ~SongCanvasRackEnabler();
+   void CreateUIControls() override;
    int GetPreferredWidth() override { return  90; };
    bool mEnablerInverted{ false };
    void OnEnter() override;
@@ -118,6 +118,8 @@ public:
    void OnExit();
    void OnTimeEvent(double time);
    void DrawRackGraphics() override;
+   void CreateUIControls() override;
+   void Init() override;
    PatchCableSource* mPulserCable;
    NoteInterval GetInterval() { return mPulserInterval; }
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
@@ -132,6 +134,7 @@ public:
    void UpdateMode();
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
+
 
 private:
    DropdownList* mIntervalSelector{ nullptr };

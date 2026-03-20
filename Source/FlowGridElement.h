@@ -17,7 +17,6 @@ public:
 
    //Due to single internal name compliance (which is also used for tooltips). FlowGrids automatically allocate names,
    //so the desired one is seen by the user, while the internal one does all the bookkeeping.
-   virtual std::string GetPreferredName() = 0;
    FlowNameAssigment* NameData;
 
    void SetPosition(int x, int y)
@@ -32,8 +31,8 @@ public:
    }
 
 
-   void SetMinimumSize(float minWidth);
-   float GetMinimumSize() ;
+   void SetMinimumSize(float minWidth) {mMinWidth = minWidth;}
+   float GetMinimumWidth() {return mMinWidth;}
    void SetPreferredSize(int width) { mPreferredWidth = width; }
    float GetPreferredWidth() const { return mPreferredWidth; }
    float GetWidth() const { return mWidth; }
@@ -45,6 +44,8 @@ public:
 
    void SetHovered(bool hovered) { mHovered = hovered; }
    bool GetHovered() { return mHovered; }
+
+   void SetRect(ofRectangle rect);
 
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }
@@ -60,6 +61,10 @@ public:
 
    FlowGrid* mFlowGridParent;
 
+   //IDrawableModule overrides:
+   bool HasTitleBar() const override {return false;}
+   void Render() override;
+
 protected:
    float mHeight = 0;
    float mWidth = 0;
@@ -68,9 +73,6 @@ protected:
    float mPreferredWidth = 90;
 
    bool mIsManual { false };//If false, it's free. Used for slotting.
-
-   int mX = 0;
-   int mY = 0;
 
    ofColor mMainColor;
    ofColor mHighlightColor;
