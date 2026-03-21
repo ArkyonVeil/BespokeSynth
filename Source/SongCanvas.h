@@ -110,6 +110,7 @@ public:
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
+   ModuleContainer* GetContainer() override;
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;

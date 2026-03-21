@@ -51,9 +51,15 @@ FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int sta
 
    SetShouldDrawOutline(false);
 }
+FlowGrid::~FlowGrid()
+{
+   delete mLocalContainer;
+}
 void FlowGrid::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
+   mLocalContainer = new ModuleContainer();
+   mLocalContainer->SetOwner(this);
    for (int i = mRows.size(); i < mMinRows; i++)
       AddRow();
 }
@@ -66,7 +72,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
          mSelectedElement->SetHighlight(false);
       mSelectedElement = mLastHoveredElement;
       mSelectedElement->SetHighlight(true);
-      mLastHoveredElement->OnMouseClick(right);
+      mLastHoveredElement->OnClicked(x,y,right);
       mStartDragMouse = ofVec2f(x + GetPosition().x, y + GetPosition().y);
       mStartDragElementPos = mSelectedElement->GetRelativePosition();
       if (mSelectedElement->GetHovered())
@@ -369,7 +375,7 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 
    //Add it to the pipeline
    AddChild(newElement);
-   newElement->SetOwningContainer(mOwner->GetOwningContainer());
+   mLocalContainer->AddModule(newElement);
    newElement->CreateUIControls();
    mElementList.push_back(newElement);
 

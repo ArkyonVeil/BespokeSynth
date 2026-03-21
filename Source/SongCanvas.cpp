@@ -1219,6 +1219,10 @@ SongCanvasRackElement* SongCanvas::GetSelectedRackPart() const
       return nullptr;
    return dynamic_cast<SongCanvasRackElement*>(e);
 }
+ModuleContainer* SongCanvas::GetContainer()
+{
+   return mRackGrid->GetContainer();
+}
 void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 {
    if (newLoopMin == mCanvas->mViewStart && newLoopMax == mCanvas->mViewEnd)

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "IDrawableModule.h"
 #include "FlowGridElement.h"
+#include "ModuleContainer.h"
 
 //Docs in FlowGrid.cpp
 
@@ -24,7 +25,7 @@ class FlowGrid : public IDrawableModule
 {
 public:
    FlowGrid(std::string name, int x, int y, int w, int h, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener);
-
+   ~FlowGrid();
    void CreateUIControls() override;
    void MouseReleased() override;
    bool MouseMoved(float x, float y) override;
@@ -53,6 +54,7 @@ public:
    void AddRow();
    void PopRow();
    void ResizeFlowgrid();
+   ModuleContainer* GetContainer() override { return mLocalContainer;};
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
@@ -121,6 +123,7 @@ private:
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
 
+   ModuleContainer* mLocalContainer = nullptr;
    int mMaxRows = -1;
    int mMinRows = 2;//Number of rows to always display.
    int mDebugIter = 0;

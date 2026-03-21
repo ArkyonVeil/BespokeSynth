@@ -13,7 +13,7 @@ class SongCanvasRackElement : public FlowGridElement, public ITimeListener, publ
 public:
    SongCanvasRackElement(std::string partName, SongCanvas* songCanvas);
    ~SongCanvasRackElement() override {};
-   void OnMouseClick(bool rightClick) override;
+
    void SetPartName(std::string newName) const;
    void Excite(float excitePower)
    {
@@ -42,6 +42,7 @@ public:
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
    void OnTimeEvent(double time) override {};
+   void OnClicked(float x, float y, bool right) override;
    void ButtonClicked(ClickButton* button, double time) override {};
 
    int mInternalRackID;
@@ -73,7 +74,6 @@ private:
    int mDebugClick{0};
    int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
-
 
 };
 

@@ -53,8 +53,7 @@ public:
    void SetColorOutline(ofColor color);
    void SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor);
    ofVec2f GetRelativePosition();
-   virtual void OnMouseClick(bool rightClick);
-   virtual void OnMouseRelease() {}
+   void OnClicked(float x, float y, bool right) override;
    bool MouseMoved(float x, float y) override;
    void MouseReleased() override;
    void DrawModule() override;
@@ -84,5 +83,7 @@ private:
    bool mHighlighted = false;
    bool mHovered = false;
    int mPreferredRow = -1;
+
+   int mDebugNum = 0;
 
 };

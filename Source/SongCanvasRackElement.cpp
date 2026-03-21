@@ -68,11 +68,16 @@ void SongCanvasRackElement::CreateUIControls()
 }
 
 
-void SongCanvasRackElement::OnMouseClick(bool rightClick)
+void SongCanvasRackElement::SetPartName(std::string newName) const
 {
-   FlowGridElement::OnMouseClick(rightClick);
+   *mElementName = newName;
+}
 
-   if (rightClick)
+
+void SongCanvasRackElement::OnClicked(float x, float y, bool right)
+{
+   FlowGridElement::OnClicked(x, y, right);
+   if (right)
    {
       mSongCanvas->OpenRightClickRackMenu(this);
    }
@@ -89,12 +94,6 @@ void SongCanvasRackElement::OnMouseClick(bool rightClick)
       }
    }
 }
-void SongCanvasRackElement::SetPartName(std::string newName) const
-{
-   *mElementName = newName;
-}
-
-
 void SongCanvasRackElement::DrawModule()
 {
    FlowGridElement::DrawModule();

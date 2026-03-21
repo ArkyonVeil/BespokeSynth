@@ -76,11 +76,11 @@ ofVec2f FlowGridElement::GetRelativePosition()
    return ofVec2f(pos.x + mX, pos.y + mY);
 }
 
-void FlowGridElement::OnMouseClick(bool rightClick)
+void FlowGridElement::OnClicked(float x, float y, bool right)
 {
+   mDebugNum++;
    mFlowGridParent->SetSelectedGridElement(this);
 }
-
 bool FlowGridElement::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
@@ -131,6 +131,10 @@ void FlowGridElement::DrawModule()
    }
    //ofFill();
    ofRect(0, 0, mWidth, mHeight);
+
+   //DrawTextNormal(ofToString(mDebugNum),2,15);
+   if (gHoveredModule!=nullptr)
+   DrawTextNormal(ofToString(gHoveredModule->GetDisplayName()),2,15);
 
    ofPopStyle();
 }
