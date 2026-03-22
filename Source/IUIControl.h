@@ -101,6 +101,7 @@ public:
    virtual float GetModulationRangeMax() const { return 1; }
    virtual bool ShouldSerializeForSnapshot() const { return false; }
    virtual IModulator* GetModulator() { return nullptr; }
+   virtual ofVec2f GetTooltipOffset(){ return {0,0}; }
    void SetControlVisualizer(IControlVisualizer* visualizer) { mControlVisualizer = visualizer; }
    IControlVisualizer* GetControlVisualizer() const { return mControlVisualizer; }
    virtual std::string& GetDynamicTooltip() {return mDynamicTooltip;};

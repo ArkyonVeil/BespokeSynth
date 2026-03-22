@@ -86,7 +86,6 @@ void AtExit()
 {
    TheSynth->Exit();
 }
-
 ModularSynth::ModularSynth()
 {
    assert(TheSynth == nullptr);
@@ -792,8 +791,8 @@ void ModularSynth::Draw()
          if (!tooltip.empty())
          {
          tooltipContainer = gHoveredUIControl->GetModuleParent()->GetOwningContainer();
-         tooltipPos.x = gHoveredUIControl->GetRect().getMaxX() + 10;
-         tooltipPos.y = GetMouseY(tooltipContainer) + 18;
+         tooltipPos.x = gHoveredUIControl->GetRect().getMaxX() + gHoveredUIControl->GetTooltipOffset().x + 10;
+         tooltipPos.y = GetMouseY(tooltipContainer) + gHoveredUIControl->GetTooltipOffset().y + 18;
          }
       }
    }

@@ -9,10 +9,10 @@
 struct FlowNameAssigment;
 class FlowGrid;
 
-class FlowGridElement: public IDrawableModule
+class FlowGridElement : public IDrawableModule
 {
 public:
-   FlowGridElement(FlowGrid* grid);
+   FlowGridElement(FlowGrid* grid, std::string elementTypeName);
    virtual ~FlowGridElement();
 
    //Due to single internal name compliance (which is also used for tooltips). FlowGrids automatically allocate names,
@@ -29,7 +29,10 @@ public:
       mWidth = width;
       mHeight = height;
    }
-
+   //IDrawableModule
+   void CreateUIControls() override {}
+   void Init() override {}
+   void Render() override;
 
    void SetMinimumSize(float minWidth) {mMinWidth = minWidth;}
    float GetMinimumWidth() {return mMinWidth;}
@@ -45,6 +48,7 @@ public:
    void SetHovered(bool hovered) { mHovered = hovered; }
    bool GetHovered() { return mHovered; }
 
+   ofRectangle GetRect() const {return {mX,mY,mWidth,mHeight};};
    void SetRect(ofRectangle rect);
 
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
@@ -57,19 +61,17 @@ public:
    bool MouseMoved(float x, float y) override;
    void MouseReleased() override;
    void DrawModule() override;
-
    FlowGrid* mFlowGridParent;
 
-   //IDrawableModule overrides:
-   bool HasTitleBar() const override {return false;}
-   void Render() override;
+   std::string mElementTypeName;
 
 protected:
-   float mHeight = 0;
-   float mWidth = 0;
+
+   bool mShowing = true;
 
    float mMinWidth = 30;
    float mPreferredWidth = 90;
+
 
    bool mIsManual { false };//If false, it's free. Used for slotting.
 
@@ -78,12 +80,14 @@ protected:
    ofColor mOutlineColor;
    ofColor mHighlightOutlineColor;
 
+
+
    float mOutlineThickness{ 0.8F };
 private:
    bool mHighlighted = false;
    bool mHovered = false;
    int mPreferredRow = -1;
-
-   int mDebugNum = 0;
-
+   bool mInitialized = false;
+   float mDebugNumX = 0;
+   float mDebugNumY = 0;
 };

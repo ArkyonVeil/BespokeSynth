@@ -1,22 +1,19 @@
 ﻿#include "FlowGrid.h"
 #include "ModularSynth.h"
 
-FlowGridElement::FlowGridElement(FlowGrid* grid)
+FlowGridElement::FlowGridElement(FlowGrid* grid, std::string elementTypeName)
 {
+   mElementTypeName = elementTypeName;
    mFlowGridParent = grid;
-   SetShouldDrawOutline(false);
 }
 FlowGridElement::~FlowGridElement()
 {
-   delete NameData;
+
 }
 void FlowGridElement::Render()
-{//Simplified rendering code for higher performance (and less jank)
+{
    if (!mShowing)
       return;
-
-   float w, h;
-   GetDimensions(w, h);
 
    ofPushMatrix();
    ofPushStyle();
@@ -24,13 +21,11 @@ void FlowGridElement::Render()
    ofTranslate(mX, mY, 0);
 
    DrawModule();
-  // DrawFrame(w, h, true, titleBarHeight, highlight);
 
    ofFill();
 
    ofPopMatrix();
    ofPopStyle();
-
 }
 void FlowGridElement::SetRect(ofRectangle rect)
 {
@@ -72,19 +67,22 @@ void FlowGridElement::SetColorsManually(ofColor mainColor, ofColor outlineColor,
 
 ofVec2f FlowGridElement::GetRelativePosition()
 {
-   auto pos = mFlowGridParent->GetPosition(true);
+   auto pos = mFlowGridParent->GetPosition();
    return ofVec2f(pos.x + mX, pos.y + mY);
 }
 
 void FlowGridElement::OnClicked(float x, float y, bool right)
 {
-   mDebugNum++;
    mFlowGridParent->SetSelectedGridElement(this);
 }
 bool FlowGridElement::MouseMoved(float x, float y)
 {
-   IDrawableModule::MouseMoved(x, y);
-   if (gHoveredModule == this)
+   //x=x-mFlowGridParent->GetPosition(true).x;
+   //y=y-mFlowGridParent->GetPosition(true).y;
+   mDebugNumX = x;
+   mDebugNumY = y;
+
+   if (GetRect().contains(x,y))
    {
       mHovered = true;
    }
@@ -103,6 +101,7 @@ void FlowGridElement::DrawModule()
    ofPushStyle();
 
    ofFill();
+
    if (!mHighlighted)
    {
       ofSetColor(mMainColor);
@@ -133,8 +132,8 @@ void FlowGridElement::DrawModule()
    ofRect(0, 0, mWidth, mHeight);
 
    //DrawTextNormal(ofToString(mDebugNum),2,15);
-   if (gHoveredModule!=nullptr)
-   DrawTextNormal(ofToString(gHoveredModule->GetDisplayName()),2,15);
-
+   //if (gHoveredUIControl!=nullptr)
+   //   DrawTextNormal(ofToString(gHoveredUIControl->GetDisplayName()),2,15);
+   DrawTextNormal(ofToString((int)mDebugNumX)+" | "+ofToString((int)mDebugNumY),2,15);
    ofPopStyle();
 }

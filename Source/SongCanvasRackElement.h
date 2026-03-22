@@ -11,7 +11,7 @@ class PatchCableSource;
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
-   SongCanvasRackElement(std::string partName, SongCanvas* songCanvas);
+   SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas);
    ~SongCanvasRackElement() override {};
 
    void SetPartName(std::string newName) const;
@@ -22,7 +22,7 @@ public:
    } //Make it dance
    void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; } //Make it do a base level of dancing, handy for long events.
 
-   virtual void CreateUIControls() override;
+   void CreateUIControls() override;
    virtual void OnEnter() = 0;
    virtual void OnProcess(){};
    virtual void OnExit() = 0;
@@ -36,8 +36,8 @@ public:
    virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) {};
    virtual void SetupCanvasPart(SongCanvas_CanvasElement* element) {};
 
-   void SaveState(FileStreamOut& out) override = 0;
-   void LoadState(FileStreamIn& in, int rev) override = 0;
+   virtual void SaveState(FileStreamOut& out) = 0;
+   virtual void LoadState(FileStreamIn& in, int rev) = 0;
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -134,8 +134,6 @@ public:
    void UpdateMode();
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
-
-
 private:
    DropdownList* mIntervalSelector{ nullptr };
    NoteInterval mPulserInterval = kInterval_8n;
@@ -158,6 +156,7 @@ private:
    void DrawRackGraphics() override;
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
+
 };
 
 /////////////
@@ -205,4 +204,5 @@ class SongCanvasRackLFO:public SongCanvasRackElement
    void DrawRackGraphics() override {};
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
+
 };

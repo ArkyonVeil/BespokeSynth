@@ -131,16 +131,15 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetCableTargetable(false);
    mMeasureSlider->SetTextAlpha(0);
 
-   mRackGrid = new FlowGrid("part rack", 8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
+   mRackGrid = new FlowGrid(8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
    mRackGrid->CreateUIControls();//Needs to be called, or the IDrawableModule throws a fit later.
-   AddChild(mRackGrid);
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
    mRackRenameTextBox->SetFlexibleWidth(true);
 
 
-   auto mgp = mRackGrid->GetPosition(true);
+   auto mgp = mRackGrid->GetPosition();
 
    mRackAddNewButton = new ClickButton(this, "add", mgp.x + mRackGrid->GetWidth(), mgp.y, ButtonDisplayStyle::kPlus);
    float bWidth;
@@ -654,7 +653,7 @@ void SongCanvas::DrawModule()
          mRackGrid->SetBackgroundColour(0, 0, 0, 75);
       }
    }
-   mRackGrid->Draw();
+   mRackGrid->DrawModule();
    mRackAddNewButton->Draw();
    ofPushStyle();
 
@@ -1219,10 +1218,6 @@ SongCanvasRackElement* SongCanvas::GetSelectedRackPart() const
       return nullptr;
    return dynamic_cast<SongCanvasRackElement*>(e);
 }
-ModuleContainer* SongCanvas::GetContainer()
-{
-   return mRackGrid->GetContainer();
-}
 void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 {
    if (newLoopMin == mCanvas->mViewStart && newLoopMax == mCanvas->mViewEnd)
@@ -1388,7 +1383,8 @@ void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 
 void SongCanvas::DisposeElement(IClickable* element)
 {
-   RemoveUIControl(static_cast<IUIControl*>(element));
+   RemoveUIControl(dynamic_cast<IUIControl*>(element));
+   delete element;
 }
 //Called on a 64n interval, which is very fast.
 void SongCanvas::OnTimeEvent(double time)
@@ -1577,7 +1573,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    mRackAddNewButton->GetDimensions(bWSize, bHSize);
    mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
    mRackGrid->RecalculateFlowGrid();
-   auto mgp = mRackGrid->GetPosition(true);
+   auto mgp = mRackGrid->GetPosition();
    mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
    mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth(), mgp.y);
    //IDrawableModule::LoadState(in, rev); <-- Meanie :(

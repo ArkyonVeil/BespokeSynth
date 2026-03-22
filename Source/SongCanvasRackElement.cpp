@@ -51,8 +51,8 @@ std::string RemoveNonNumericalChars(const std::string& input)
 }
 
 
-SongCanvasRackElement::SongCanvasRackElement(std::string partName, SongCanvas* songCanvas)
-: FlowGridElement(mFlowGridParent)
+SongCanvasRackElement::SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas)
+: FlowGridElement(mFlowGridParent, internalName)
 {
    mElementName = new std::string(partName);
    mSongCanvas = songCanvas;
@@ -63,7 +63,6 @@ SongCanvasRackElement::SongCanvasRackElement(std::string partName, SongCanvas* s
 
 void SongCanvasRackElement::CreateUIControls()
 {
-   IDrawableModule::CreateUIControls();
    mElementRenameTextBox = mSongCanvas->GetRackRenameTextbox();
 }
 
@@ -156,7 +155,7 @@ void SongCanvasRackElement::DrawModule()
 /////////////
 
 SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, songCanvas)
+: SongCanvasRackElement(partName,"enabler", songCanvas)
 {
    SetColor(ofColor::white);
 }
@@ -167,8 +166,8 @@ SongCanvasRackEnabler::~SongCanvasRackEnabler()
 void SongCanvasRackEnabler::CreateUIControls()
 {
    SongCanvasRackElement::CreateUIControls();
-   mEnablerCable = new PatchCableSource(this, kConnectionType_UIControl);
-   this->AddPatchCableSource(mEnablerCable);
+   mEnablerCable = new PatchCableSource(mSongCanvas, kConnectionType_UIControl);
+   mSongCanvas->AddPatchCableSource(mEnablerCable);
    mEnablerCable->SetAllowMultipleTargets(true);
 }
 
@@ -228,10 +227,8 @@ std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 }
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
-   //int oX = mX+mFlowGridParent->GetRect(true).x;
-   //int oY = mY+mFlowGridParent->GetRect(true).y;
-
-   mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
+   auto pos = GetRelativePosition();
+   mEnablerCable->SetManualPosition(pos.x+mWidth - 12, pos.y+mHeight / 2);
 }
 
 void SongCanvasRackEnabler::SetupCanvasPart(SongCanvas_CanvasElement* element)
@@ -267,7 +264,7 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 
 
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, songCanvas)
+: SongCanvasRackElement(partName,"pulser", songCanvas)
 {
    SetColor(ofColor::yellow);
    if (mOnePulseMode)
@@ -287,8 +284,8 @@ void SongCanvasRackPulser::CreateUIControls()
 {
    SongCanvasRackElement::CreateUIControls();
 
-   mPulserCable = new PatchCableSource(this, kConnectionType_Pulse);
-   this->AddPatchCableSource(mPulserCable);
+   mPulserCable = new PatchCableSource(mSongCanvas, kConnectionType_Pulse);
+   mSongCanvas->AddPatchCableSource(mPulserCable);
    mPulserCable->SetAllowMultipleTargets(true);
 
    mIntervalSelector = new DropdownList(this, "interval", 75, 2, (int*)(&mPulserInterval));
@@ -313,7 +310,6 @@ void SongCanvasRackPulser::CreateUIControls()
 }
 void SongCanvasRackPulser::Init()
 {
-   SongCanvasRackElement::Init();
    mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
 }
 
@@ -437,7 +433,7 @@ void SongCanvasRackKeyer::DrawRackGraphics()
 {
 }
 SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, songCanvas)
+: SongCanvasRackElement(partName, "keyer", songCanvas)
 {
 }
 
@@ -447,7 +443,7 @@ SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas
 /////////////
 
 SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, songCanvas)
+: SongCanvasRackElement(partName, "sampler", songCanvas)
 {
    SetColor(ofColor::green);
 
@@ -521,7 +517,7 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 /////////
 
 SongCanvasRackLFO::SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, songCanvas)
+: SongCanvasRackElement(partName,"modulator", songCanvas)
 {
    //TODO
 }

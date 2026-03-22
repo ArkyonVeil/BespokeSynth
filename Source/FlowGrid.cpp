@@ -33,46 +33,44 @@
 ///
 
 #include "FlowGrid.h"
+
 #include "ModularSynth.h"
 #include "PatchCableSource.h"
 
 
-FlowGrid::FlowGrid(std::string name, int x, int y, int w, int rowHeight, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener)
+FlowGrid::FlowGrid(int x, int y, int w, int rowHeight, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener)
 {
-   SetName(name.c_str());
    SetPosition(x, y);
    mListener = listener;
    mOwner = owner;
-   SetParent(owner);
    mMinRows = startNumRows;
    mWidth = w;
    mHeight = rowHeight * startNumRows;
    mRowYSize = rowHeight;
 
-   SetShouldDrawOutline(false);
 }
 FlowGrid::~FlowGrid()
 {
-   delete mLocalContainer;
+   for (auto el : mElementList)
+   {
+      RemoveFlowElement(el);
+   }
 }
 void FlowGrid::CreateUIControls()
 {
-   IDrawableModule::CreateUIControls();
-   mLocalContainer = new ModuleContainer();
-   mLocalContainer->SetOwner(this);
    for (int i = mRows.size(); i < mMinRows; i++)
       AddRow();
 }
 
 void FlowGrid::OnClicked(float x, float y, bool right)
 {
-   if (mHovered && mLastHoveredElement != nullptr)
+   if (mHovered && mHoveredElement != nullptr)
    {
       if (mSelectedElement != nullptr)
          mSelectedElement->SetHighlight(false);
-      mSelectedElement = mLastHoveredElement;
+      mSelectedElement = mHoveredElement;
       mSelectedElement->SetHighlight(true);
-      mLastHoveredElement->OnClicked(x,y,right);
+      mHoveredElement->OnClicked(x,y,right);
       mStartDragMouse = ofVec2f(x + GetPosition().x, y + GetPosition().y);
       mStartDragElementPos = mSelectedElement->GetRelativePosition();
       if (mSelectedElement->GetHovered())
@@ -115,12 +113,21 @@ void FlowGrid::MouseReleased()
 }
 bool FlowGrid::MouseMoved(float x, float y)
 {
-   IDrawableModule::MouseMoved(x, y);
+   mHovered = x >= 0 && x < mWidth && y >= 0 && y < mHeight;
 
-   float rX = x + mX;
-   float rY = y + mY;
-
-   bool isMouseOver = (x >= 0 && x < mWidth && y >= 0 && y < mHeight);
+   mHoveredElement = nullptr;
+   for(auto el: mElementList)
+   {
+      float sX, sY;
+      sX = x + el->GetPosition(true).x;
+      sY = y + el->GetPosition(true).y;
+      el->MouseMoved(sX,sY);
+      if (el->GetRect().contains(x,y))
+      {
+         mHoveredElement = el;
+         break;
+      }
+   }
 
    //TheSynth->LogEvent("MouseMove "+std::to_string(mDebugIter),kLogEventType_Verbose);
    //mDebugIter++;
@@ -266,16 +273,17 @@ void FlowGrid::SetDimensions(float width, float height)
 
 void FlowGrid::DrawModule()
 {
+   ofPushMatrix();
+   ofTranslate(mX,mY);
    ofPushStyle();
-   /*
+
    if (!mHovered)
-      ofSetColor(0, 255, 0);
+      ofSetColor(mBackgroundColor);
    else
    {
-      ofSetColor(255, 255, 0);
-   }*/
+      ofSetColor(ofColor(mBackgroundColor.r+2,mBackgroundColor.g+2,mBackgroundColor.b+2,mBackgroundColor.a));
+   }
 
-   ofSetColor(mBackgroundColor);
    ofFill();
    ofRect(0, 0, mWidth, mHeight);
 
@@ -290,14 +298,15 @@ void FlowGrid::DrawModule()
 
    for (auto elm : mElementList)
    {
-      elm->Draw();
+      elm->Render();
    }
 
    ofPopStyle();
+   ofPopMatrix();
 }
 void FlowGrid::Render()
 {
-   IDrawableModule::Render();
+
 }
 
 //Tries to find an available slot in the grid, returns -1 if none available. Otherwise, returns the row.
@@ -374,9 +383,18 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
    }
 
    //Add it to the pipeline
-   AddChild(newElement);
-   mLocalContainer->AddModule(newElement);
    newElement->CreateUIControls();
+   if (mOwner->IsInitialized())
+   {
+      newElement->Init();
+   }
+   auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
+
+   newElement->NameData = rec;
+   newElement->SetName(rec->internalName.c_str());
+   newElement->SetParent(mOwner);
+   mOwner->AddChild(newElement);
+
    mElementList.push_back(newElement);
 
    AddToRow(newElement, r);
@@ -547,14 +565,28 @@ void FlowGrid::RecalculateFlowGrid()
 void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 {
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   RemoveChild(element);
+   ReturnName(element->NameData);
+   mOwner->RemoveChild(element);
+   delete element;
    RecalculateFlowGrid();
+}
+
+void FlowGrid::ReturnName(FlowNameAssigment* nAssign)
+{
+   for (auto rec : mFlowNameRecords)
+   {
+      if (rec.name == nAssign->internalName)
+      {
+         rec.freeIndexes.push_back(nAssign->index);
+      }
+   }//Marks the name index free for reuse.
+   delete nAssign;
 }
 
 void FlowGrid::AddRow()
 {
    mRows.push_back(FlowGridRow{ false, false });
-   ResizeFlowgrid();
+   ResizeFlowGrid();
 }
 
 //Removes the last row. Any flow elements in it WILL be deleted.
@@ -567,16 +599,25 @@ void FlowGrid::PopRow()
    {
       auto e = mRows.back().elements[i];
       mElementList.erase(std::find(mElementList.begin(), mElementList.end(), e));
-      RemoveChild(e);
    }
    mRows.pop_back();
-   ResizeFlowgrid();
+   ResizeFlowGrid();
 }
 
-void FlowGrid::ResizeFlowgrid()
+void FlowGrid::ResizeFlowGrid()
 {
    SetDimensions(mWidth, mRows.size() * mRowYSize);
    mListener->onFlowGridResize(mWidth, mRows.size() * mRowYSize);
+}
+void FlowGrid::InitAllFlowElements() const
+{
+   for (auto el : mElementList)
+   {
+      if (!el->IsInitialized())
+      {
+         el->Init();
+      }
+   }
 }
 
 
@@ -584,4 +625,36 @@ void FlowGrid::SetSelectedGridElement(FlowGridElement* element)
 {
    mSelectedElement = element;
    mListener->onFlowGridNewSelection(element);
+}
+
+FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
+{
+   FlowNameRecord* record = nullptr;
+   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
+   {
+      if (mFlowNameRecords[i].name == name)
+      {
+         record = &mFlowNameRecords[i];
+      }
+   }
+   if (record == nullptr)
+   {
+      mFlowNameRecords.push_back(FlowNameRecord{
+      name,0,{}});
+      return new FlowNameAssigment{name+ofToString(0),name,0};
+   }
+
+   int idx;
+   if (!record->freeIndexes.empty())
+   {
+      idx = record->freeIndexes.back();
+      record->freeIndexes.pop_back();
+   }
+   else
+   {
+      record->index++;
+      idx = record->index;
+   }
+
+   return new FlowNameAssigment{ name+ofToString(idx),name,idx};
 }

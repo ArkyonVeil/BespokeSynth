@@ -21,17 +21,17 @@ public:
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
 };
 
-class FlowGrid : public IDrawableModule
+class FlowGrid
 {
 public:
-   FlowGrid(std::string name, int x, int y, int w, int h, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener);
+   FlowGrid(int x, int y, int w, int h, int startNumRows, IDrawableModule* owner, IFlowGridListener* listener);
    ~FlowGrid();
-   void CreateUIControls() override;
-   void MouseReleased() override;
-   bool MouseMoved(float x, float y) override;
-   void OnClicked(float x, float y, bool right) override;
+   void CreateUIControls();
+   void MouseReleased();
+   bool MouseMoved(float x, float y);
+   void OnClicked(float x, float y, bool right);
 
-   bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll) override;
+   bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll);
    int GetRowCount() const { return mRows.size(); }
 
    void SetHighlightCol(double time, int col);
@@ -41,27 +41,31 @@ public:
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
-   void DrawModule() override;
-   void Render() override;
+   void DrawModule();
+   void Render();
 
    void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
    void SetMinRows(int rowNum) {mMinRows = rowNum;}
 
    void AddFlowElement(FlowGridElement* newElement);
+   void AddToRow(FlowGridElement* element, int row);
+   void InsertToRow(FlowGridElement* element, int row, int index);
    void UpdateRow(int index, bool updateFillState);
    void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
+   void ReturnName(FlowNameAssigment* nAssign);
    void AddRow();
    void PopRow();
-   void ResizeFlowgrid();
-   ModuleContainer* GetContainer() override { return mLocalContainer;};
+   void ResizeFlowGrid();
+   void InitAllFlowElements() const; //Only called automatically after the parent module is initialized.
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
+   FlowNameAssigment* GetInternalNameForFlowElement(std::string name);
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
-
+   FlowGridElement* GetHoveredGridElement() const { return mHoveredElement; }
 
    struct FlowGridRow
    {
@@ -70,16 +74,22 @@ public:
       std::vector<FlowGridElement*> elements;
    };
    std::vector<FlowGridRow> mRows;
-   //IDrawableModule overrides:
-   bool HasTitleBar() const override {return false;}
+
+   void SetPosition(int x, int y) { mX = x; mY = y;};
+   ofVec2f GetPosition() const { return ofVec2f{ mX, mY };};
 
 protected:
    int TryGetSlot(int targetRow);
    bool IsRowOverfilled(int row);
 
-   void AddToRow(FlowGridElement* element, int row);
-   void InsertToRow(FlowGridElement* element, int row, int index);
+   struct FlowNameRecord
+   {
+      std::string name;
+      int index;
+      std::vector<int> freeIndexes {};
+   };
 
+   std::vector<FlowNameRecord> mFlowNameRecords;
 private:
    enum FlowGridDirection
    {
@@ -93,7 +103,7 @@ private:
 
 
    FlowGridElement* mSelectedElement{ nullptr };
-   FlowGridElement* mLastHoveredElement{ nullptr };
+   FlowGridElement* mHoveredElement{ nullptr };
    IFlowGridListener* mListener;
    std::vector<FlowGridElement*> mElementList;
    float mRowScalingSize[30];
@@ -122,9 +132,12 @@ private:
    IDrawableModule* mOwner;
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
-
-   ModuleContainer* mLocalContainer = nullptr;
    int mMaxRows = -1;
    int mMinRows = 2;//Number of rows to always display.
    int mDebugIter = 0;
+
+   float mWidth = 0;
+   float mHeight = 0;
+   float mX = 0;
+   float mY = 0;
 };
