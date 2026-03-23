@@ -1,5 +1,6 @@
 ﻿#include "FlowGrid.h"
 #include "ModularSynth.h"
+#include "PatchCableSource.h"
 
 FlowGridElement::FlowGridElement(FlowGrid* grid, std::string elementTypeName)
 {
@@ -34,6 +35,12 @@ void FlowGridElement::Render()
 
    ofPopMatrix();
    ofPopStyle();
+/*
+   for (auto source : GetPatchCableSources())
+   {
+      source->UpdatePosition(false);
+      source->DrawSource();
+   }*/
 }
 ofRectangle FlowGridElement::GetRectRelativeToGrid() const
 {
@@ -116,7 +123,7 @@ bool FlowGridElement::MouseMoved(float x, float y)
 }
 void FlowGridElement::MouseReleased()
 {
-
+   IDrawableModule::MouseReleased();
 }
 void FlowGridElement::DrawModule()
 {

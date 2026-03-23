@@ -482,14 +482,7 @@ void IDrawableModule::Render()
    ofPopMatrix();
    ofPopStyle();
 
-   if (Push2Control::sDrawingPush2Display)
-      return;
-
-   for (auto source : mPatchCableSources)
-   {
-      source->UpdatePosition(false);
-      source->DrawSource();
-   }
+   DrawGlobal();
 }
 
 
@@ -1061,6 +1054,23 @@ void IDrawableModule::ForcePosition()
    }
    else if (mPinned) // Moved while pinned.
       SetPinned(true);
+}
+
+//Draws in global space. Running in all added children.
+void IDrawableModule::DrawGlobal()
+{
+   for (auto child : GetChildren())
+   {
+      child->DrawGlobal();
+   }
+   if (Push2Control::sDrawingPush2Display)
+      return;
+
+   for (auto source : mPatchCableSources)
+   {
+      source->UpdatePosition(false);
+      source->DrawSource();
+   }
 }
 
 void IDrawableModule::FindClosestSides(float xThis, float yThis, float wThis, float hThis, float xThat, float yThat, float wThat, float hThat, float& startX, float& startY, float& endX, float& endY, bool sidesOnly /*= false*/)

@@ -43,6 +43,7 @@ public:
    void DrawContents();
    void DrawModules();
    void DrawPatchCables(bool parentMinimized, bool inFront);
+   void DrawPatchCablesDeep(IDrawableModule* module, bool parentMinimized, bool inFront);
    void PreDrawUnclipped();
    void DrawUnclipped();
    void PostRender();

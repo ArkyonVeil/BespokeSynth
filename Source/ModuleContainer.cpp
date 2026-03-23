@@ -115,10 +115,25 @@ void ModuleContainer::DrawPatchCables(bool parentMinimized, bool inFront)
 
    for (int i = (int)mModules.size() - 1; i >= 0; --i)
    {
+      for (auto child : mModules[i]->GetChildren())
+      {
+         DrawPatchCablesDeep(child, parentMinimized, inFront);
+      }
       mModules[i]->DrawPatchCables(parentMinimized, inFront);
       if (mModules[i]->GetContainer())
          mModules[i]->GetContainer()->DrawPatchCables(parentMinimized, inFront);
    }
+}
+
+void ModuleContainer::DrawPatchCablesDeep(IDrawableModule* module, bool parentMinimized, bool inFront)
+{
+   for (auto child : module->GetChildren())
+   {
+      DrawPatchCablesDeep(child, parentMinimized, inFront);
+   }
+   module->DrawPatchCables(parentMinimized, inFront);
+   if (module->GetContainer())
+      module->GetContainer()->DrawPatchCables(parentMinimized, inFront);
 }
 
 void ModuleContainer::Poll()

@@ -4,8 +4,6 @@
 
 //Created, because I keep writing to the wrong class header. -Ark
 #pragma once
-#include "FlowGrid.h"
-
 
 struct FlowNameAssigment;
 class FlowGrid;

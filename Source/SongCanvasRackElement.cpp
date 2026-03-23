@@ -159,6 +159,7 @@ SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCa
 : SongCanvasRackElement(partName,"partenabler", songCanvas)
 {
    SetColor(ofColor::white);
+   SetOwningContainer(songCanvas->GetOwningContainer());
 }
 SongCanvasRackEnabler::~SongCanvasRackEnabler()
 {
@@ -229,7 +230,7 @@ std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
    auto pos = GetRelativePosition();
-   mEnablerCable->SetManualPosition(pos.x+mWidth - 12, pos.y+mHeight / 2);
+   mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
 }
 
 void SongCanvasRackEnabler::SetupCanvasPart(SongCanvas_CanvasElement* element)

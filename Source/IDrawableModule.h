@@ -252,6 +252,7 @@ private:
    virtual void SetUpFromSaveData() {}
    virtual bool ShouldSavePatchCableSources() const { return true; }
    void ForcePosition();
+   void DrawGlobal();
 
    std::vector<IUIControl*> mUIControls;
    std::vector<IDrawableModule*> mChildren;
