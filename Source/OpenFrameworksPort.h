@@ -188,6 +188,7 @@ struct ofRectangle
    float getMaxX() const;
    float getMinY() const;
    float getMaxY() const;
+   bool zero() const { return x == 0 && y == 0 && width == 0 && height == 0;}
    ofVec2f getCenter() const { return ofVec2f(x + width * .5f, y + height * .5f); }
    float x{ 0 };
    float y{ 0 };

@@ -389,10 +389,11 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
    {
       newElement->Init();
    }
-   auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
+   //auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
 
-   newElement->NameData = rec;
-   newElement->SetName(rec->internalName.c_str());
+   newElement->SetName(newElement->mElementTypeName.c_str());
+   newElement->SetTypeName(newElement->mElementTypeName, kModuleCategory_Other);
+   //newElement->NameData = rec;
    newElement->SetParent(mOwner);
    mOwner->AddChild(newElement);
 
@@ -566,7 +567,7 @@ void FlowGrid::RecalculateFlowGrid()
 void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 {
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   ReturnName(element->NameData);
+   //ReturnName(element->NameData);
    mOwner->RemoveChild(element);
    delete element;
    RecalculateFlowGrid();

@@ -4,6 +4,7 @@
 
 //Created, because I keep writing to the wrong class header. -Ark
 #pragma once
+#include "FlowGrid.h"
 
 
 struct FlowNameAssigment;
@@ -36,6 +37,7 @@ public:
    bool HasTitleBar() const override { return false;};
    void SetEnabled(bool enabled) override { true;};
    bool CanMinimize() override {return false;};//Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
+   ofRectangle CustomTooltipBounds() const override {return {0,0,mWidth,mHeight};};
 
    void SetMinimumSize(float minWidth) {mMinWidth = minWidth;}
    float GetMinimumWidth() {return mMinWidth;}
@@ -52,6 +54,8 @@ public:
    bool GetHovered() { return mHovered; }
 
    ofRectangle GetRect() const {return {mX,mY,mWidth,mHeight};};
+   ofRectangle GetRectRelativeToGrid() const;
+   ofRectangle GetRectLocal() const {return {0,0,mWidth,mHeight};};
    void SetRect(ofRectangle rect);
    void SetRectRelativeToGrid(ofRectangle rect);
 

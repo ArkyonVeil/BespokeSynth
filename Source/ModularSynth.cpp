@@ -773,9 +773,17 @@ void ModularSynth::Draw()
                tooltipContainer = list->GetModuleParent()->GetOwningContainer();
             }
          }
-         else if (GetMouseY(&mModuleContainer) < gHoveredModule->GetPosition().y && gHoveredModule->HasTitleBar()) //this means we're hovering over the module's title bar
+         else if (!gHoveredSubModule->CustomTooltipBounds().zero())
          {
-            tooltip = helpDisplay->GetModuleTooltip(gHoveredModule);
+            if (gHoveredSubModule->CustomTooltipBounds().contains(GetMouseX(&mModuleContainer)-gHoveredSubModule->GetPosition().x,GetMouseY(&mModuleContainer)-gHoveredSubModule->GetPosition().y))
+            {
+               tooltip = helpDisplay->GetModuleTooltip(gHoveredSubModule);
+               tooltipContainer = gHoveredModule->GetOwningContainer();
+            }
+         }
+         else if (GetMouseY(&mModuleContainer) < gHoveredSubModule->GetPosition().y && gHoveredSubModule->HasTitleBar()) //this means we're hovering over the module's title bar
+         {
+            tooltip = helpDisplay->GetModuleTooltip(gHoveredSubModule);
             tooltipContainer = gHoveredModule->GetOwningContainer();
          }
 
@@ -1516,7 +1524,9 @@ void ModularSynth::MouseMoved(int intX, int intY)
       }
    }
 
+   //Set the current hovered module.
    gHoveredModule = GetModuleAtCursor();
+   gHoveredSubModule = GetModuleAtCursor(0,0,true);
 }
 
 void ModularSynth::MouseDragged(int intX, int intY, int button, const juce::MouseInputSource& source)
@@ -2160,17 +2170,17 @@ bool ModularSynth::IsModalFocusItem(IDrawableModule* item) const
    return std::find(mModalFocusItemStack.begin(), mModalFocusItemStack.end(), item) == mModalFocusItemStack.end();
 }
 
-IDrawableModule* ModularSynth::GetModuleAtCursor(int offsetX /*=0*/, int offsetY /*=0*/)
+IDrawableModule* ModularSynth::GetModuleAtCursor(int offsetX /*=0*/, int offsetY /*=0*/, bool includeSubModules)
 {
    float x = GetMouseX(&mUILayerModuleContainer) + offsetX;
    float y = GetMouseY(&mUILayerModuleContainer) + offsetY;
-   IDrawableModule* uiLayerModule = mUILayerModuleContainer.GetModuleAt(x, y);
+   IDrawableModule* uiLayerModule = mUILayerModuleContainer.GetModuleAt(x, y, includeSubModules);
    if (uiLayerModule)
       return uiLayerModule;
 
    x = GetMouseX(&mModuleContainer) + offsetX;
    y = GetMouseY(&mModuleContainer) + offsetY;
-   return mModuleContainer.GetModuleAt(x, y);
+   return mModuleContainer.GetModuleAt(x, y, includeSubModules);
 }
 
 void ModularSynth::CheckClick(IDrawableModule* clickedModule, float x, float y, bool rightButton)

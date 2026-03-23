@@ -209,8 +209,7 @@ void ModuleContainer::MouseReleased()
       mModules[i]->MouseReleased();
    }
 }
-
-IDrawableModule* ModuleContainer::GetModuleAt(float x, float y)
+IDrawableModule* ModuleContainer::GetModuleAt(float x, float y, bool includeSubModules)
 {
    if (mOwner != nullptr)
    {
@@ -227,6 +226,7 @@ IDrawableModule* ModuleContainer::GetModuleAt(float x, float y)
          return modalItems[i];
    }
 
+   //Checks for a module in the header.
    for (int i = 0; i < mModules.size(); ++i)
    {
       if (mModules[i]->AlwaysOnTop() && mModules[i]->TestClick(x, y, false, true))
@@ -243,6 +243,7 @@ IDrawableModule* ModuleContainer::GetModuleAt(float x, float y)
          return mModules[i];
       }
    }
+   //Checks for a module in the workspace. Does not apply an offset.
    for (int i = 0; i < mModules.size(); ++i)
    {
       if (!mModules[i]->AlwaysOnTop() && mModules[i]->TestClick(x, y, false, true))
@@ -255,6 +256,29 @@ IDrawableModule* ModuleContainer::GetModuleAt(float x, float y)
             {
                return contained;
             }
+         }
+         if (includeSubModules)
+         {
+            IDrawableModule* parent = mModules[i];
+            while (parent)
+            {
+               auto ref = parent;
+               for (IDrawableModule* child : parent->GetChildren())
+               {
+                  float w, h;
+                  float pX, pY;
+                  parent->GetDimensions(w, h);
+                  parent->GetPosition(pX, pY);
+                  if (child->TestClick(x - pX, y - pY, false, true))
+                  {
+                     parent = child;
+                     break;
+                  }
+               }
+               if (ref == parent)
+                  break;
+            }
+            return parent;
          }
          return mModules[i];
       }

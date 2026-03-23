@@ -156,19 +156,19 @@ void SongCanvasRackElement::DrawModule()
 /////////////
 
 SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,"enabler", songCanvas)
+: SongCanvasRackElement(partName,"partenabler", songCanvas)
 {
    SetColor(ofColor::white);
 }
 SongCanvasRackEnabler::~SongCanvasRackEnabler()
 {
-   mSongCanvas->RemovePatchCableSource(mEnablerCable);
+   RemovePatchCableSource(mEnablerCable);
 }
 void SongCanvasRackEnabler::CreateUIControls()
 {
    SongCanvasRackElement::CreateUIControls();
-   mEnablerCable = new PatchCableSource(mSongCanvas, kConnectionType_UIControl);
-   mSongCanvas->AddPatchCableSource(mEnablerCable);
+   mEnablerCable = new PatchCableSource(this, kConnectionType_UIControl);
+   this->AddPatchCableSource(mEnablerCable);
    mEnablerCable->SetAllowMultipleTargets(true);
 }
 

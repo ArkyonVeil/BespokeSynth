@@ -4,7 +4,9 @@
 #pragma once
 #include "FlowGrid.h"
 
+
 class SongCanvas;
+class SongCanvas_CanvasElement;
 
 class PatchCableSource;
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
@@ -87,7 +89,8 @@ public:
    SongCanvasRackEnabler(const std::string& partName, SongCanvas* owner);
    ~SongCanvasRackEnabler();
    void CreateUIControls() override;
-   int GetPreferredWidth() override { return  90; };
+   int GetPreferredWidth() override { return 90; }
+   static IDrawableModule* Create() {return new SongCanvasRackEnabler("Part",nullptr);};
    bool mEnablerInverted{ false };
    void OnEnter() override;
    void OnExit() override;
@@ -120,6 +123,7 @@ public:
    void DrawRackGraphics() override;
    void CreateUIControls() override;
    void Init() override;
+   static IDrawableModule* Create() {return new SongCanvasRackPulser("Part",nullptr);};
    PatchCableSource* mPulserCable;
    NoteInterval GetInterval() { return mPulserInterval; }
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
@@ -148,7 +152,9 @@ class SongCanvasRackKeyer:public SongCanvasRackElement
 {
 public:
    SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
-   int GetPreferredWidth() override { return  150; };
+   int GetPreferredWidth() override { return 150; }
+   static IDrawableModule* Create() {return new SongCanvasRackKeyer("Part",nullptr);};
+   ;
 private:
    PatchCableSource* mKeyerCable;
    void OnEnter() override {};
@@ -168,6 +174,7 @@ class SongCanvasRackSampler:public SongCanvasRackElement
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackSampler();
+   static IDrawableModule* Create() {return new SongCanvasRackSampler("Part",nullptr);};
    void OnEnter() override;
    void OnExit() override;
    void LoadFileSample();
@@ -178,7 +185,7 @@ public:
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
-   void SaveState(FileStreamOut& out) override {};
+   void SaveState(FileStreamOut& out) override {}
    void LoadState(FileStreamIn& in, int rev) override {};
 private:
    Sample* mSample {};
@@ -194,7 +201,9 @@ private:
 
 class SongCanvasRackLFO:public SongCanvasRackElement
 {
-   int GetPreferredWidth() override {return 90;};
+public:
+   int GetPreferredWidth() override { return 90; }
+   static IDrawableModule* Create() {return new SongCanvasRackLFO("Part",nullptr);}
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
    void OnEnter() override {};
    void OnExit() override {};
@@ -204,5 +213,5 @@ class SongCanvasRackLFO:public SongCanvasRackElement
    void DrawRackGraphics() override {};
    void SaveState(FileStreamOut& out) override {};
    void LoadState(FileStreamIn& in, int rev) override {};
-
+private:
 };

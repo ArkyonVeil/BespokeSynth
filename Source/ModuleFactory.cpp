@@ -113,6 +113,7 @@
 #include "ComboGridController.h"
 #include "StutterControl.h"
 #include "CircleSequencer.h"
+#include "SongCanvasRackElement.h"
 #ifdef BESPOKE_MAC
 #include "KompleteKontrol.h"
 #endif
@@ -541,6 +542,13 @@ ModuleFactory::ModuleFactory()
    REGISTER_HIDDEN(FFTtoAdditive, ffttoadditive, kModuleCategory_Audio);
    REGISTER_HIDDEN(SlowLayers, slowlayers, kModuleCategory_Audio);
    REGISTER_HIDDEN(ClipLauncher, cliplauncher, kModuleCategory_Synth);
+
+   REGISTER_HIDDEN(SongCanvasRackEnabler, partenabler, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackPulser, partpulser, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackSampler, partsampler, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackKeyer, partkeyer, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackLFO, partmodulator, kModuleCategory_Other);
+
 #ifdef BESPOKE_MAC
    REGISTER_HIDDEN(KompleteKontrol, kompletekontrol, kModuleCategory_Note);
 #endif
@@ -553,6 +561,8 @@ ModuleFactory::ModuleFactory()
    REGISTER_HIDDEN(ScriptReferenceDisplay, scriptingreference, kModuleCategory_Other);
    REGISTER_HIDDEN(ScriptWarningPopup, scriptwarning, kModuleCategory_Other);
    REGISTER_HIDDEN(MultitrackRecorderTrack, multitrackrecordertrack, kModuleCategory_Audio);
+
+
 }
 
 void ModuleFactory::Register(std::string type, CreateModuleFn creator, CanCreateModuleFn canCreate, ModuleCategory moduleCategory, bool hidden, bool experimental, bool canReceiveAudio, bool canReceiveNotes, bool canReceivePulses)

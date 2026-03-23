@@ -215,7 +215,7 @@ public:
    bool ShouldAccentuateActiveModules() const;
    bool ShouldDimModule(IDrawableModule* module);
    LocationZoomer* GetLocationZoomer() { return &mZoomer; }
-   IDrawableModule* GetModuleAtCursor(int offsetX = 0, int offsetY = 0);
+   IDrawableModule* GetModuleAtCursor(int offsetX = 0, int offsetY = 0, bool includeSubModules = false);
    WelcomeScreen* GetWelcomeScreen() { return mWelcomeScreen; }
 
    void RegisterPatchCable(PatchCable* cable);

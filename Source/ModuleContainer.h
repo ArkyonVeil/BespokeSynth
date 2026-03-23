@@ -60,7 +60,7 @@ public:
    void KeyReleased(int key);
    void MouseMoved(float x, float y);
    void MouseReleased();
-   IDrawableModule* GetModuleAt(float x, float y);
+   IDrawableModule* GetModuleAt(float x, float y, bool includeSubModules = false);
    void GetModulesWithinRect(ofRectangle rect, std::vector<IDrawableModule*>& output, bool ignorePinned = false);
    void MoveToFront(IDrawableModule* module);
    void AddModule(IDrawableModule* module);

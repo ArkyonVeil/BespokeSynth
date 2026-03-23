@@ -35,6 +35,10 @@ void FlowGridElement::Render()
    ofPopMatrix();
    ofPopStyle();
 }
+ofRectangle FlowGridElement::GetRectRelativeToGrid() const
+{
+   return ofRectangle(mX-mFlowGridParent->GetPosition().x,mY-mFlowGridParent->GetPosition().y,mWidth,mHeight);
+}
 void FlowGridElement::SetRect(ofRectangle rect)
 {
    mWidth = rect.width;
@@ -100,7 +104,7 @@ bool FlowGridElement::MouseMoved(float x, float y)
    mDebugNumX = x;
    mDebugNumY = y;
 
-   if (GetRect().contains(x,y))
+   if (GetRectLocal().contains(x,y))
    {
       mHovered = true;
    }
@@ -150,8 +154,8 @@ void FlowGridElement::DrawModule()
    ofRect(0, 0, mWidth, mHeight);
 
    //DrawTextNormal(ofToString(mDebugNum),2,15);
-   //if (gHoveredUIControl!=nullptr)
-   //   DrawTextNormal(ofToString(gHoveredUIControl->GetDisplayName()),2,15);
-   DrawTextNormal(ofToString((int)mDebugNumX)+" | "+ofToString((int)mDebugNumY),2,15);
+   if (gHoveredSubModule!=nullptr)
+      DrawTextNormal(ofToString(gHoveredSubModule->GetDisplayName()),2,15);
+   //DrawTextNormal(ofToString((int)mDebugNumX)+" | "+ofToString((int)mDebugNumY),2,15);
    ofPopStyle();
 }
