@@ -2211,3 +2211,4 @@ songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules
 ~on finish~what happens when the transport reaches the final measure (outside the canvas or out of the loop range)\n-continue: does nothing, keeps going past the canvas bounds. Still respects the loop region if active (Global only)\n-loop: resets to the first possible measure and keeps playing.\n-stop: resets to the first possible measure and stops
 ~sync~syncs the local time to the global transport. looping if needed.
 ~part rack~holds the parts for the canvas. it's like a palette!\n\nselect a part, and shift-click on the canvas to add it. canvas parts will activate their counterparts on cue.
+~enabler*~test

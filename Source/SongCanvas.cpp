@@ -90,7 +90,6 @@ void SongCanvas::CreateUIControls()
 {
    IDrawableModule::CreateUIControls();
 
-
    if (expertPanelEnabled)
       mStartCanvasXOffset = LayersListWidthSize + AdvancedConfigHSize;
    else

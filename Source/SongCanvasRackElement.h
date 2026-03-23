@@ -109,7 +109,7 @@ private:
 ///Pulser///
 /////////////
 
-class SongCanvasRackPulser:public SongCanvasRackElement , IDropdownListener
+class SongCanvasRackPulser:public SongCanvasRackElement, public IDropdownListener
 {
 public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);

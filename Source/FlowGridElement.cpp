@@ -8,6 +8,14 @@ FlowGridElement::FlowGridElement(FlowGrid* grid, std::string elementTypeName)
 }
 FlowGridElement::~FlowGridElement()
 {
+}
+void FlowGridElement::CreateUIControls()
+{
+   IDrawableModule::CreateUIControls();
+}
+void FlowGridElement::Init()
+{
+   IDrawableModule::Init();
 
 }
 void FlowGridElement::Render()
@@ -34,6 +42,15 @@ void FlowGridElement::SetRect(ofRectangle rect)
    mX = rect.x;
    mY = rect.y;
 }
+
+void FlowGridElement::SetRectRelativeToGrid(ofRectangle rect)//Sets rect and offsets mX/mY based on the FlowGrid's position.
+{
+   mWidth = rect.width;
+   mHeight = rect.height;
+   mX = rect.x + mFlowGridParent->GetPosition().x;
+   mY = rect.y + mFlowGridParent->GetPosition().y;
+}
+
 void FlowGridElement::SetColor(ofColor color)
 {
    mMainColor = color;
@@ -77,6 +94,7 @@ void FlowGridElement::OnClicked(float x, float y, bool right)
 }
 bool FlowGridElement::MouseMoved(float x, float y)
 {
+   IDrawableModule::MouseMoved(x,y);
    //x=x-mFlowGridParent->GetPosition(true).x;
    //y=y-mFlowGridParent->GetPosition(true).y;
    mDebugNumX = x;

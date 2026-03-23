@@ -30,9 +30,12 @@ public:
       mHeight = height;
    }
    //IDrawableModule
-   void CreateUIControls() override {}
-   void Init() override {}
+   void CreateUIControls() override;
+   void Init() override;
    void Render() override;
+   bool HasTitleBar() const override { return false;};
+   void SetEnabled(bool enabled) override { true;};
+   bool CanMinimize() override {return false;};//Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
 
    void SetMinimumSize(float minWidth) {mMinWidth = minWidth;}
    float GetMinimumWidth() {return mMinWidth;}
@@ -50,6 +53,7 @@ public:
 
    ofRectangle GetRect() const {return {mX,mY,mWidth,mHeight};};
    void SetRect(ofRectangle rect);
+   void SetRectRelativeToGrid(ofRectangle rect);
 
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }

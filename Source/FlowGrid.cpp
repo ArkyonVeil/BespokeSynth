@@ -295,14 +295,15 @@ void FlowGrid::DrawModule()
       ofSetColor(ofColor::yellow);
       ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
    }
+   ofPopStyle();
+   ofPopMatrix();
 
+   //Draw in SongCanvas space.
    for (auto elm : mElementList)
    {
       elm->Render();
    }
 
-   ofPopStyle();
-   ofPopMatrix();
 }
 void FlowGrid::Render()
 {
@@ -480,7 +481,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       for (int i = 0; i < row->elements.size(); ++i)
       {
          auto el = row->elements[i];
-         row->elements[i]->SetRect(ofRectangle(offset, yOffset, MIN(maxRowSize, el->GetPreferredWidth()), mRowYSize));
+         row->elements[i]->SetRectRelativeToGrid(ofRectangle(offset, yOffset, MIN(maxRowSize, el->GetPreferredWidth()), mRowYSize));
          offset += el->GetPreferredWidth() + mElementXSpacing;
       }
       return;
@@ -511,7 +512,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
             eSize = el->GetPreferredWidth() / ratio;
          }
 
-         el->SetRect(ofRectangle(offset, yOffset, eSize, mRowYSize));
+         el->SetRectRelativeToGrid(ofRectangle(offset, yOffset, eSize, mRowYSize));
          offset += eSize + mElementXSpacing;
       }
 
@@ -543,7 +544,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
          //Interpolate between minimum and preferred based on t
          eSize = e->GetMinimumWidth() + t * (e->GetPreferredWidth() - e->GetMinimumWidth());
       }
-      e->SetRect(ofRectangle(offset, yOffset, eSize, mRowYSize));
+      e->SetRectRelativeToGrid(ofRectangle(offset, yOffset, eSize, mRowYSize));
       offset += eSize + mElementXSpacing;
    }
    if (updateFillState)

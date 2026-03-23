@@ -63,6 +63,7 @@ SongCanvasRackElement::SongCanvasRackElement(std::string partName, std::string i
 
 void SongCanvasRackElement::CreateUIControls()
 {
+   FlowGridElement::CreateUIControls();
    mElementRenameTextBox = mSongCanvas->GetRackRenameTextbox();
 }
 
@@ -310,6 +311,7 @@ void SongCanvasRackPulser::CreateUIControls()
 }
 void SongCanvasRackPulser::Init()
 {
+   IDrawableModule::Init();
    mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
 }
 
