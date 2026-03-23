@@ -131,6 +131,8 @@ void FlowGridElement::DrawModule()
 
    ofFill();
 
+   mHighlighted = mFlowGridParent->GetSelectedGridElement() == this;
+
    if (!mHighlighted)
    {
       ofSetColor(mMainColor);
