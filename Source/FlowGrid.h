@@ -34,15 +34,11 @@ public:
    bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll);
    int GetRowCount() const { return mRows.size(); }
 
-   void SetHighlightCol(double time, int col);
-   int GetHighlightCol(double time) const;
-
    void SetDimensions(float width, float height);
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule();
-   void Render();
 
    void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
    void SetMinRows(int rowNum) {mMinRows = rowNum;}
@@ -122,12 +118,12 @@ private:
    int mElementNameIndex = 0;
    int mSnapDragIndex;
    int mSnapDragRow;
+   ofRectangle mRackPartDragGhostRect;
    bool mHovered{ false };
-   bool mDragging{ false }; //Is it being dragged?
-   bool mDragToken{ false }; //In a position where it could be dragged?
+   bool mDragging{ false }; //Is an element currently being dragged?
+   ofVec2f mStartDragMouse;
    bool mPressed{ false };
    int mDragElementRow;
-   ofVec2f mStartDragMouse;
    ofVec2f mStartDragElementPos;
    IDrawableModule* mOwner;
 

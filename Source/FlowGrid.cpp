@@ -64,205 +64,112 @@ void FlowGrid::CreateUIControls()
 
 void FlowGrid::OnClicked(float x, float y, bool right)
 {
+   x -= mX;
+   y -= mY;
+   //Center the cords.
    if (mHovered && mHoveredElement != nullptr)
    {
-      if (mSelectedElement != nullptr)
-         mSelectedElement->SetHighlight(false);
       mSelectedElement = mHoveredElement;
-      mSelectedElement->SetHighlight(true);
-      mHoveredElement->OnClicked(x,y,right);
-      mStartDragMouse = ofVec2f(x + GetPosition().x, y + GetPosition().y);
-      mStartDragElementPos = mSelectedElement->GetRelativePosition();
-      if (mSelectedElement->GetHovered())
-         mDragToken = true;
+      mStartDragMouse = ofVec2f(x, y);
+      mRackPartDragGhostRect = mSelectedElement->GetRectRelativeToGrid();
       mPressed = true;
    }
-}
-
-void FlowGrid::MouseReleased()
-{
-   mDragToken = false;
-   mPressed = false;
-   if (mDragging)
+   else
    {
-      /*
-      //Time for the swaparoo.
-      auto& outRow = mRows[mDragElementRow];
-      auto& inRow = mRows[mSnapDragRow];
-
-      auto r = std::find(outRow.begin(), outRow.end(), mSelectedElement);
-      int idx = std::distance(outRow.begin(), r);
-
-
-      if (mDragElementRow == mSnapDragRow && idx < mSnapDragIndex)
-      {
-         mSnapDragIndex -= 1;
-      }
-      outRow.erase(r);
-      if (mSnapDragIndex < 0)
-         mSnapDragIndex = 0;
-
-      inRow.insert(inRow.begin() + mSnapDragIndex, mSelectedElement);
-
-      RecalculateFlowGrid();
-
-      //mSelectedElement = nullptr;
-      //mLastHoveredElement = nullptr;
-      mDragging = false;*/
+      mSelectedElement = nullptr;
    }
 }
+
 bool FlowGrid::MouseMoved(float x, float y)
 {
+
+   x -= mX;
+   y -= mY;
+   //Offset out stuff
    mHovered = x >= 0 && x < mWidth && y >= 0 && y < mHeight;
 
+   //Pass the current hovering events.
    mHoveredElement = nullptr;
    for(auto el: mElementList)
    {
-      float sX, sY;
-      sX = x + el->GetPosition(true).x;
-      sY = y + el->GetPosition(true).y;
-      el->MouseMoved(sX,sY);
-      if (el->GetRect().contains(x,y))
+      if (el->GetRectRelativeToGrid().contains(x,y))
       {
          mHoveredElement = el;
          break;
       }
    }
-
-   //TheSynth->LogEvent("MouseMove "+std::to_string(mDebugIter),kLogEventType_Verbose);
-   //mDebugIter++;
-   //See which element we're hovering over...
-   /*
-   if (mPressed)
+   if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x,y))>5)
    {
-      if (ofDistSquared(rX, rY, mStartDragMouse.x, mStartDragMouse.y) > mDragDistance && !mDragging && mDragToken)
+      mDragging = true;
+
+      float elPX, elPY;
+      elPX = mX +  x - mStartDragMouse.x;
+      elPY = mY + y - mStartDragMouse.y;
+      elPX = CLAMP(elPX,mX,mX+mWidth-mSelectedElement->GetWidth());
+      elPY = CLAMP(elPY,mY,mY+mHeight-mSelectedElement->GetHeight());
+      mSelectedElement->SetPosition(elPX,elPY);
+      //Go through the rows and find to the most likely place to snap to.
+      int rowSnap = MAX(0,floor(y/(mRows.size()*mRowYSize+mRowYBorderOffset*2)*mRows.size()));
+      rowSnap = MIN(mRows.size()-1,rowSnap);
+      //TODO if we're at lowest row, spawn a new one if possible.
+
+      float xOffset = mRowXBorderOffset;
+      float xSnapPos = mRowXBorderOffset;
+
+      mSnapDragRow = rowSnap;
+      mSnapDragIndex = 0;
+
+      int idx = 0;
+      for (auto el : mRows[rowSnap].elements)
       {
-         mDragging = true;
-         mDragToken = false;
-         //Heckin' lazy, so I'll just learn their row location this way -_-
-         bool foundRow = false;
-         for (int x = 0; x < mRows.size(); ++x)
+         idx++;
+         xOffset += el->GetWidth()+mElementXSpacing;
+
+         //Once xOffset is larger than x, we stop jumping
+         //If x is roughly in the first half of the previous element, we place it before the previous element.
+         //Otherwise we place it ahead of the previous element.
+
+         if (xOffset > x || idx == mRows[rowSnap].elements.size())
          {
-            for (int y = 0; y < mRows[x].size(); ++y)
+            float diff = xOffset - x;
+            if (el->GetWidth()/2 > diff)
             {
-               if (mRows[x][y] == mSelectedElement)
-               {
-                  mDragElementRow = x;
-                  foundRow = true;
-                  break;
-               }
+               xSnapPos = xOffset - mElementXSpacing/2;
             }
-            if (foundRow)
-               break;
-         }
-      }
-   }
-
-   if (mDragging)
-   {
-      float dX = ofClamp(x, 0, mWidth - mSelectedElement->GetWidth());
-      float dY = ofClamp(y, 0, mHeight - mSelectedElement->GetHeight());
-
-      mSelectedElement->SetPosition(dX, dY);
-
-
-      float offset = mRowXBorderOffset;
-      int tRow = CLAMP(std::floor(y / mHeight * GetRowCount()), 0, GetRowCount() - 1);
-      auto row = mRows[tRow];
-
-      mSnapDragRow = tRow;
-      if (row.size() > 0)
-         for (int i = 0; i < row.size(); ++i)
-         {
-            float rowSizeMul = mRowScalingSize[tRow];
-
-            offset += row[i]->GetPreferredWidth() * rowSizeMul / 2.0;
-
-            //Do the check here.
-            if (offset > x)
+            else
             {
-               offset -= row[i]->GetWidth() / 2;
-               if (offset > 8)
-               {
-                  offset -= mElementSpacing / 2 * rowSizeMul;
-               }
-               mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize * tRow);
-               mSnapDragIndex = i;
-               break;
+               xSnapPos = xOffset - el->GetWidth() - mElementXSpacing*1.5;
+               mSnapDragIndex--;
             }
-
-            offset += row[i]->GetPreferredWidth() * rowSizeMul / 2.0;
-
-            offset += mElementSpacing * rowSizeMul;
-
-            if (i + 1 == row.size())
-            {
-               offset -= mElementSpacing / 2 * rowSizeMul;
-               mDragSnapIndicatorPos = ofVec2f(offset, mRowYSize * tRow);
-               mSnapDragIndex = row.size();
-               break;
-            }
-         }
-      else
-      {
-         mDragSnapIndicatorPos = ofVec2f(0, mRowYSize * tRow);
-         mSnapDragIndex = 0;
-      }
-   }
-
-   if (isMouseOver)
-   {
-      int hRow = std::floor(y / mHeight * mRows.size());
-      hRow = std::clamp(hRow, 0, static_cast<int>(mRows.size() - 1));
-
-      float offsetRange = 0;
-      bool select = false;
-      //TheSynth->LogEvent("Row:  " + std::to_string(hRow), kLogEventType_Verbose);
-
-      if (mLastHoveredElement != nullptr)
-      {
-         mLastHoveredElement->SetHovered(false);
-      }
-
-      for (int i = 0; i < mRows[hRow].size(); ++i)
-      {
-         float rowSizeMul = mRowScalingSize[hRow];
-         offsetRange += mRows[hRow][i]->GetPreferredWidth() * rowSizeMul + mElementSpacing * rowSizeMul;
-         if (x < offsetRange && !select)
-         {
-            select = true;
-
-            mRows[hRow][i]->MouseMove(x, y);
-            mRows[hRow][i]->SetHovered(true);
-            mLastHoveredElement = mRows[hRow][i];
+            break;
          }
          else
          {
-            mRows[hRow][i]->SetHovered(false);
+            mSnapDragIndex++;
          }
+
       }
+      mSnapDragIndex = CLAMP(mSnapDragIndex,0,mRows[rowSnap].elements.size()-1);
+      mDragSnapIndicatorPos = ofVec2f(xSnapPos,mRowYBorderOffset+rowSnap*mRowYSize);
    }
-   else if (mHovered && !isMouseOver)
-   {
-      for (int i = 0; i < mElementList.size(); ++i)
-      {
-         mElementList[i]->SetHovered(false);
-      }
-   }
-   mHovered = isMouseOver;
-*/
+
    return false;
 }
+
+void FlowGrid::MouseReleased()
+{
+   mPressed = false;
+   if (mDragging)
+   {
+      //TODO relocate element to a new position.
+      mDragging = false;
+      mSelectedElement->SetPosition(mX+mRackPartDragGhostRect.x,mY+mRackPartDragGhostRect.y);
+   }
+}
+
 bool FlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
 {
    return false;
-}
-void FlowGrid::SetHighlightCol(double time, int col)
-{
-}
-int FlowGrid::GetHighlightCol(double time) const
-{
-   return 0;
 }
 void FlowGrid::SetDimensions(float width, float height)
 {
@@ -281,7 +188,8 @@ void FlowGrid::DrawModule()
       ofSetColor(mBackgroundColor);
    else
    {
-      ofSetColor(ofColor(mBackgroundColor.r+2,mBackgroundColor.g+2,mBackgroundColor.b+2,mBackgroundColor.a));
+      int hColAdd = 6;
+      ofSetColor(ofColor(mBackgroundColor.r+hColAdd,mBackgroundColor.g+hColAdd,mBackgroundColor.b+hColAdd,mBackgroundColor.a));
    }
 
    ofFill();
@@ -290,7 +198,8 @@ void FlowGrid::DrawModule()
    if (mDragging)
    {
       ofSetColor(255, 255, 255, 100);
-      ofRect(mStartDragElementPos.x - mX, mStartDragElementPos.y - mY, mSelectedElement->GetWidth(), mSelectedElement->GetHeight());
+      ofNoFill();
+      ofRect(mRackPartDragGhostRect.x , mRackPartDragGhostRect.y, mRackPartDragGhostRect.width, mRackPartDragGhostRect.height);
 
       ofSetColor(ofColor::yellow);
       ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
@@ -303,10 +212,6 @@ void FlowGrid::DrawModule()
    {
       elm->Render();
    }
-
-}
-void FlowGrid::Render()
-{
 
 }
 

@@ -1130,19 +1130,21 @@ void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
       Resize(mWidth,mHeight);
    }
 }
-bool SongCanvas::MouseMoved(float x, float y)
-{
-   IDrawableModule::MouseMoved(x, y);
-   //mRackGrid->MouseMoved(x, y);
-   return false;
-}
 void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
+   mRackGrid->OnClicked(x,y,right);
+}
+bool SongCanvas::MouseMoved(float x, float y)
+{
+   IDrawableModule::MouseMoved(x, y);
+   mRackGrid->MouseMoved(x, y);
+   return false;
 }
 void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
+   mRackGrid->MouseReleased();
 }
 
 void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)

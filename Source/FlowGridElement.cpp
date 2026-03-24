@@ -128,7 +128,6 @@ void FlowGridElement::MouseReleased()
 void FlowGridElement::DrawModule()
 {
    ofPushStyle();
-
    ofFill();
 
    mHighlighted = mFlowGridParent->GetSelectedGridElement() == this;
