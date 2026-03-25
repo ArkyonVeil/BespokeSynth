@@ -100,7 +100,7 @@ public:
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
-   void SetupCanvasElement(SongCanvas_CanvasElement* element);
+   void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element) const;

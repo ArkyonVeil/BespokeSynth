@@ -103,8 +103,8 @@ bool FlowGrid::MouseMoved(float x, float y)
       mDragging = true;
 
       float elPX, elPY;
-      elPX = mX +  x - mStartDragMouse.x;
-      elPY = mY + y - mStartDragMouse.y;
+      elPX = mX + mRackPartDragGhostRect.x + x - mStartDragMouse.x;
+      elPY = mY + mRackPartDragGhostRect.y + y - mStartDragMouse.y;
       elPX = CLAMP(elPX,mX,mX+mWidth-mSelectedElement->GetWidth());
       elPY = CLAMP(elPY,mY,mY+mHeight-mSelectedElement->GetHeight());
       mSelectedElement->SetPosition(elPX,elPY);
@@ -129,6 +129,7 @@ bool FlowGrid::MouseMoved(float x, float y)
          //If x is roughly in the first half of the previous element, we place it before the previous element.
          //Otherwise we place it ahead of the previous element.
 
+         mSnapDragIndex++;
          if (xOffset > x || idx == mRows[rowSnap].elements.size())
          {
             float diff = xOffset - x;
@@ -138,18 +139,15 @@ bool FlowGrid::MouseMoved(float x, float y)
             }
             else
             {
-               xSnapPos = xOffset - el->GetWidth() - mElementXSpacing*1.5;
+               //if (idx < mRows[rowSnap].elements.size())
                mSnapDragIndex--;
+               xSnapPos = xOffset - el->GetWidth() - mElementXSpacing*1.5;
             }
             break;
          }
-         else
-         {
-            mSnapDragIndex++;
-         }
 
       }
-      mSnapDragIndex = CLAMP(mSnapDragIndex,0,mRows[rowSnap].elements.size()-1);
+      mSnapDragIndex = CLAMP(mSnapDragIndex,0,mRows[rowSnap].elements.size());
       mDragSnapIndicatorPos = ofVec2f(xSnapPos,mRowYBorderOffset+rowSnap*mRowYSize);
    }
 
@@ -161,9 +159,10 @@ void FlowGrid::MouseReleased()
    mPressed = false;
    if (mDragging)
    {
-      //TODO relocate element to a new position.
       mDragging = false;
       mSelectedElement->SetPosition(mX+mRackPartDragGhostRect.x,mY+mRackPartDragGhostRect.y);
+
+      MoveToRow(mSelectedElement,mSnapDragRow,mSnapDragIndex);
    }
 }
 
@@ -329,6 +328,79 @@ void FlowGrid::InsertToRow(FlowGridElement* element, int row, int index)
    UpdateRow(row, true);
 }
 
+void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
+{
+   //First we find out in which row it is.
+   int sourceRow = -1;
+   int sourceIndex = -1;
+   int rowIdx = 0;
+   for(auto lRow : mRows)
+   {
+      for (int i = 0; i < lRow.elements.size(); ++i)
+      {
+         if (lRow.elements[i] == element)//Found it
+         {
+            sourceRow = rowIdx;
+            sourceIndex = i;
+            if (row == sourceRow)//Same row move
+            {
+               //Either of these indexes will result in a no-move situation so we skip it.
+               if (sourceIndex == index || sourceIndex == index-1)
+               {
+                  ofLog() << "FlowGrid move rejected: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+                  return;
+               }
+            }
+         }
+      }
+      rowIdx++;
+   }
+   assert(sourceIndex != -1 && sourceRow != -1); //For an element to be "Moved" it needs to already exist in the grid. Otherwise use InsertToRow()
+
+
+
+
+   //Then we move it to its proper location.
+   if (sourceRow != row)//Different row move
+   {
+      //Remove
+      mRows[sourceRow].elements.erase(mRows[sourceRow].elements.begin() + sourceIndex);
+
+      //Put in
+      mRows[row].elements.insert(mRows[row].elements.begin()+index,element);
+      ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+      UpdateRow(sourceRow, true);
+      UpdateRow(row, true);
+   }
+   else//Same row
+   {
+      //Remove
+      mRows[sourceRow].elements.erase(mRows[sourceRow].elements.begin() + sourceIndex);
+
+      //Put in
+      std::vector<FlowGridElement*>::iterator tIdx;
+      bool isLast = false;
+      if (sourceIndex > index)
+      {
+         ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+         tIdx = mRows[sourceRow].elements.begin() + index;
+      }
+      else
+      {
+         ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index-1);
+         if (index-1 == mRows[sourceRow].elements.size())
+            isLast = true;
+         else
+            tIdx = mRows[sourceRow].elements.begin()+index-1;
+      }
+      if (!isLast)
+         mRows[row].elements.insert(tIdx,element);
+      else
+         mRows[row].elements.push_back(element);
+      UpdateRow(row, true);
+   }
+}
+
 //Updates cached data, and visuals. Does not trigger a resize.
 void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
@@ -471,6 +543,21 @@ void FlowGrid::RecalculateFlowGrid()
 }
 void FlowGrid::RemoveFlowElement(FlowGridElement* element)
 {
+   bool erased = false;
+   for (auto& r : mRows)
+   {
+      for (int i = 0; i < r.elements.size(); ++i)
+      {
+         if (r.elements[i] == element)
+         {
+            r.elements.erase(r.elements.begin() + i);
+            erased = true;
+            break;
+         }
+      }
+      if (erased)
+         break;
+   }
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
    //ReturnName(element->NameData);
    mOwner->RemoveChild(element);
@@ -537,7 +624,7 @@ void FlowGrid::SetSelectedGridElement(FlowGridElement* element)
 FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
 {
    FlowNameRecord* record = nullptr;
-   for (int i = 0; i < mFlowNameRecords.size(); ++i)//Get a match
+   for (int i = 0; i < mFlowNameRecords.size(); ++i) //Get a match
    {
       if (mFlowNameRecords[i].name == name)
       {
@@ -547,8 +634,8 @@ FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
    if (record == nullptr)
    {
       mFlowNameRecords.push_back(FlowNameRecord{
-      name,0,{}});
-      return new FlowNameAssigment{name+ofToString(0),name,0};
+      name, 0, {} });
+      return new FlowNameAssigment{ name + ofToString(0), name, 0 };
    }
 
    int idx;
@@ -563,5 +650,30 @@ FlowNameAssigment* FlowGrid::GetInternalNameForFlowElement(std::string name)
       idx = record->index;
    }
 
-   return new FlowNameAssigment{ name+ofToString(idx),name,idx};
+   return new FlowNameAssigment{ name + ofToString(idx), name, idx };
+}
+void FlowGrid::SaveElements(FileStreamOut& out)
+{
+   out << static_cast<int>(mElementList.size());
+   for (auto el : mElementList)
+   {
+      out << el->GetFlowGridElementType();
+      el->SaveState(out);
+   }
+}
+
+//Takes in a factory and uses it to restore the elements within. Destroys the factory when done.
+void FlowGrid::LoadElements(FlowGridElementFactory* factory,FileStreamIn& in)
+{
+   int elementCount = 0;
+   in >> elementCount;
+   for (int i = 0; i < elementCount; ++i)
+   {
+      std::string type;
+      in >> type;
+      auto el = factory->Create(type);
+      el->LoadState(in,el->GetModuleSaveStateRev());
+      AddFlowElement(el);
+   }
+   delete factory;
 }

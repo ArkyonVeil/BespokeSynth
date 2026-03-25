@@ -1,5 +1,4 @@
 ﻿#include "SongCanvas_CanvasElement.h"
-#include "CanvasControls.h"
 #include "CanvasElement.h"
 #include "SongCanvas.h"
 
@@ -18,8 +17,6 @@ void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
    mRackPart = templateElement;
    mRackParentID = mRackPart->mInternalRackID;
    mRackPart->SetupCanvasPart(this);
-
-
 }
 
 CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const
@@ -115,20 +112,27 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
 
 void SongCanvas_CanvasElement::SaveState(FileStreamOut& out)
 {
-   CanvasElement::SaveState(out);
-
-   //out << kNCESaveStateRev;
-
-   //out << mVelocity;
+   out << mRow;
+   out << mCol;
+   out << mLength;
+   out << GetStart();
+   out << GetEnd();
+   out << mRackParentID;
+   mRackPart->SaveCanvasPart(this, out);
 }
 
 void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
 {
-   CanvasElement::LoadState(in);
+   in >> mRow;
+   in >> mCol;
+   in >> mLength;
+   float val;
+   in >> val;
+   SetStart(val,true);
+   in >> val;
+   SetEnd(val);
+   in >> mRackParentID;
+   mRackPart = mSongCanvas->GetRackPartWithID(mRackParentID);
 
-   //int rev;
-   //in >> rev;
-   //LoadStateValidate(rev <= kNCESaveStateRev);
-
-   //in >> mVelocity;
+   mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }

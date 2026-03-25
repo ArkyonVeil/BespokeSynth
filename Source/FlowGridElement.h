@@ -71,6 +71,9 @@ public:
 
    std::string mElementTypeName;
 
+   virtual std::string GetFlowGridElementType() const = 0;
+   int GetModuleSaveStateRev() const override { return 0; };
+
 protected:
 
    bool mShowing = true;

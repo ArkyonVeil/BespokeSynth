@@ -1147,7 +1147,7 @@ void SongCanvas::MouseReleased()
    mRackGrid->MouseReleased();
 }
 
-void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element)
+void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element) const
 {
    element->SetupBase(GetSelectedRackPart());
 }
@@ -1451,11 +1451,8 @@ void SongCanvas::SaveState(FileStreamOut& out)
       out << seqLayers[i].layerName;
    }
    //now the racks.
-   auto racks = GetAllRackElements();
-   out << mInternalRackIDCounter;
-   out << (int)racks.size();
-
-   //TODO Rack saving
+   out << mInternalRackIDCounter;//We have to save this increment, so we don't get bugs where racks get assigned duplicate ids.
+   mRackGrid->SaveElements(out);
 
    //Let's save the canvas states now.
    out << mCanvas->GetNumRows();
@@ -1472,13 +1469,8 @@ void SongCanvas::SaveState(FileStreamOut& out)
    for (int i = 0; i < cvs.size(); ++i)
    {
       auto ce = static_cast<SongCanvas_CanvasElement*>(cvs[i]);
-      out << ce->mRow;
-      out << ce->mCol;
-      out << ce->mLength;
-      out << ce->GetStart();
-      out << ce->GetEnd();
 
-      out << ce->GetRackElementId();
+      ce->SaveState(out);
    }
    out << mCanvas->mViewStart;
    out << mCanvas->mViewEnd;
@@ -1539,8 +1531,8 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    }
 
    //now load our real rack.
-
-   //TODO Rack loading
+   in >> mInternalRackIDCounter;
+   mRackGrid->LoadElements(new SongCanvasRackFactory(this), in);
 
    //time to set up our Canvas and scaling now
 
@@ -1568,38 +1560,13 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 
    in >> mFlowGridRows;
 
-   //Most of this can probably be thrown away.
-   float bWSize;
-   float bHSize;
-   mRackAddNewButton->GetDimensions(bWSize, bHSize);
-   mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWSize * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
-   mRackGrid->RecalculateFlowGrid();
-   auto mgp = mRackGrid->GetPosition();
-   mRackAddNewButton->SetDimensions(bWSize, mFlowGridRows * FlowGridRowHeightSize);
-   mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth(), mgp.y);
-   //IDrawableModule::LoadState(in, rev); <-- Meanie :(
-
+   //Load the canvas elements...
    std::vector<SongCanvas_CanvasElement*> celms;
    in >> i1;
    for (int i = 0; i < i1; ++i)
    {
-      int row;
-      int col;
-      float length;
-      float eStart;
-      float eEnd;
-      int rackId;
-
-      in >> row;
-      in >> col;
-      in >> length;
-      in >> eStart;
-      in >> eEnd;
-      in >> rackId;
-      mRackGrid->SetSelectedGridElement(GetRackPartWithID(rackId));
-      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas, col, row, 0, length);
-      celm->SetStart(eStart, true);
-      celm->SetEnd(eEnd);
+      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas, 0, 0, 0, 0);
+      celm->LoadState(in);
       mCanvas->AddElement(celm);
    }
 
@@ -1771,8 +1738,10 @@ void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
          mRackRenameTextBox->ClearInput();
          mRackRenameTextBox->ClearActiveKeyboardFocus(false);
          DeleteRackElement(mRightClickDropdownElementContext);
+         mRightClickDropdownElementContext = nullptr;
          mCanvas->SetAllowElementPlacement(false);
       }
+      break;
       default:
       {
          //Handle additional options here.

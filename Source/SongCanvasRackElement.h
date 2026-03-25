@@ -7,8 +7,20 @@
 
 class SongCanvas;
 class SongCanvas_CanvasElement;
-
 class PatchCableSource;
+
+class SongCanvasRackFactory : public FlowGridElementFactory
+{
+public:
+   ~SongCanvasRackFactory() = default;
+   explicit SongCanvasRackFactory(SongCanvas* songCanvas)
+   {
+      mSongCanvas = songCanvas;
+   }
+   SongCanvas* mSongCanvas;
+   FlowGridElement* Create(std::string typeName) override;
+};
+
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
@@ -38,8 +50,12 @@ public:
    virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) {};
    virtual void SetupCanvasPart(SongCanvas_CanvasElement* element) {};
 
-   virtual void SaveState(FileStreamOut& out) = 0;
-   virtual void LoadState(FileStreamIn& in, int rev) = 0;
+   void SaveState(FileStreamOut& out) override{};
+   void LoadState(FileStreamIn& in, int rev) override{};
+
+   //Save/load unique canvas part data.
+   virtual void SaveCanvasPart(SongCanvas_CanvasElement* obj,FileStreamOut& out) {};
+   virtual void LoadCanvasPart(SongCanvas_CanvasElement* obj,FileStreamIn& in, int rev) {};
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -88,6 +104,7 @@ class SongCanvasRackEnabler: public SongCanvasRackElement
 public:
    SongCanvasRackEnabler(const std::string& partName, SongCanvas* owner);
    ~SongCanvasRackEnabler();
+   std::string GetFlowGridElementType() const override {return "partenabler";};
    void CreateUIControls() override;
    int GetPreferredWidth() override { return 90; }
    static IDrawableModule* Create() {return new SongCanvasRackEnabler("Part",nullptr);};
@@ -101,8 +118,9 @@ public:
 
    void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
-   void SaveState(FileStreamOut& out) override {};
-   void LoadState(FileStreamIn& in, int rev) override {};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
+
 
 private:
    PatchCableSource* mEnablerCable;
@@ -117,6 +135,7 @@ class SongCanvasRackPulser:public SongCanvasRackElement, public IDropdownListene
 public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackPulser();
+   std::string GetFlowGridElementType() const override {return "partpulser";};
    void OnEnter();
    void OnExit();
    void OnTimeEvent(double time);
@@ -136,8 +155,8 @@ public:
    std::vector<DropdownListElement> GetRightClickOptions() override;
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;//TODO
    void UpdateMode();
-   void SaveState(FileStreamOut& out) override {};
-   void LoadState(FileStreamIn& in, int rev) override {};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 private:
    DropdownList* mIntervalSelector{ nullptr };
    NoteInterval mPulserInterval = kInterval_8n;
@@ -152,6 +171,7 @@ class SongCanvasRackKeyer:public SongCanvasRackElement
 {
 public:
    SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
+   std::string GetFlowGridElementType() const override {return "partkeyer";}
    int GetPreferredWidth() override { return 150; }
    static IDrawableModule* Create() {return new SongCanvasRackKeyer("Part",nullptr);};
    ;
@@ -174,6 +194,7 @@ class SongCanvasRackSampler:public SongCanvasRackElement
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackSampler();
+   std::string GetFlowGridElementType() const override {return "partsampler";};
    static IDrawableModule* Create() {return new SongCanvasRackSampler("Part",nullptr);};
    void OnEnter() override;
    void OnExit() override;
@@ -203,6 +224,7 @@ class SongCanvasRackLFO:public SongCanvasRackElement
 {
 public:
    int GetPreferredWidth() override { return 90; }
+   std::string GetFlowGridElementType() const override {return "partlfo";};
    static IDrawableModule* Create() {return new SongCanvasRackLFO("Part",nullptr);}
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
    void OnEnter() override {};

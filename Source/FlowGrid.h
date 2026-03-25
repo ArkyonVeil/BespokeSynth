@@ -21,6 +21,13 @@ public:
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
 };
 
+class FlowGridElementFactory
+{
+public:
+   ~FlowGridElementFactory() = default;
+   virtual FlowGridElement* Create(std::string typeName) = 0;
+};
+
 class FlowGrid
 {
 public:
@@ -46,6 +53,7 @@ public:
    void AddFlowElement(FlowGridElement* newElement);
    void AddToRow(FlowGridElement* element, int row);
    void InsertToRow(FlowGridElement* element, int row, int index);
+   void MoveToRow(FlowGridElement* element, int row, int index);
    void UpdateRow(int index, bool updateFillState);
    void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
@@ -59,6 +67,10 @@ public:
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
    FlowNameAssigment* GetInternalNameForFlowElement(std::string name);
+
+
+   virtual void SaveElements(FileStreamOut& out);
+   virtual void LoadElements(FlowGridElementFactory* factory, FileStreamIn& in);
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
    FlowGridElement* GetHoveredGridElement() const { return mHoveredElement; }

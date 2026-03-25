@@ -51,6 +51,22 @@ std::string RemoveNonNumericalChars(const std::string& input)
 }
 
 
+FlowGridElement* SongCanvasRackFactory::Create(const std::string typeName)
+{
+   //Ark: This isn't particularly sophisticated, but I also don't know any better. Anyone who cares is welcome to redo. <>V
+   if ("partenabler" == typeName)
+      return new SongCanvasRackEnabler("", mSongCanvas);
+   if ("partpulser" == typeName)
+      return new SongCanvasRackPulser("", mSongCanvas);
+   if ("partkeyer" == typeName)
+      return new SongCanvasRackKeyer("", mSongCanvas);
+   if ("partsampler" == typeName)
+      return new SongCanvasRackSampler("", mSongCanvas);
+   if ("partlfo" == typeName)
+      return new SongCanvasRackLFO("", mSongCanvas);
+
+   throw std::invalid_argument("SongCanvas loaded an unknown rack type --> " + typeName);
+}
 SongCanvasRackElement::SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas)
 : FlowGridElement(mFlowGridParent, internalName)
 {
@@ -116,7 +132,7 @@ void SongCanvasRackElement::DrawModule()
    if (mRenameActive)
    {
       //mElementRenameTextBox->SetPosition(rPos.x, rPos.y + mHeight / 2);
-      mElementRenameTextBox->SetPosition( 4, 7);
+      mElementRenameTextBox->SetPosition(4, 7);
       mElementRenameTextBox->Draw();
 
       int form = (static_cast<std::string>(mElementRenameTextBox->GetText()).size() - 10) * 6;
@@ -146,7 +162,7 @@ void SongCanvasRackElement::DrawModule()
       }
 
       if (mWidth > 20)
-         DrawTextNormal(displayString,8, mHeight / 2 + 5.5);
+         DrawTextNormal(displayString, 8, mHeight / 2 + 5.5);
    }
    ofPopStyle();
 }
@@ -156,7 +172,7 @@ void SongCanvasRackElement::DrawModule()
 /////////////
 
 SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,"partenabler", songCanvas)
+: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    SetColor(ofColor::white);
    SetOwningContainer(songCanvas->GetOwningContainer());
@@ -227,9 +243,16 @@ std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 {
    return std::vector{ DropdownListElement{ "invert", 10 } };
 }
+void SongCanvasRackEnabler::SaveState(FileStreamOut& out)
+{
+   out << mEnablerInverted;
+}
+void SongCanvasRackEnabler::LoadState(FileStreamIn& in, int rev)
+{
+   in >> mEnablerInverted;
+}
 void SongCanvasRackEnabler::DrawRackGraphics()
 {
-   auto pos = GetRelativePosition();
    mEnablerCable->SetManualPosition(mWidth - 12, mHeight / 2);
 }
 
@@ -266,7 +289,7 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 
 
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,"pulser", songCanvas)
+: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    SetColor(ofColor::yellow);
    if (mOnePulseMode)
@@ -276,9 +299,9 @@ SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanv
 }
 SongCanvasRackPulser::~SongCanvasRackPulser()
 {
-   mSongCanvas->RemovePatchCableSource(mPulserCable);
+   this->RemovePatchCableSource(mPulserCable);
    TheTransport->RemoveListener(this);
-   mSongCanvas->DisposeElement(mIntervalSelector);
+   RemoveUIControl(mIntervalSelector);
    mIntervalSelector->Delete();
 }
 
@@ -286,8 +309,8 @@ void SongCanvasRackPulser::CreateUIControls()
 {
    SongCanvasRackElement::CreateUIControls();
 
-   mPulserCable = new PatchCableSource(mSongCanvas, kConnectionType_Pulse);
-   mSongCanvas->AddPatchCableSource(mPulserCable);
+   mPulserCable = new PatchCableSource(this, kConnectionType_Pulse);
+   this->AddPatchCableSource(mPulserCable);
    mPulserCable->SetAllowMultipleTargets(true);
 
    mIntervalSelector = new DropdownList(this, "interval", 75, 2, (int*)(&mPulserInterval));
@@ -306,9 +329,6 @@ void SongCanvasRackPulser::CreateUIControls()
    mIntervalSelector->AddLabel("16nt", kInterval_16nt);
    mIntervalSelector->AddLabel("32n", kInterval_32n);
    mIntervalSelector->AddLabel("64n", kInterval_64n);
-   mIntervalSelector->AddLabel("none", kInterval_None);
-   mIntervalSelector->AddLabel("div", kInterval_CustomDivisor);
-
 }
 void SongCanvasRackPulser::Init()
 {
@@ -412,6 +432,18 @@ void SongCanvasRackPulser::UpdateMode()
       mIntervalSelector->SetShowing(true);
    }
 }
+void SongCanvasRackPulser::SaveState(FileStreamOut& out)
+{
+   out << mOnePulseMode;
+   out << mPulserInterval;
+}
+void SongCanvasRackPulser::LoadState(FileStreamIn& in, int rev)
+{
+   in >> mOnePulseMode;
+   int v;
+   in >> v;
+   mPulserInterval = static_cast<NoteInterval>(v);
+}
 
 void SongCanvasRackPulser::DrawRackGraphics()
 {
@@ -436,7 +468,7 @@ void SongCanvasRackKeyer::DrawRackGraphics()
 {
 }
 SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, "keyer", songCanvas)
+: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
 }
 
@@ -446,7 +478,7 @@ SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas
 /////////////
 
 SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, "sampler", songCanvas)
+: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    SetColor(ofColor::green);
 
@@ -520,7 +552,7 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 /////////
 
 SongCanvasRackLFO::SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName,"modulator", songCanvas)
+: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    //TODO
 }
