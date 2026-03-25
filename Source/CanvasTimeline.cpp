@@ -206,12 +206,12 @@ float CanvasTimeline::GetQuantizedForX(float posX, HoverMode clampSide)
          if (measure <= mCanvas->mLoopStart)
             measure = mCanvas->mLoopStart + 1;
       }
-         return measure;
+      return measure;
    }
    else
    {
-      float cPerM = mCanvas->GetNumCols()/mCanvas->GetLength();
-      pos = round(pos*(cPerM))/cPerM;
+      float cPerM = mCanvas->GetNumCols() / mCanvas->GetLength();
+      pos = round(pos * (cPerM)) / cPerM;
       float interval = CLAMP(pos, 0, mCanvas->GetLength());
       if (clampSide == HoverMode::kStart)
       {

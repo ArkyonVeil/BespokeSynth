@@ -122,8 +122,8 @@ public:
    virtual void FilesDropped(std::vector<std::string> files, int x, int y) {}
    virtual std::string GetTitleLabel() const { return Name(); }
    virtual bool HasTitleBar() const { return true; }
-   virtual ofRectangle CustomTooltipBounds() const { return ofRectangle(0,0,0,0);}//If 0000, ignored.
-   virtual ofVec2f TooltipOffset() const { return ofVec2f(0,0);}
+   virtual ofRectangle CustomTooltipBounds() const { return ofRectangle(0, 0, 0, 0); } //If 0000, ignored.
+   virtual ofVec2f TooltipOffset() const { return ofVec2f(0, 0); }
    static float TitleBarHeight() { return mTitleBarHeight; }
    static ofColor GetColor(ModuleCategory type);
    virtual void SetEnabled(bool enabled) {}

@@ -68,8 +68,8 @@ float gModuleDrawAlpha = 255;
 float gZeroBuffer[kWorkBufferSize];
 float gWorkBuffer[kWorkBufferSize];
 ChannelBuffer gWorkChannelBuffer(kWorkBufferSize);
-IDrawableModule* gHoveredModule = nullptr;//Returns the currently hovered base module.
-IDrawableModule* gHoveredSubModule = nullptr;//Returns the currently hovered submodule, or base module. Whichever is most precise.
+IDrawableModule* gHoveredModule = nullptr; //Returns the currently hovered base module.
+IDrawableModule* gHoveredSubModule = nullptr; //Returns the currently hovered submodule, or base module. Whichever is most precise.
 IUIControl* gHoveredUIControl = nullptr;
 IUIControl* gHotBindUIControl[10];
 float gControlTactileFeedback = 0;

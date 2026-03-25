@@ -100,7 +100,7 @@ private:
    float mHeight{ 20 };
    float mCanvasYOffset{ -10 };
 
-   bool mDisableControlSnapping { false };
+   bool mDisableControlSnapping{ false };
    bool mClick{ false };
    bool mShiftOverride{ false };
    bool mHideShiftTemp{ false };

@@ -65,7 +65,8 @@ std::array<ofColor, 4> SongCanvas::ESTransColours{
    ofColor(245, 171, 182)
 };
 
-SongCanvas::SongCanvas(): mWriteBuffer(gBufferSize)
+SongCanvas::SongCanvas()
+: mWriteBuffer(gBufferSize)
 {
    mRowColors.push_back(ofColor::black);
    seqLayers.reserve(MaxLayers + 1);
@@ -131,7 +132,7 @@ void SongCanvas::CreateUIControls()
    mMeasureSlider->SetTextAlpha(0);
 
    mRackGrid = new FlowGrid(8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
-   mRackGrid->CreateUIControls();//Needs to be called, or the IDrawableModule throws a fit later.
+   mRackGrid->CreateUIControls(); //Needs to be called, or the IDrawableModule throws a fit later.
 
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
@@ -296,14 +297,14 @@ void SongCanvas::ReloadHeader()
       mMeasureCountTextbox->SetShowing(true);
       mMeasureEndTextbox->SetShowing(false);
       mMeasureCountTextbox->SetPosition(headerXOffset, headerYOffset);
-      headerXOffset += mMeasureCountTextbox->GetRect(true).width+8;
+      headerXOffset += mMeasureCountTextbox->GetRect(true).width + 8;
    }
    else
    {
       mMeasureEndTextbox->SetPosition(headerXOffset, headerYOffset);
       mMeasureCountTextbox->SetShowing(false);
       mMeasureEndTextbox->SetShowing(true);
-      headerXOffset += mMeasureEndTextbox->GetRect(true).width+8;
+      headerXOffset += mMeasureEndTextbox->GetRect(true).width + 8;
    }
 
    mCanvasIntervalDropdown->SetPosition(headerXOffset, headerYOffset);
@@ -547,15 +548,15 @@ void SongCanvas::DrawModule()
 
       std::string strStartMeasure;
       if (!mLocalMode)
-         strStartMeasure = "(" + strM1 + ofToString(fmod(sDTime, 60)) + ")"+std2;
-      std::string strMeasureCount =  "(" + strM2 + ofToString(fmod(eDTime, 60)) + ")";
+         strStartMeasure = "(" + strM1 + ofToString(fmod(sDTime, 60)) + ")" + std2;
+      std::string strMeasureCount = "(" + strM2 + ofToString(fmod(eDTime, 60)) + ")";
       std::string strCurrentTime = " [" + strM3 + ofToString(fmod(cDTime, 60)) + str1 + "]";
 
       timeField = strStartMeasure + strMeasureCount + strCurrentTime;
       if (mWidth >= GetHeaderSingleRowMinSpace())
          DrawTextMonoRightJustify(timeField, mLocalModeCheckbox->GetRect(true).x - 4, mLocalModeCheckbox->GetRect(true).y + 13);
       else
-         DrawTextMonoRightJustify(timeField, mWidth-4, 41);
+         DrawTextMonoRightJustify(timeField, mWidth - 4, 41);
    }
    float drawPointOffset = startCanvasOffset;
    float measuresVisible = mCanvas->mViewEnd - mCanvas->mViewStart; //12 = (ex:default)number of measures visible, 0 = infinitely zoomed in
@@ -660,9 +661,9 @@ void SongCanvas::DrawModule()
 
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
-   dText += "mWidth: "+ofToString(mWidth)+"\n";
-   dText += "mHeight: "+ofToString(mHeight)+"\n";
-   DrawTextNormal(dText,canvasRect.x+4, canvasRect.y+10);
+   dText += "mWidth: " + ofToString(mWidth) + "\n";
+   dText += "mHeight: " + ofToString(mHeight) + "\n";
+   DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
@@ -722,8 +723,8 @@ void SongCanvas::Resize(float w, float h)
    mHeight = h;
 
    float canvasHeight = h - (16 + GetCanvasYOffset() + mFlowGridRows * FlowGridRowHeightSize);
-   mCanvas->SetPosition(GetCanvasStartXOffset(),GetCanvasYOffset());
-   mMeasureSlider->SetPosition(GetCanvasStartXOffset(),GetCanvasYOffset()-16);
+   mCanvas->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset());
+   mMeasureSlider->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset() - 16);
    mCanvas->SetDimensions(w - mStartCanvasXOffset, canvasHeight);
    ReloadMeasures(false);
    //Layers <>V
@@ -853,7 +854,7 @@ void SongCanvas::TextEntryComplete(TextEntry* entry)
    {
       auto part = GetSelectedRackPart();
       part->SetPartName(mRackRenameTextBox->GetText());
-      SetRackElementRenameState(part,false);
+      SetRackElementRenameState(part, false);
       mRackRenameTextBox->SetPosition(-500, -500);
       mRackRenameTextBox->CheckHover(-500, -500);
    }
@@ -1119,7 +1120,7 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
    for (int i = 0; i < mRackGrid->GetAllElements().size(); ++i)
    {
       auto e = dynamic_cast<SongCanvasRackElement*>(mRackGrid->GetAllElements()[i]);
-      e->ButtonClicked(button,time);
+      e->ButtonClicked(button, time);
    }
 }
 void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
@@ -1127,13 +1128,13 @@ void SongCanvas::CheckboxUpdated(Checkbox* checkbox, double time)
    if (checkbox == mLocalModeCheckbox)
    {
       UpdateEndMode();
-      Resize(mWidth,mHeight);
+      Resize(mWidth, mHeight);
    }
 }
 void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
-   mRackGrid->OnClicked(x,y,right);
+   mRackGrid->OnClicked(x, y, right);
 }
 bool SongCanvas::MouseMoved(float x, float y)
 {
@@ -1369,7 +1370,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
 void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY)
 {
    if (mRackAddNewButton == nullptr)
-      return;//Not yet ready.
+      return; //Not yet ready.
    mRackAddNewButton->GetDimensions(newBoundsX, newBoundsY);
    mRackAddNewButton->SetDimensions(newBoundsX, mFlowGridRows * FlowGridRowHeightSize);
 }
@@ -1377,7 +1378,7 @@ void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 {
    if (element != GetSelectedRackPart() && GetSelectedRackPart() != nullptr)
    {
-      SetRackElementRenameState(GetSelectedRackPart(),false);
+      SetRackElementRenameState(GetSelectedRackPart(), false);
    }
    mCanvas->SetAllowElementPlacement(true);
 }
@@ -1390,7 +1391,6 @@ void SongCanvas::DisposeElement(IClickable* element)
 //Called on a 64n interval, which is very fast.
 void SongCanvas::OnTimeEvent(double time)
 {
-
 }
 
 //Attempt to resize based on the addition/removal of a feature.
@@ -1433,7 +1433,7 @@ void SongCanvas::SetUpFromSaveData()
    mLocalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("local_colour_style");
 
 
-   Resize(mWidth,mHeight);
+   Resize(mWidth, mHeight);
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
@@ -1451,7 +1451,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
       out << seqLayers[i].layerName;
    }
    //now the racks.
-   out << mInternalRackIDCounter;//We have to save this increment, so we don't get bugs where racks get assigned duplicate ids.
+   out << mInternalRackIDCounter; //We have to save this increment, so we don't get bugs where racks get assigned duplicate ids.
    mRackGrid->SaveElements(out);
 
    //Let's save the canvas states now.
@@ -1670,7 +1670,6 @@ void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool 
 
          GetSelectedRackPart()->SetRenameState(false);
       }
-
    }
 }
 
@@ -1711,11 +1710,11 @@ void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
 
    for (int i = 0; i < rackPartOptions.size(); ++i)
    {
-      mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel,rackPartOptions[i].mValue);
+      mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel, rackPartOptions[i].mValue);
    }
-   mRackElementRightClickDropdown->AddLabel("rename",(int)RackElementRightClickBaseOptions::Rename);
-   mRackElementRightClickDropdown->AddLabel("---",0);
-   mRackElementRightClickDropdown->AddLabel("delete",(int)RackElementRightClickBaseOptions::Delete);
+   mRackElementRightClickDropdown->AddLabel("rename", (int)RackElementRightClickBaseOptions::Rename);
+   mRackElementRightClickDropdown->AddLabel("---", 0);
+   mRackElementRightClickDropdown->AddLabel("delete", (int)RackElementRightClickBaseOptions::Delete);
 
    mRackElementRightClickDropdown->SetPosition(p.x, p.y);
    mRackElementRightClickDropdown->OnClicked(1, 1, false);

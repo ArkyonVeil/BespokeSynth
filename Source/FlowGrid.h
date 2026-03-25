@@ -17,8 +17,8 @@ class IFlowGridListener
 public:
    virtual ~IFlowGridListener() = default;
 
-   virtual void onFlowGridNewSelection(FlowGridElement* element) {};
-   virtual void onFlowGridResize(float newBoundsX, float newBoundsY) {};//The grid is resizing in some direction, ignore, and it may clip.
+   virtual void onFlowGridNewSelection(FlowGridElement* element){};
+   virtual void onFlowGridResize(float newBoundsX, float newBoundsY){}; //The grid is resizing in some direction, ignore, and it may clip.
 };
 
 class FlowGridElementFactory
@@ -47,8 +47,8 @@ public:
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule();
 
-   void SetMaxRows(int rowNum){ mMaxRows = rowNum;}
-   void SetMinRows(int rowNum) {mMinRows = rowNum;}
+   void SetMaxRows(int rowNum) { mMaxRows = rowNum; }
+   void SetMinRows(int rowNum) { mMinRows = rowNum; }
 
    void AddFlowElement(FlowGridElement* newElement);
    void AddToRow(FlowGridElement* element, int row);
@@ -77,14 +77,18 @@ public:
 
    struct FlowGridRow
    {
-      bool isOverfilled;//No more elements allowed to be moved.
-      bool isFilled;//Currently packed, free elements cannot be moved there automatically.
+      bool isOverfilled; //No more elements allowed to be moved.
+      bool isFilled; //Currently packed, free elements cannot be moved there automatically.
       std::vector<FlowGridElement*> elements;
    };
    std::vector<FlowGridRow> mRows;
 
-   void SetPosition(int x, int y) { mX = x; mY = y;};
-   ofVec2f GetPosition() const { return ofVec2f{ mX, mY };};
+   void SetPosition(int x, int y)
+   {
+      mX = x;
+      mY = y;
+   };
+   ofVec2f GetPosition() const { return ofVec2f{ mX, mY }; };
 
 protected:
    int TryGetSlot(int targetRow);
@@ -94,10 +98,11 @@ protected:
    {
       std::string name;
       int index;
-      std::vector<int> freeIndexes {};
+      std::vector<int> freeIndexes{};
    };
 
    std::vector<FlowNameRecord> mFlowNameRecords;
+
 private:
    enum FlowGridDirection
    {
@@ -119,10 +124,10 @@ private:
    bool mAllowDragAndDrop = { true }; //If it allows elements to be dragged around the gridspace by the user.
    float mRowYSize = {};
 
-   float const mDragDistance { 12 }; //How far to drag in px before it considers a movement a "dragging" operation.
+   float const mDragDistance{ 12 }; //How far to drag in px before it considers a movement a "dragging" operation.
 
    float mElementXSpacing = { 4 }; //The amount of space between each element.
-   float mElementYSpacing = {2};
+   float mElementYSpacing = { 2 };
    float mRowXBorderOffset = 2;
    float mRowYBorderOffset = 2;
    ofColor mBackgroundColor = { 0, 0, 0, 75 };
@@ -141,7 +146,7 @@ private:
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
    int mMaxRows = -1;
-   int mMinRows = 2;//Number of rows to always display.
+   int mMinRows = 2; //Number of rows to always display.
    int mDebugIter = 0;
 
    float mWidth = 0;

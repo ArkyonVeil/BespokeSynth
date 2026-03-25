@@ -47,7 +47,6 @@ FlowGrid::FlowGrid(int x, int y, int w, int rowHeight, int startNumRows, IDrawab
    mWidth = w;
    mHeight = rowHeight * startNumRows;
    mRowYSize = rowHeight;
-
 }
 FlowGrid::~FlowGrid()
 {
@@ -90,27 +89,27 @@ bool FlowGrid::MouseMoved(float x, float y)
 
    //Pass the current hovering events.
    mHoveredElement = nullptr;
-   for(auto el: mElementList)
+   for (auto el : mElementList)
    {
-      if (el->GetRectRelativeToGrid().contains(x,y))
+      if (el->GetRectRelativeToGrid().contains(x, y))
       {
          mHoveredElement = el;
          break;
       }
    }
-   if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x,y))>5)
+   if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x, y)) > 5)
    {
       mDragging = true;
 
       float elPX, elPY;
       elPX = mX + mRackPartDragGhostRect.x + x - mStartDragMouse.x;
       elPY = mY + mRackPartDragGhostRect.y + y - mStartDragMouse.y;
-      elPX = CLAMP(elPX,mX,mX+mWidth-mSelectedElement->GetWidth());
-      elPY = CLAMP(elPY,mY,mY+mHeight-mSelectedElement->GetHeight());
-      mSelectedElement->SetPosition(elPX,elPY);
+      elPX = CLAMP(elPX, mX, mX + mWidth - mSelectedElement->GetWidth());
+      elPY = CLAMP(elPY, mY, mY + mHeight - mSelectedElement->GetHeight());
+      mSelectedElement->SetPosition(elPX, elPY);
       //Go through the rows and find to the most likely place to snap to.
-      int rowSnap = MAX(0,floor(y/(mRows.size()*mRowYSize+mRowYBorderOffset*2)*mRows.size()));
-      rowSnap = MIN(mRows.size()-1,rowSnap);
+      int rowSnap = MAX(0, floor(y / (mRows.size() * mRowYSize + mRowYBorderOffset * 2) * mRows.size()));
+      rowSnap = MIN(mRows.size() - 1, rowSnap);
       //TODO if we're at lowest row, spawn a new one if possible.
 
       float xOffset = mRowXBorderOffset;
@@ -123,7 +122,7 @@ bool FlowGrid::MouseMoved(float x, float y)
       for (auto el : mRows[rowSnap].elements)
       {
          idx++;
-         xOffset += el->GetWidth()+mElementXSpacing;
+         xOffset += el->GetWidth() + mElementXSpacing;
 
          //Once xOffset is larger than x, we stop jumping
          //If x is roughly in the first half of the previous element, we place it before the previous element.
@@ -133,22 +132,21 @@ bool FlowGrid::MouseMoved(float x, float y)
          if (xOffset > x || idx == mRows[rowSnap].elements.size())
          {
             float diff = xOffset - x;
-            if (el->GetWidth()/2 > diff)
+            if (el->GetWidth() / 2 > diff)
             {
-               xSnapPos = xOffset - mElementXSpacing/2;
+               xSnapPos = xOffset - mElementXSpacing / 2;
             }
             else
             {
                //if (idx < mRows[rowSnap].elements.size())
                mSnapDragIndex--;
-               xSnapPos = xOffset - el->GetWidth() - mElementXSpacing*1.5;
+               xSnapPos = xOffset - el->GetWidth() - mElementXSpacing * 1.5;
             }
             break;
          }
-
       }
-      mSnapDragIndex = CLAMP(mSnapDragIndex,0,mRows[rowSnap].elements.size());
-      mDragSnapIndicatorPos = ofVec2f(xSnapPos,mRowYBorderOffset+rowSnap*mRowYSize);
+      mSnapDragIndex = CLAMP(mSnapDragIndex, 0, mRows[rowSnap].elements.size());
+      mDragSnapIndicatorPos = ofVec2f(xSnapPos, mRowYBorderOffset + rowSnap * mRowYSize);
    }
 
    return false;
@@ -160,9 +158,9 @@ void FlowGrid::MouseReleased()
    if (mDragging)
    {
       mDragging = false;
-      mSelectedElement->SetPosition(mX+mRackPartDragGhostRect.x,mY+mRackPartDragGhostRect.y);
+      mSelectedElement->SetPosition(mX + mRackPartDragGhostRect.x, mY + mRackPartDragGhostRect.y);
 
-      MoveToRow(mSelectedElement,mSnapDragRow,mSnapDragIndex);
+      MoveToRow(mSelectedElement, mSnapDragRow, mSnapDragIndex);
    }
 }
 
@@ -180,7 +178,7 @@ void FlowGrid::SetDimensions(float width, float height)
 void FlowGrid::DrawModule()
 {
    ofPushMatrix();
-   ofTranslate(mX,mY);
+   ofTranslate(mX, mY);
    ofPushStyle();
 
    if (!mHovered)
@@ -188,7 +186,7 @@ void FlowGrid::DrawModule()
    else
    {
       int hColAdd = 6;
-      ofSetColor(ofColor(mBackgroundColor.r+hColAdd,mBackgroundColor.g+hColAdd,mBackgroundColor.b+hColAdd,mBackgroundColor.a));
+      ofSetColor(ofColor(mBackgroundColor.r + hColAdd, mBackgroundColor.g + hColAdd, mBackgroundColor.b + hColAdd, mBackgroundColor.a));
    }
 
    ofFill();
@@ -198,7 +196,7 @@ void FlowGrid::DrawModule()
    {
       ofSetColor(255, 255, 255, 100);
       ofNoFill();
-      ofRect(mRackPartDragGhostRect.x , mRackPartDragGhostRect.y, mRackPartDragGhostRect.width, mRackPartDragGhostRect.height);
+      ofRect(mRackPartDragGhostRect.x, mRackPartDragGhostRect.y, mRackPartDragGhostRect.width, mRackPartDragGhostRect.height);
 
       ofSetColor(ofColor::yellow);
       ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
@@ -211,7 +209,6 @@ void FlowGrid::DrawModule()
    {
       elm->Render();
    }
-
 }
 
 //Tries to find an available slot in the grid, returns -1 if none available. Otherwise, returns the row.
@@ -334,20 +331,20 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
    int sourceRow = -1;
    int sourceIndex = -1;
    int rowIdx = 0;
-   for(auto lRow : mRows)
+   for (auto lRow : mRows)
    {
       for (int i = 0; i < lRow.elements.size(); ++i)
       {
-         if (lRow.elements[i] == element)//Found it
+         if (lRow.elements[i] == element) //Found it
          {
             sourceRow = rowIdx;
             sourceIndex = i;
-            if (row == sourceRow)//Same row move
+            if (row == sourceRow) //Same row move
             {
                //Either of these indexes will result in a no-move situation so we skip it.
-               if (sourceIndex == index || sourceIndex == index-1)
+               if (sourceIndex == index || sourceIndex == index - 1)
                {
-                  ofLog() << "FlowGrid move rejected: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+                  ofLog() << "FlowGrid move rejected: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
                   return;
                }
             }
@@ -358,21 +355,19 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
    assert(sourceIndex != -1 && sourceRow != -1); //For an element to be "Moved" it needs to already exist in the grid. Otherwise use InsertToRow()
 
 
-
-
    //Then we move it to its proper location.
-   if (sourceRow != row)//Different row move
+   if (sourceRow != row) //Different row move
    {
       //Remove
       mRows[sourceRow].elements.erase(mRows[sourceRow].elements.begin() + sourceIndex);
 
       //Put in
-      mRows[row].elements.insert(mRows[row].elements.begin()+index,element);
-      ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+      mRows[row].elements.insert(mRows[row].elements.begin() + index, element);
+      ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
       UpdateRow(sourceRow, true);
       UpdateRow(row, true);
    }
-   else//Same row
+   else //Same row
    {
       //Remove
       mRows[sourceRow].elements.erase(mRows[sourceRow].elements.begin() + sourceIndex);
@@ -382,19 +377,19 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
       bool isLast = false;
       if (sourceIndex > index)
       {
-         ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index);
+         ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
          tIdx = mRows[sourceRow].elements.begin() + index;
       }
       else
       {
-         ofLog() << "FlowGrid move: sR"+ ofToString(sourceRow)+" sI"+ofToString(sourceIndex)+" -> R"+ofToString(row)+" I"+ofToString(index-1);
-         if (index-1 == mRows[sourceRow].elements.size())
+         ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index - 1);
+         if (index - 1 == mRows[sourceRow].elements.size())
             isLast = true;
          else
-            tIdx = mRows[sourceRow].elements.begin()+index-1;
+            tIdx = mRows[sourceRow].elements.begin() + index - 1;
       }
       if (!isLast)
-         mRows[row].elements.insert(tIdx,element);
+         mRows[row].elements.insert(tIdx, element);
       else
          mRows[row].elements.push_back(element);
       UpdateRow(row, true);
@@ -573,7 +568,7 @@ void FlowGrid::ReturnName(FlowNameAssigment* nAssign)
       {
          rec.freeIndexes.push_back(nAssign->index);
       }
-   }//Marks the name index free for reuse.
+   } //Marks the name index free for reuse.
    delete nAssign;
 }
 
@@ -663,7 +658,7 @@ void FlowGrid::SaveElements(FileStreamOut& out)
 }
 
 //Takes in a factory and uses it to restore the elements within. Destroys the factory when done.
-void FlowGrid::LoadElements(FlowGridElementFactory* factory,FileStreamIn& in)
+void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
 {
    int elementCount = 0;
    in >> elementCount;
@@ -672,7 +667,7 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory,FileStreamIn& in)
       std::string type;
       in >> type;
       auto el = factory->Create(type);
-      el->LoadState(in,el->GetModuleSaveStateRev());
+      el->LoadState(in, el->GetModuleSaveStateRev());
       AddFlowElement(el);
    }
    delete factory;

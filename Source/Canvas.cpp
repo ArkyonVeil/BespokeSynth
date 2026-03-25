@@ -293,8 +293,8 @@ float Canvas::QuantizeToGrid(float input) const
 }
 float Canvas::QuantizeToGridMin(float input) const
 {
-   float col = int(input * GetLength()*mMinimumSnappingInterval + .5f);
-   return col / (GetLength()*mMinimumSnappingInterval);
+   float col = int(input * GetLength() * mMinimumSnappingInterval + .5f);
+   return col / (GetLength() * mMinimumSnappingInterval);
 }
 
 bool Canvas::CanBeTargetedBy(PatchCableSource* source) const
@@ -325,7 +325,7 @@ bool Canvas::MouseMoved(float x, float y)
             {
                float start = element->GetStart() + startDelta;
                if (quantize)
-                     start = QuantizeToGrid(start);
+                  start = QuantizeToGrid(start);
                else
                {
                   if (!freeRescale)
@@ -517,7 +517,7 @@ bool Canvas::MouseScrolled(float x, float y, float scrollX, float scrollY, bool 
       float canvasX, canvasY;
       float canvasXl, canvasYl;
       GetPosition(canvasX, canvasY, false);
-      GetPosition(canvasXl, canvasYl, true);//Compensates for offsets added by being the child of other modules.
+      GetPosition(canvasXl, canvasYl, true); //Compensates for offsets added by being the child of other modules.
       canvasX -= canvasXl;
       canvasY -= canvasYl;
       ofVec2f canvasPos = ofVec2f(ofMap(x, canvasX, canvasX + GetWidth(), 0, 1),

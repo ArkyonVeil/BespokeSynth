@@ -775,7 +775,7 @@ void ModularSynth::Draw()
          }
          else if (!gHoveredSubModule->CustomTooltipBounds().zero())
          {
-            if (gHoveredSubModule->CustomTooltipBounds().contains(GetMouseX(&mModuleContainer)-gHoveredSubModule->GetPosition().x,GetMouseY(&mModuleContainer)-gHoveredSubModule->GetPosition().y))
+            if (gHoveredSubModule->CustomTooltipBounds().contains(GetMouseX(&mModuleContainer) - gHoveredSubModule->GetPosition().x, GetMouseY(&mModuleContainer) - gHoveredSubModule->GetPosition().y))
             {
                tooltip = helpDisplay->GetModuleTooltip(gHoveredSubModule);
                tooltipContainer = gHoveredModule->GetOwningContainer();
@@ -798,9 +798,9 @@ void ModularSynth::Draw()
          tooltip = helpDisplay->GetUIControlTooltip(gHoveredUIControl);
          if (!tooltip.empty())
          {
-         tooltipContainer = gHoveredUIControl->GetModuleParent()->GetOwningContainer();
-         tooltipPos.x = gHoveredUIControl->GetRect().getMaxX() + gHoveredUIControl->GetTooltipOffset().x + 10;
-         tooltipPos.y = GetMouseY(tooltipContainer) + gHoveredUIControl->GetTooltipOffset().y + 18;
+            tooltipContainer = gHoveredUIControl->GetModuleParent()->GetOwningContainer();
+            tooltipPos.x = gHoveredUIControl->GetRect().getMaxX() + gHoveredUIControl->GetTooltipOffset().x + 10;
+            tooltipPos.y = GetMouseY(tooltipContainer) + gHoveredUIControl->GetTooltipOffset().y + 18;
          }
       }
    }
@@ -1526,7 +1526,7 @@ void ModularSynth::MouseMoved(int intX, int intY)
 
    //Set the current hovered module.
    gHoveredModule = GetModuleAtCursor();
-   gHoveredSubModule = GetModuleAtCursor(0,0,true);
+   gHoveredSubModule = GetModuleAtCursor(0, 0, true);
 }
 
 void ModularSynth::MouseDragged(int intX, int intY, int button, const juce::MouseInputSource& source)

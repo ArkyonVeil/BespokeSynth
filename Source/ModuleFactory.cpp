@@ -561,8 +561,6 @@ ModuleFactory::ModuleFactory()
    REGISTER_HIDDEN(ScriptReferenceDisplay, scriptingreference, kModuleCategory_Other);
    REGISTER_HIDDEN(ScriptWarningPopup, scriptwarning, kModuleCategory_Other);
    REGISTER_HIDDEN(MultitrackRecorderTrack, multitrackrecordertrack, kModuleCategory_Audio);
-
-
 }
 
 void ModuleFactory::Register(std::string type, CreateModuleFn creator, CanCreateModuleFn canCreate, ModuleCategory moduleCategory, bool hidden, bool experimental, bool canReceiveAudio, bool canReceiveNotes, bool canReceivePulses)

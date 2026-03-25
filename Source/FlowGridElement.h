@@ -32,18 +32,22 @@ public:
    void CreateUIControls() override;
    void Init() override;
    void Render() override;
-   bool HasTitleBar() const override { return false;};
-   void SetEnabled(bool enabled) override { true;};
-   bool CanMinimize() override {return false;};//Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
-   ofRectangle CustomTooltipBounds() const override {return {0,0,mWidth,mHeight};};
+   bool HasTitleBar() const override { return false; };
+   void SetEnabled(bool enabled) override { true; };
+   bool CanMinimize() override { return false; }; //Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
+   ofRectangle CustomTooltipBounds() const override { return { 0, 0, mWidth, mHeight }; };
 
-   void SetMinimumSize(float minWidth) {mMinWidth = minWidth;}
-   float GetMinimumWidth() {return mMinWidth;}
+   void SetMinimumSize(float minWidth) { mMinWidth = minWidth; }
+   float GetMinimumWidth() { return mMinWidth; }
    void SetPreferredSize(int width) { mPreferredWidth = width; }
    float GetPreferredWidth() const { return mPreferredWidth; }
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
-   void GetDimensions(float& width, float& height) override {width = mWidth; height = mHeight;};
+   void GetDimensions(float& width, float& height) override
+   {
+      width = mWidth;
+      height = mHeight;
+   };
 
    void SetFlowGrid(FlowGrid* parent) { mFlowGridParent = parent; }
    FlowGrid* GetFlowGrid() const { return mFlowGridParent; }
@@ -51,9 +55,9 @@ public:
    void SetHovered(bool hovered) { mHovered = hovered; }
    bool GetHovered() { return mHovered; }
 
-   ofRectangle GetRect() const {return {mX,mY,mWidth,mHeight};};
+   ofRectangle GetRect() const { return { mX, mY, mWidth, mHeight }; };
    ofRectangle GetRectRelativeToGrid() const;
-   ofRectangle GetRectLocal() const {return {0,0,mWidth,mHeight};};
+   ofRectangle GetRectLocal() const { return { 0, 0, mWidth, mHeight }; };
    void SetRect(ofRectangle rect);
    void SetRectRelativeToGrid(ofRectangle rect);
 
@@ -75,14 +79,13 @@ public:
    int GetModuleSaveStateRev() const override { return 0; };
 
 protected:
-
    bool mShowing = true;
 
    float mMinWidth = 30;
    float mPreferredWidth = 90;
 
 
-   bool mIsManual { false };//If false, it's free. Used for slotting.
+   bool mIsManual{ false }; //If false, it's free. Used for slotting.
 
    ofColor mMainColor;
    ofColor mHighlightColor;
@@ -90,8 +93,8 @@ protected:
    ofColor mHighlightOutlineColor;
 
 
-
    float mOutlineThickness{ 0.8F };
+
 private:
    bool mHighlighted = false;
    bool mHovered = false;

@@ -114,7 +114,7 @@ public:
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
 
-   bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled;}
+   bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
 
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
@@ -124,7 +124,6 @@ public:
    void onFlowGridNewSelection(FlowGridElement* element) override;
 
    void DisposeElement(IClickable* element);
-
 
 
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
@@ -156,10 +155,10 @@ public:
    ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
 
 
-   static std::array<ofColor,2> ESCarbonColours;
-   static std::array<ofColor,3> ESRGBColours;
-   static std::array<ofColor,6> ESPrideColours;
-   static std::array<ofColor,4> ESTransColours;
+   static std::array<ofColor, 2> ESCarbonColours;
+   static std::array<ofColor, 3> ESRGBColours;
+   static std::array<ofColor, 6> ESPrideColours;
+   static std::array<ofColor, 4> ESTransColours;
 
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
@@ -234,7 +233,6 @@ private:
    static const int FlowGridRowHeightSize = 32;
 
 
-
    bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
    int mMeasureCount{ 0 };
@@ -252,22 +250,22 @@ private:
    bool mShowRealTime{ false };
 
    bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
-   NoteInterval mCanvasInterval{NoteInterval::kInterval_4n};
-   int mCanvasIntervalInt{NoteInterval::kInterval_4n};
+   NoteInterval mCanvasInterval{ NoteInterval::kInterval_4n };
+   int mCanvasIntervalInt{ NoteInterval::kInterval_4n };
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
 
    int GetHeaderSingleRowMinSpace()
    {
-      int val = 400+(mShowRealTime ? 120 : 0) + (mLocalMode ? 0 : 100);
+      int val = 400 + (mShowRealTime ? 120 : 0) + (mLocalMode ? 0 : 100);
       return val;
    };
 
    int GetCanvasYOffset()
    {
       if (mWidth < GetHeaderSingleRowMinSpace())
-         return mOffsetFromTopSpacing  + 24;
+         return mOffsetFromTopSpacing + 24;
       return mOffsetFromTopSpacing;
    }
 
@@ -344,13 +342,12 @@ private:
    };
 
 
-
    int mOnEndMeasure{ 0 };
    int mPreviousGlobalEndMeasure{ -1 };
    int mPreviousLocalEndMeasure{ -1 };
 
-   EnumSongCanvasStyle mGlobalModeColor { ESRed };
-   EnumSongCanvasStyle mLocalModeColor { ESPink };
+   EnumSongCanvasStyle mGlobalModeColor{ ESRed };
+   EnumSongCanvasStyle mLocalModeColor{ ESPink };
 
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
@@ -361,7 +358,7 @@ private:
 
    //Audio/Sample stuff
    Sample* mSample{ nullptr };
-   bool mPlayingSample {false};
+   bool mPlayingSample{ false };
    ::ADSR mAdsr{ 10, 1, 1, 10 };
    SwitchAndRamp mSwitchAndRamp;
    ChannelBuffer mWriteBuffer;

@@ -17,7 +17,6 @@ void FlowGridElement::CreateUIControls()
 void FlowGridElement::Init()
 {
    IDrawableModule::Init();
-
 }
 void FlowGridElement::Render()
 {
@@ -35,7 +34,7 @@ void FlowGridElement::Render()
 
    ofPopMatrix();
    ofPopStyle();
-/*
+   /*
    for (auto source : GetPatchCableSources())
    {
       source->UpdatePosition(false);
@@ -44,7 +43,7 @@ void FlowGridElement::Render()
 }
 ofRectangle FlowGridElement::GetRectRelativeToGrid() const
 {
-   return ofRectangle(mX-mFlowGridParent->GetPosition().x,mY-mFlowGridParent->GetPosition().y,mWidth,mHeight);
+   return ofRectangle(mX - mFlowGridParent->GetPosition().x, mY - mFlowGridParent->GetPosition().y, mWidth, mHeight);
 }
 void FlowGridElement::SetRect(ofRectangle rect)
 {
@@ -54,7 +53,7 @@ void FlowGridElement::SetRect(ofRectangle rect)
    mY = rect.y;
 }
 
-void FlowGridElement::SetRectRelativeToGrid(ofRectangle rect)//Sets rect and offsets mX/mY based on the FlowGrid's position.
+void FlowGridElement::SetRectRelativeToGrid(ofRectangle rect) //Sets rect and offsets mX/mY based on the FlowGrid's position.
 {
    mWidth = rect.width;
    mHeight = rect.height;
@@ -105,13 +104,13 @@ void FlowGridElement::OnClicked(float x, float y, bool right)
 }
 bool FlowGridElement::MouseMoved(float x, float y)
 {
-   IDrawableModule::MouseMoved(x,y);
+   IDrawableModule::MouseMoved(x, y);
    //x=x-mFlowGridParent->GetPosition(true).x;
    //y=y-mFlowGridParent->GetPosition(true).y;
    mDebugNumX = x;
    mDebugNumY = y;
 
-   if (GetRectLocal().contains(x,y))
+   if (GetRectLocal().contains(x, y))
    {
       mHovered = true;
    }
@@ -162,8 +161,8 @@ void FlowGridElement::DrawModule()
    ofRect(0, 0, mWidth, mHeight);
 
    //DrawTextNormal(ofToString(mDebugNum),2,15);
-   if (gHoveredSubModule!=nullptr)
-      DrawTextNormal(ofToString(gHoveredSubModule->GetDisplayName()),2,15);
+   if (gHoveredSubModule != nullptr)
+      DrawTextNormal(ofToString(gHoveredSubModule->GetDisplayName()), 2, 15);
    //DrawTextNormal(ofToString((int)mDebugNumX)+" | "+ofToString((int)mDebugNumY),2,15);
    ofPopStyle();
 }

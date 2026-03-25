@@ -38,26 +38,26 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
    {
       float addedTextYOffset = 0;
       bool isActive = mSongCanvas->IsEnabled() && mSongCanvas->IsLayerActive(mRow);
-      int eDiv = 1;//Enabled Divisor
+      int eDiv = 1; //Enabled Divisor
       if (isActive)
-         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(rect.width/2,rect.y+rect.height*0.66), ofVec2f(rect.width/2,rect.y+rect.height));
+         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(rect.width / 2, rect.y + rect.height * 0.66), ofVec2f(rect.width / 2, rect.y + rect.height));
       else
       {
          eDiv = 2;
-         auto colA1 = ofColor(mCurrentColor.r/2, mCurrentColor.g/2, mCurrentColor.b/2);
-         auto colA2 = ofColor(mCurrentColorGrad.r/2, mCurrentColorGrad.g/2, mCurrentColorGrad.b/2);
+         auto colA1 = ofColor(mCurrentColor.r / 2, mCurrentColor.g / 2, mCurrentColor.b / 2);
+         auto colA2 = ofColor(mCurrentColorGrad.r / 2, mCurrentColorGrad.g / 2, mCurrentColorGrad.b / 2);
          ofSetColorGradient(colA2, colA1, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
       }
       //ofSetColor(mCurrentColor);
       ofRect(rect, 2);
 
       //Draw unique rack based graphics for the canvas element
-      mRackPart->DrawCanvasPartGraphics(this,rect);
+      mRackPart->DrawCanvasPartGraphics(this, rect);
 
       if (isActive)
          ofSetColor(ofColor::white);
       else
-         ofSetColor(ofColor(125,125,125));
+         ofSetColor(ofColor(125, 125, 125));
 
 
       //If the name differs, redo the size calcs.
@@ -103,7 +103,7 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
       }
 
 
-      DrawTextNormal(mDisplayName, rect.x + mTextDrawXOffset, rect.y + 9+addedTextYOffset, 9);
+      DrawTextNormal(mDisplayName, rect.x + mTextDrawXOffset, rect.y + 9 + addedTextYOffset, 9);
    }
 
 
@@ -128,7 +128,7 @@ void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
    in >> mLength;
    float val;
    in >> val;
-   SetStart(val,true);
+   SetStart(val, true);
    in >> val;
    SetEnd(val);
    in >> mRackParentID;
