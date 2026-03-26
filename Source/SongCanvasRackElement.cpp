@@ -446,9 +446,9 @@ std::vector<DropdownListElement> SongCanvasRackPulser::GetRightClickOptions()
 {
    if (mOnePulseMode)
    {
-      return std::vector{ DropdownListElement{ "one pulse mode", 11 } };
+      return std::vector{ DropdownListElement{ "interval mode", 11 } };
    }
-   return std::vector{ DropdownListElement{ "interval mode", 10 } };
+   return std::vector{ DropdownListElement{ "one pulse mode", 10 } };
 }
 void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, double time)
 {
@@ -489,6 +489,7 @@ void SongCanvasRackPulser::LoadState(FileStreamIn& in, int rev)
    int v;
    in >> v;
    mPulserInterval = static_cast<NoteInterval>(v);
+   UpdateMode();
 }
 
 void SongCanvasRackPulser::DrawRackGraphics()
