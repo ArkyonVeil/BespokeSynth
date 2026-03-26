@@ -66,8 +66,10 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    x -= mX;
    y -= mY;
    //Center the cords.
-   if (mHovered && mHoveredElement != nullptr)
+   if (mHovered && mHoveredElement != nullptr && gHoveredUIControl == nullptr)
    {
+      if (mHoveredElement->TestClick(x,y,false,true))//So we don't accidentally drag the module while dragging cables
+         return;
       mSelectedElement = mHoveredElement;
       mStartDragMouse = ofVec2f(x, y);
       mRackPartDragGhostRect = mSelectedElement->GetRectRelativeToGrid();
@@ -97,7 +99,7 @@ bool FlowGrid::MouseMoved(float x, float y)
          break;
       }
    }
-   if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x, y)) > 5)
+   if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x, y)) > 10)
    {
       mDragging = true;
 
