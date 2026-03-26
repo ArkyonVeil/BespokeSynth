@@ -404,6 +404,7 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
 //Updates cached data, and visuals. Does not trigger a resize.
 void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
+
    if (mRows.size() <= index)
       return; //???
 
@@ -462,6 +463,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
          row->elements[i]->SetRectRelativeToGrid(ofRectangle(offset, yOffset, MIN(maxRowSize, el->GetPreferredWidth()), mRowYSize));
          offset += el->GetPreferredWidth() + mElementXSpacing;
       }
+      RowNotifyPostResize(index);
       return;
    }
    //Okay we'll have to get squeezy.
@@ -499,6 +501,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
          row->isFilled = true;
          row->isOverfilled = true;
       }
+      RowNotifyPostResize(index);
       return;
    }
 
@@ -530,8 +533,34 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       row->isFilled = true;
       row->isOverfilled = true;
    }
+   RowNotifyPostResize(index);
 }
 
+void FlowGrid::RowNotifyPostResize(int row) const
+{
+   for (auto r : mRows[row].elements)
+   {
+      r->OnPostResize();
+   }
+}
+
+int FlowGrid::GetRowIndexOfElement(FlowGridElement* element) const
+{
+   if (element->mPreferredRow != -1)
+      return element->mPreferredRow;
+
+   int idx = 0;
+   for (auto row : mRows)
+   {
+      for (auto el: row.elements)
+      {
+         if (el == element)
+            return idx;
+      }
+      idx++;
+   }
+   return -1;
+}
 
 void FlowGrid::RecalculateFlowGrid()
 {

@@ -83,6 +83,15 @@ void SongCanvasRackElement::CreateUIControls()
    FlowGridElement::CreateUIControls();
    mElementRenameTextBox = mSongCanvas->GetRackRenameTextbox();
 }
+float SongCanvasRackElement::GetPreferredWidth() const
+{
+   int baseSize = 30;
+   std::string rackName = TruncateString(*mElementName, mMaxNameSize,true);
+
+   int textSize = MAX(50,GetStringWidth(rackName));
+
+   return baseSize+textSize;
+}
 
 
 void SongCanvasRackElement::SetPartName(std::string newName) const
@@ -181,8 +190,12 @@ void SongCanvasRackElement::DrawModule()
       int form = (static_cast<std::string>(mElementRenameTextBox->GetText()).size() - 10) * 6;
       if (form < 0)
          form = 0;
-      SetPreferredSize(90 + form);
-      GetFlowGrid()->RecalculateFlowGrid();
+
+      if (mLastRenameSize!= mElementRenameTextBox->GetRect(true).width)
+      {
+         mLastRenameSize = mElementRenameTextBox->GetRect(true).width;
+         UpdateRow();
+      }
 
       if (mElementRenameTextBox->GetActiveKeyboardFocus() != mElementRenameTextBox)
       {
@@ -202,6 +215,12 @@ void SongCanvasRackElement::DrawModule()
       else
       {
          displayString = TruncateString(mElementName->c_str(), textSize, true);
+      }
+
+      if (displayString.size() != mLastNameSize)
+      {
+         mLastNameSize = displayString.size();
+         UpdateRow();
       }
 
       if (mWidth > 20)
@@ -335,7 +354,7 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
-   SetPreferredSize(110);
+
 }
 SongCanvasRackPulser::~SongCanvasRackPulser()
 {
@@ -410,6 +429,13 @@ void SongCanvasRackPulser::OnTimeEvent(double time)
 }
 
 
+float SongCanvasRackPulser::GetPreferredWidth() const
+{
+   float val = SongCanvasRackElement::GetPreferredWidth();
+   if (!mOnePulseMode)
+      val += mIntervalSelector->GetRect(true).width;
+   return val;
+}
 void SongCanvasRackPulser::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
    if (!mOnePulseMode)
@@ -446,10 +472,12 @@ void SongCanvasRackPulser::HandleRightClickDropdown(int optionValue)
    if (optionValue == 10)
    {
       mOnePulseMode = true;
+      UpdateRow();
    }
    else if (optionValue == 11)
    {
       mOnePulseMode = false;
+      UpdateRow();
    }
    UpdateMode();
 }

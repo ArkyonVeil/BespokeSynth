@@ -39,8 +39,7 @@ public:
 
    void SetMinimumSize(float minWidth) { mMinWidth = minWidth; }
    float GetMinimumWidth() { return mMinWidth; }
-   void SetPreferredSize(int width) { mPreferredWidth = width; }
-   float GetPreferredWidth() const { return mPreferredWidth; }
+   virtual float GetPreferredWidth() const { return 60; }
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void GetDimensions(float& width, float& height) override
@@ -72,8 +71,14 @@ public:
    void MouseReleased() override;
    void DrawModule() override;
    FlowGrid* mFlowGridParent;
+   //Updates the current row for module resizing, call when you made a change that should alter the element's preferred size.
+   void UpdateRow();
+   //Called after the module has been resized in the grid. Use to show/hide things depending on the new size.
+   //You are strongly encouraged, NOT to do any resizing/preferred width altering here.
+   virtual void OnPostResize() {};
 
    std::string mElementTypeName;
+   int mPreferredRow = -1;
 
    virtual std::string GetFlowGridElementType() const = 0;
    int GetModuleSaveStateRev() const override { return 0; };
@@ -82,8 +87,6 @@ protected:
    bool mShowing = true;
 
    float mMinWidth = 30;
-   float mPreferredWidth = 90;
-
 
    bool mIsManual{ false }; //If false, it's free. Used for slotting.
 
@@ -92,13 +95,11 @@ protected:
    ofColor mOutlineColor;
    ofColor mHighlightOutlineColor;
 
-
    float mOutlineThickness{ 0.8F };
 
 private:
    bool mHighlighted = false;
    bool mHovered = false;
-   int mPreferredRow = -1;
    bool mInitialized = false;
    float mDebugNumX = 0;
    float mDebugNumY = 0;

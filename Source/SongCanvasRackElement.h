@@ -40,7 +40,7 @@ public:
    virtual void OnEnter() = 0;
    virtual void OnProcess(){};
    virtual void OnExit() = 0;
-   virtual int GetPreferredWidth() = 0;
+   float GetPreferredWidth() const override;
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
    virtual void DrawRackGraphics() = 0;
@@ -88,6 +88,10 @@ private:
    float mExciteConstant{ 0 };
    float mExciteDrag{ 0 };
    double mLastClickTime{ 0 };
+   int mMaxNameSize = 32; //If the text is longer than this we truncate it
+
+   float mLastRenameSize = 0;
+   int mLastNameSize = 0;
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;
@@ -104,7 +108,6 @@ public:
    ~SongCanvasRackEnabler();
    std::string GetFlowGridElementType() const override { return "partenabler"; };
    void CreateUIControls() override;
-   int GetPreferredWidth() override { return 90; }
    static IDrawableModule* Create() { return new SongCanvasRackEnabler("Part", nullptr); };
    bool mEnablerInverted{ false };
    void OnEnter() override;
@@ -143,8 +146,8 @@ public:
    static IDrawableModule* Create() { return new SongCanvasRackPulser("Part", nullptr); };
    PatchCableSource* mPulserCable;
    NoteInterval GetInterval() { return mPulserInterval; }
+   float GetPreferredWidth() const override;
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
-   int GetPreferredWidth() override { return 150; };
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
    void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
@@ -172,9 +175,9 @@ class SongCanvasRackKeyer : public SongCanvasRackElement
 public:
    SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas);
    std::string GetFlowGridElementType() const override { return "partkeyer"; }
-   int GetPreferredWidth() override { return 150; }
+   float GetPreferredWidth() const override { return 90; }
    static IDrawableModule* Create() { return new SongCanvasRackKeyer("Part", nullptr); };
-   ;
+
 
 private:
    PatchCableSource* mKeyerCable;
@@ -202,7 +205,6 @@ public:
    void ButtonClicked(ClickButton* button, double time);
    void SetSample(Sample* sample);
    void DrawRackGraphics() override;
-   int GetPreferredWidth() override { return 150; }
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
@@ -224,7 +226,6 @@ private:
 class SongCanvasRackLFO : public SongCanvasRackElement
 {
 public:
-   int GetPreferredWidth() override { return 90; }
    std::string GetFlowGridElementType() const override { return "partlfo"; };
    static IDrawableModule* Create() { return new SongCanvasRackLFO("Part", nullptr); }
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);

@@ -159,10 +159,14 @@ void FlowGridElement::DrawModule()
    }
    //ofFill();
    ofRect(0, 0, mWidth, mHeight);
-/* DEBUG TEXT
+   /* DEBUG TEXT
    //DrawTextNormal(ofToString(mDebugNum),2,15);
    if (gHoveredSubModule != nullptr)
       DrawTextNormal(ofToString(gHoveredSubModule->GetDisplayName()), 2, 15);
    //DrawTextNormal(ofToString((int)mDebugNumX)+" | "+ofToString((int)mDebugNumY),2,15);*/
    ofPopStyle();
+}
+void FlowGridElement::UpdateRow()
+{
+   mFlowGridParent->UpdateRow(mFlowGridParent->GetRowIndexOfElement(this), true);
 }

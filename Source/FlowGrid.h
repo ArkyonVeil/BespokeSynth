@@ -55,6 +55,8 @@ public:
    void InsertToRow(FlowGridElement* element, int row, int index);
    void MoveToRow(FlowGridElement* element, int row, int index);
    void UpdateRow(int index, bool updateFillState);
+   void RowNotifyPostResize(int row) const;
+   int GetRowIndexOfElement(FlowGridElement* element) const;
    void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
    void ReturnName(FlowNameAssigment* nAssign);
