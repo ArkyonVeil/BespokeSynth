@@ -115,6 +115,7 @@ public:
    void Process(double time) override;
 
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
+   bool IsRackActive(SongCanvasRackElement* rackPart) const;//True if there's a part on the canvas with the same rack that is currently playing.
 
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }

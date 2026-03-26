@@ -180,8 +180,8 @@ private:
    void OnEnter() override{};
    void OnExit() override{};
    void DrawRackGraphics() override;
-   void SaveState(FileStreamOut& out) override{};
-   void LoadState(FileStreamIn& in, int rev) override{};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 };
 
 /////////////
@@ -205,8 +205,8 @@ public:
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
-   void SaveState(FileStreamOut& out) override {}
-   void LoadState(FileStreamIn& in, int rev) override{};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 
 private:
    Sample* mSample{};
@@ -233,8 +233,7 @@ public:
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
    void DrawRackGraphics() override{};
-   void SaveState(FileStreamOut& out) override{};
-   void LoadState(FileStreamIn& in, int rev) override{};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 
-private:
 };

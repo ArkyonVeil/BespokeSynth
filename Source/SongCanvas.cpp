@@ -1807,6 +1807,15 @@ void SongCanvas::Process(double time)
       Add(target->GetBuffer()->GetChannel(ch), mWriteBuffer.GetChannel(ch), gBufferSize);
    }
 }
+bool SongCanvas::IsRackActive(SongCanvasRackElement* rackPart) const
+{
+   for (auto p : mActiveElements)
+   {
+      if (p->GetRackElement() == rackPart)
+         return true;
+   }
+   return false;
+}
 
 void SongCanvas::PlaySample()
 {

@@ -70,6 +70,7 @@ FlowGridElement* SongCanvasRackFactory::Create(const std::string typeName)
 SongCanvasRackElement::SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas)
 : FlowGridElement(mFlowGridParent, internalName)
 {
+   SetOwningContainer(songCanvas->GetOwningContainer());
    mElementName = new std::string(partName);
    mSongCanvas = songCanvas;
    mInternalRackID = mSongCanvas->GetInternalRackId();
@@ -217,7 +218,6 @@ SongCanvasRackEnabler::SongCanvasRackEnabler(const std::string& partName, SongCa
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    SetColor(ofColor::white);
-   SetOwningContainer(songCanvas->GetOwningContainer());
 }
 SongCanvasRackEnabler::~SongCanvasRackEnabler()
 {
@@ -335,6 +335,7 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
+   SetPreferredSize(110);
    SetColor(ofColor::yellow);
    if (mOnePulseMode)
    {
@@ -357,7 +358,7 @@ void SongCanvasRackPulser::CreateUIControls()
    this->AddPatchCableSource(mPulserCable);
    mPulserCable->SetAllowMultipleTargets(true);
 
-   mIntervalSelector = new DropdownList(this, "interval", 75, 2, (int*)(&mPulserInterval));
+   mIntervalSelector = new DropdownList(this, "interval", mWidth-50, 3, (int*)(&mPulserInterval));
    mIntervalSelector->AddLabel("16", kInterval_16);
    mIntervalSelector->AddLabel("8", kInterval_8);
    mIntervalSelector->AddLabel("4", kInterval_4);
@@ -382,6 +383,8 @@ void SongCanvasRackPulser::Init()
 
 void SongCanvasRackPulser::OnEnter()
 {
+   if (mOnePulseMode)
+   {
    double time = NextBufferTime(mSongCanvas);
    const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
    mPulserCable->AddHistoryEvent(time, true, 0);
@@ -389,6 +392,7 @@ void SongCanvasRackPulser::OnEnter()
    Excite(1);
    for (auto* receiver : receivers)
       receiver->OnPulse(time, 1, 0);
+   }
 }
 void SongCanvasRackPulser::OnExit()
 {
@@ -396,7 +400,7 @@ void SongCanvasRackPulser::OnExit()
 
 void SongCanvasRackPulser::OnTimeEvent(double time)
 {
-   if (IsEnabled() && mSongCanvas->IsEnabled())
+   if (IsEnabled() && mSongCanvas->IsEnabled() && mSongCanvas->IsRackActive(this))
    {
       const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
       mPulserCable->AddHistoryEvent(time, true, 0);
@@ -446,9 +450,9 @@ std::vector<DropdownListElement> SongCanvasRackPulser::GetRightClickOptions()
 {
    if (mOnePulseMode)
    {
-      return std::vector{ DropdownListElement{ "one pulse mode", 10 } };
+      return std::vector{ DropdownListElement{ "one pulse mode", 11 } };
    }
-   return std::vector{ DropdownListElement{ "interval mode", 11 } };
+   return std::vector{ DropdownListElement{ "interval mode", 10 } };
 }
 void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, double time)
 {
@@ -464,25 +468,29 @@ void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, doubl
 }
 void SongCanvasRackPulser::UpdateMode()
 {
+
+
    if (mOnePulseMode)
    {
-      SetColor(ofColor(40, 40, 40));
-      SetColorOutline(ofColor(255, 255, 255));
+      SetColor(ofColor(40, 40, 0));
+      SetColorOutline(ofColor(220, 220, 0));
       mIntervalSelector->SetShowing(false);
    }
    else
    {
-      SetColor(ofColor(255, 255, 255));
+      SetColor(ofColor::yellow);
       mIntervalSelector->SetShowing(true);
    }
 }
 void SongCanvasRackPulser::SaveState(FileStreamOut& out)
 {
+   SongCanvasRackElement::SaveState(out);
    out << mOnePulseMode;
    out << mPulserInterval;
 }
 void SongCanvasRackPulser::LoadState(FileStreamIn& in, int rev)
 {
+   SongCanvasRackElement::LoadState(in, rev);
    in >> mOnePulseMode;
    int v;
    in >> v;
@@ -494,7 +502,7 @@ void SongCanvasRackPulser::DrawRackGraphics()
    if (!mOnePulseMode)
    {
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
-      mIntervalSelector->SetPosition(mWidth - 53, 7);
+      mIntervalSelector->SetPosition(mWidth - 64, mHeight / 4+1);
       mIntervalSelector->Draw();
    }
    else
@@ -508,13 +516,22 @@ void SongCanvasRackPulser::DrawRackGraphics()
 ///Keyer///
 ///////////
 
-void SongCanvasRackKeyer::DrawRackGraphics()
-{
-}
 SongCanvasRackKeyer::SongCanvasRackKeyer(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
 }
+void SongCanvasRackKeyer::DrawRackGraphics()
+{
+}
+void SongCanvasRackKeyer::SaveState(FileStreamOut& out)
+{
+   SongCanvasRackElement::SaveState(out);
+}
+void SongCanvasRackKeyer::LoadState(FileStreamIn& in, int rev)
+{
+   SongCanvasRackElement::LoadState(in, rev);
+}
+
 
 
 /////////////
@@ -590,6 +607,14 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
    element->mCurrentColor = mCanvasSamplerColor;
    element->mCurrentColorGrad = mCanvasSamplerColor2;
 }
+void SongCanvasRackSampler::SaveState(FileStreamOut& out)
+{
+   SongCanvasRackElement::SaveState(out);
+}
+void SongCanvasRackSampler::LoadState(FileStreamIn& in, int rev)
+{
+   SongCanvasRackElement::LoadState(in, rev);
+}
 
 /////////
 ///LFO///
@@ -603,4 +628,12 @@ SongCanvasRackLFO::SongCanvasRackLFO(const std::string& partName, SongCanvas* so
 void SongCanvasRackLFO::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
    element->mCurrentColor = mCanvasLFOColor;
+}
+void SongCanvasRackLFO::SaveState(FileStreamOut& out)
+{
+   SongCanvasRackElement::SaveState(out);
+}
+void SongCanvasRackLFO::LoadState(FileStreamIn& in, int rev)
+{
+   SongCanvasRackElement::LoadState(in, rev);
 }
