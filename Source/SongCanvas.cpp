@@ -156,7 +156,6 @@ void SongCanvas::CreateUIControls()
    mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mRackGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
    mRackAddNewDropdown->AddLabel("Enabler", enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", enumPulser);
-   mRackAddNewDropdown->AddLabel("OnePulse", enumOnePulse);
    mRackAddNewDropdown->AddLabel("Sampler", enumSample);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
@@ -977,8 +976,7 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
          case enumSample:
             mRackGrid->AddFlowElement(new SongCanvasRackSampler(newPartName, this));
             break;
-         case enumOnePulse:
-            mRackGrid->AddFlowElement(new SongCanvasRackKeyer(newPartName, this));
+         case enumKeyer:
             break;
          default:;
       }

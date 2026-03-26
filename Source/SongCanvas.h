@@ -322,7 +322,7 @@ private:
       enumPulser = 1,
       enumModulator = 2,
       enumSample = 3,
-      enumOnePulse = 4,
+      enumKeyer = 4,
    };
    RackAddNewElementOptions mRackAddNewElementIndex;
 

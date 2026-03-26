@@ -336,11 +336,6 @@ SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanv
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
    SetPreferredSize(110);
-   SetColor(ofColor::yellow);
-   if (mOnePulseMode)
-   {
-      SetColor(ofColor(150, 150, 0));
-   }
 }
 SongCanvasRackPulser::~SongCanvasRackPulser()
 {
@@ -379,6 +374,7 @@ void SongCanvasRackPulser::Init()
 {
    IDrawableModule::Init();
    mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
+   UpdateMode();
 }
 
 void SongCanvasRackPulser::OnEnter()
@@ -468,8 +464,6 @@ void SongCanvasRackPulser::DropdownUpdated(DropdownList* list, int oldVal, doubl
 }
 void SongCanvasRackPulser::UpdateMode()
 {
-
-
    if (mOnePulseMode)
    {
       SetColor(ofColor(40, 40, 0));
