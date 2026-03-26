@@ -1701,7 +1701,7 @@ std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 
 void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
 {
-   auto p = element->GetRelativePosition();
+   auto p = element->GetPosition(true);
    SetNewRackDropdownContext(element);
 
    mRackElementRightClickDropdown->Clear();
