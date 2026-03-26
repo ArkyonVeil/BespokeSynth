@@ -79,7 +79,7 @@ protected:
    const ofColor mCanvasLFOColor = ofColor::purple;
    const ofColor mCanvasSamplerColor = ofColor(40, 180, 40);
    const ofColor mCanvasSamplerColor2 = ofColor(20, 70, 20);
-   const ofColor mCanvasOnePulseColor = ofColor(100, 100, 0);
+   const ofColor mCanvasOnePulseColor = ofColor(80, 80, 0);
 
 private:
    void DrawModule() override;
@@ -147,6 +147,7 @@ public:
    int GetPreferredWidth() override { return 150; };
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
+   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
 
    bool mOnePulseMode{ false };
    void HandleRightClickDropdown(int optionValue) override;

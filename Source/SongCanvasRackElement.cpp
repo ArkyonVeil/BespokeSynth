@@ -396,6 +396,8 @@ void SongCanvasRackPulser::OnExit()
 
 void SongCanvasRackPulser::OnTimeEvent(double time)
 {
+   if (mOnePulseMode)
+      return;
    if (IsEnabled() && mSongCanvas->IsEnabled() && mSongCanvas->IsRackActive(this))
    {
       const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
@@ -426,6 +428,16 @@ void SongCanvasRackPulser::SetupCanvasPart(SongCanvas_CanvasElement* element)
       MAX(0, element->mCurrentColor.r - 30),
       MAX(0, element->mCurrentColor.g - 30),
       MAX(0, element->mCurrentColor.b - 30));
+   }
+}
+void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+{
+   if (mOnePulseMode)
+   {
+   ofPushStyle();
+      ofSetColor(200,200,0);
+      ofRect(rect.x,rect.y,2, rect.height,0);
+   ofPopStyle();
    }
 }
 
@@ -502,6 +514,11 @@ void SongCanvasRackPulser::DrawRackGraphics()
    }
    else
    {
+      ofPushStyle();
+      ofFill();
+      ofSetColor(ofColor{200,200,0});
+      ofRect(0,0,4,mHeight,0);
+      ofPopStyle();
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
    }
 }
