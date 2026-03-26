@@ -9,6 +9,12 @@ SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int 
    mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
    mSongCanvas->SetupCanvasElement(this);
 }
+SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas)
+: CanvasElement(canvas,0,0,0,4)
+{
+   mLength *= 4;
+   mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
+}
 
 void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
 {
@@ -132,7 +138,6 @@ void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
    in >> val;
    SetEnd(val);
    in >> mRackParentID;
-   mRackPart = mSongCanvas->GetRackPartWithID(mRackParentID);
-
+   SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
    mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }

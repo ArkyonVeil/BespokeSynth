@@ -271,7 +271,7 @@ bool FlowGrid::IsRowOverfilled(int row)
 
 
 //Please check with TryGetSlot to see if it's possible to add first, or it WILL crash.
-void FlowGrid::AddFlowElement(FlowGridElement* newElement)
+void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
 {
    newElement->SetFlowGrid(this);
 
@@ -284,6 +284,8 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
       throw std::exception("Error: Tried to push in a new element to an already full FlowGrid.");
    }
 
+   if (!preSetup)
+   {
    //Add it to the pipeline
    newElement->CreateUIControls();
    if (mOwner->IsInitialized())
@@ -294,6 +296,7 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement)
 
    newElement->SetName(newElement->mElementTypeName.c_str());
    newElement->SetTypeName(newElement->mElementTypeName, kModuleCategory_Other);
+   }
    //newElement->NameData = rec;
    newElement->SetParent(mOwner);
    mOwner->AddChild(newElement);
@@ -667,8 +670,12 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       std::string type;
       in >> type;
       auto el = factory->Create(type);
+      el->CreateUIControls();
+      el->Init();
+      el->SetName(el->mElementTypeName.c_str());
+      el->SetTypeName(el->mElementTypeName, kModuleCategory_Other);
       el->LoadState(in, el->GetModuleSaveStateRev());
-      AddFlowElement(el);
+      AddFlowElement(el, true);
    }
    delete factory;
 }

@@ -90,6 +90,48 @@ void SongCanvasRackElement::SetPartName(std::string newName) const
 }
 
 
+void SongCanvasRackElement::SaveState(FileStreamOut& out)
+{
+   FlowGridElement::SaveState(out);
+
+   out << *mElementName;
+   out << mRackEnabled;
+   out << mInternalRackID;
+
+   auto cables = GetPatchCableSources();
+   out << (int)cables.size();
+   for (auto* cable : cables)
+      cable->SaveState(out);
+}
+void SongCanvasRackElement::LoadState(FileStreamIn& in, int rev)
+{
+   FlowGridElement::LoadState(in, rev);
+
+   std::string partName;
+   in >> partName;
+   SetPartName(partName);
+   in >> mRackEnabled;
+   in >> mInternalRackID;
+
+   int numCables;
+   in >> numCables;
+   PatchCableSource* dummy = nullptr;
+   for (int i = 0; i < numCables; ++i)
+   {
+      PatchCableSource* readIn;
+      if (i < GetPatchCableSources().size())
+      {
+         readIn = GetPatchCableSources()[i];
+      }
+      else
+      {
+         if (dummy == nullptr)
+            dummy = new PatchCableSource(this, kConnectionType_Special);
+         readIn = dummy;
+      }
+      readIn->LoadState(in);
+   }
+}
 void SongCanvasRackElement::OnClicked(float x, float y, bool right)
 {
    FlowGridElement::OnClicked(x, y, right);
@@ -245,10 +287,12 @@ std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
 }
 void SongCanvasRackEnabler::SaveState(FileStreamOut& out)
 {
+   SongCanvasRackElement::SaveState(out);
    out << mEnablerInverted;
 }
 void SongCanvasRackEnabler::LoadState(FileStreamIn& in, int rev)
 {
+   SongCanvasRackElement::LoadState(in, rev);
    in >> mEnablerInverted;
 }
 void SongCanvasRackEnabler::DrawRackGraphics()

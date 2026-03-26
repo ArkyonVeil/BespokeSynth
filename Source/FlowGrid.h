@@ -50,7 +50,7 @@ public:
    void SetMaxRows(int rowNum) { mMaxRows = rowNum; }
    void SetMinRows(int rowNum) { mMinRows = rowNum; }
 
-   void AddFlowElement(FlowGridElement* newElement);
+   void AddFlowElement(FlowGridElement* newElement, bool preSetup = false);
    void AddToRow(FlowGridElement* element, int row);
    void InsertToRow(FlowGridElement* element, int row, int index);
    void MoveToRow(FlowGridElement* element, int row, int index);

@@ -40,22 +40,22 @@ public:
    virtual void OnEnter() = 0;
    virtual void OnProcess(){};
    virtual void OnExit() = 0;
-   virtual void SetEnabled(bool newState) { enabled = newState; }
-   bool IsEnabled() { return enabled; }
    virtual int GetPreferredWidth() = 0;
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
    virtual void DrawRackGraphics() = 0;
 
-   virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect){};
-   virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
 
-   void SaveState(FileStreamOut& out) override{};
-   void LoadState(FileStreamIn& in, int rev) override{};
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 
    //Save/load unique canvas part data.
    virtual void SaveCanvasPart(SongCanvas_CanvasElement* obj, FileStreamOut& out){};
    virtual void LoadCanvasPart(SongCanvas_CanvasElement* obj, FileStreamIn& in, int rev){};
+
+   //Canvas stuff
+   virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect){};
+   virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -64,6 +64,7 @@ public:
    void ButtonClicked(ClickButton* button, double time) override{};
 
    int mInternalRackID;
+   bool mRackEnabled;
 
 protected:
    SongCanvas* mSongCanvas;
@@ -82,7 +83,6 @@ protected:
 
 private:
    void DrawModule() override;
-   bool enabled{ false };
    bool mRenameActive = false;
    float mExcitePower{ 0 };
    float mExciteConstant{ 0 };
@@ -90,7 +90,6 @@ private:
    double mLastClickTime{ 0 };
 
    int mDebugClick{ 0 };
-   int mInternalID{ 0 };
    TextEntry* mElementRenameTextBox;
 };
 
@@ -152,7 +151,7 @@ public:
    bool mOnePulseMode{ false };
    void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
-   void DropdownUpdated(DropdownList* list, int oldVal, double time) override; //TODO
+   void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void UpdateMode();
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

@@ -1565,7 +1565,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> i1;
    for (int i = 0; i < i1; ++i)
    {
-      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas, 0, 0, 0, 0);
+      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas);
       celm->LoadState(in);
       mCanvas->AddElement(celm);
    }
