@@ -37,9 +37,18 @@ public:
    bool CanMinimize() override { return false; }; //Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
    ofRectangle CustomTooltipBounds() const override { return { 0, 0, mWidth, mHeight }; };
 
-   void SetMinimumSize(float minWidth) { mMinWidth = minWidth; }
-   float GetMinimumWidth() { return mMinWidth; }
+   //FlowGrid sizing rules.
+   // > Preferred size is the max size allowed to this module, it will occupy as much as possible.
+   // Selected modules have priority over others, and will display at their preferred size if possible, even if squeezed.
+   // > Compact size is the minimum size it may be squeezed into before further modules being moved to the same row are blocked.
+   // > Min Size is the minimum possible size this module may be compacted to.
+   // As it takes priority over the selected module, it will not be squeezed further.
    virtual float GetPreferredWidth() const { return 60; }
+   void SetCompactSize(float compactWidth) { mCompactWidth = compactWidth; }
+   float GetCompactWidth() { return mCompactWidth; }
+   float GetMinWidth() { return mMinWidth; }
+
+
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void GetDimensions(float& width, float& height) override
@@ -86,7 +95,7 @@ public:
 protected:
    bool mShowing = true;
 
-   float mMinWidth = 30;
+   float mCompactWidth = 30;
 
    bool mIsManual{ false }; //If false, it's free. Used for slotting.
 
@@ -103,4 +112,5 @@ private:
    bool mInitialized = false;
    float mDebugNumX = 0;
    float mDebugNumY = 0;
+   float mMinWidth = 10;
 };

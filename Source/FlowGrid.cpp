@@ -70,6 +70,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    {
       if (mHoveredElement->TestClick(x,y,false,true))//So we don't accidentally drag the module while dragging cables
          return;
+      mSelectedElement->UpdateRow();
       mSelectedElement = mHoveredElement;
       mStartDragMouse = ofVec2f(x, y);
       mRackPartDragGhostRect = mSelectedElement->GetRectRelativeToGrid();
@@ -203,10 +204,28 @@ void FlowGrid::DrawModule()
       ofSetColor(ofColor::yellow);
       ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
    }
+
+   //Debug colours, shows the state/formula of the row:
+   for (int i = 0; i < mRows.size(); ++i)
+   {
+      float offset = mRowYBorderOffset + mRowYSize*i;
+      if (mRows[i].isFilled)//Formula 1
+      {
+         ofSetColor(ofColor::yellow);
+         ofLine(15,offset,15,offset+mRowYSize);
+      }
+      if (mRows[i].isOverfilled)//Formula 2
+      {
+         ofSetColor(ofColor::red);
+         ofLine(17,offset,17,offset+mRowYSize);
+      }
+   }
+
    ofPopStyle();
    ofPopMatrix();
 
-   //Draw in SongCanvas space.
+
+   //Draw in parent space.
    for (auto elm : mElementList)
    {
       elm->Render();
@@ -405,7 +424,8 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
 void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
 
-   if (mRows.size() <= index)
+   int const rowCount = mRows.size();
+   if (rowCount <= index)
       return; //???
 
    if (mRows[index].elements.empty())
@@ -416,43 +436,44 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
    }
 
    FlowGridRow* row = &mRows[index];
+   int const elCount = static_cast<int>(row->elements.size());
 
    float totalPreferredWidth = 0; //How much we can stuff it before it starts to compress
-   float totalMinimumWidth = 0; //Minimum size to lerp to, not necessarily the smallest possible size.
+   float totalCompactWidth = 0; //Minimum size to lerp to, not necessarily the smallest possible size. Less priority than selected modules.
+   float totalMinWidth = 0; //Absolute minimum size all(except selected) modules can be squeezed into, takes priority over selected.
    float offset = mRowXBorderOffset;
-   float totalSpacing = 0;
+   float totalSpacing = mElementXSpacing*(elCount-1);//Same priority as module's compact size. Minimum is 0.
 
    int selectedIndex = -1; //If one is selected, in the squeeze step if applicable, we set it to its largest possible size.
-   float selectedPreferredSize;
+   float selectedPreferredSize = 0;
 
    float maxRowSize = mWidth - mRowXBorderOffset * 2;
    int yOffset = mRowYBorderOffset + mRowYSize * index + mElementYSpacing * index;
 
 
-   //Get maximum size of all elements.
-   //Also the minimum size.
+   //Collect data on all the elements.
    for (int i = 0; i < row->elements.size(); ++i)
    {
       auto el = row->elements[i];
 
       if (mSelectedElement == el)
       {
+         //We don't include the selected one in the math for the main compression calcs.
          selectedIndex = i;
          selectedPreferredSize = el->GetPreferredWidth();
-         totalMinimumWidth += el->GetPreferredWidth(); //If selected, it renders at its maximum size.
       }
       else
       {
          totalPreferredWidth += el->GetPreferredWidth();
-         totalMinimumWidth += el->GetMinimumWidth();
-         totalSpacing += mElementXSpacing;
+         totalCompactWidth += el->GetCompactWidth();
+         totalMinWidth += el->GetMinWidth();
       }
    }
 
-   if (totalPreferredWidth + totalSpacing < mWidth - mRowXBorderOffset * 2)
+   //0 -> Room available. (Mod size/Selected -> Preferred Size | Spacing -> default)
+   if (selectedPreferredSize + totalPreferredWidth + totalSpacing < maxRowSize)
    {
       //Okay! There's still room.
-
       row->isFilled = false;
       row->isOverfilled = false;
 
@@ -466,73 +487,107 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       RowNotifyPostResize(index);
       return;
    }
+
    //Okay we'll have to get squeezy.
 
-   //Squeezy is much more complicated, to make it work, we get the oversize ratio and some multiplication.
+   //Note Spacing is treated as a module with min 0, compact 4.
+   //We'll start by setting aside the space we'll dedicate for the selected module. Usually preferredSize, but exceptions may apply.
+   float finalSelectedModuleSpace = MIN(selectedPreferredSize, maxRowSize-totalMinWidth);
+   float ratio;
+   float spaceSize;
+   int formula = 1;
+   //Now we need to know which formula we'll apply for compression.
 
-
-   //First, for convenience's sake, we'll check the worst case scenario first. IE, minimum total is still larger than available row space.
-   if (totalMinimumWidth + totalSpacing > maxRowSize)
+   //1 -> Squeezed, non-overfilled. (Mod size -> Preferred Size ~ Compact Size | Selected -> Preferred Size | Spacing -> default)
+   if (selectedPreferredSize+totalCompactWidth+totalSpacing <= maxRowSize)
    {
-      //If this happens, we scale evenly down.
-      //IE we start at minimum and down we go.
-      //Don't forget the special case, it still renders at full size even in an overfilled scenario.
-      offset = mRowXBorderOffset;
-      float ratio = totalMinimumWidth / maxRowSize; //TODO, inspect this later, it may be wrong due to assumptions of a full sized selected element.
-      for (int i = 0; i < row->elements.size(); ++i)
+
+      float scaleRange = totalPreferredWidth-totalCompactWidth;//Aka difference
+      ratio = (maxRowSize - totalSpacing - selectedPreferredSize - totalCompactWidth) / scaleRange;
+      spaceSize = mElementXSpacing;
+
+      //Example, for posterity’s sake.
+      //Row -> 150
+      //Spacing -> 4
+      //A -> Con 30 Pref 60
+      //B -> Con 30 Pref 45
+      //C -> Con 30 Pref 95
+      //Ratio -> ?
+
+      //Solution
+      //Difference Total = 60-30 + 45-30 + 95-30 = 110
+      //Ratio -> (Row - Spacing * (ElementCount-1) - ConTotal) / DifferenceTotal
+      //Ratio = (150-4*(3-1)-90) / 110 = 0.472
+
+      // A -> 30 + (60-30) * 0.472 = 44.16
+      // B -> 30 + (45-30) * 0.472 = 37.08
+      // C -> 30 + (95-30) * 0.472 = 60.68
+      // To be correct, All 3 combined should be equal to 142
+
+      //Solution: Remove the stuff that doesn't matter from the calculations.
+   }
+   //2 -> Squeezed, overfilled. (Mod size -> Compact Size ~ Min Size | Selected -> Preferred Size | Spacing -> default ~ 0)
+   else if (selectedPreferredSize+totalMinWidth <= maxRowSize)
+   {
+      formula = 2;
+
+      float scaleRange = totalSpacing+totalCompactWidth - totalMinWidth;
+      ratio = (maxRowSize-totalMinWidth-selectedPreferredSize) / scaleRange;
+      spaceSize = mElementXSpacing*ratio;
+   }
+   //3 -> Squeezed, minimum. (Mod size -> Min Size | Selected -> Constrained Size | Spacing -> 0)
+   else
+   {
+      formula = 3;
+      spaceSize = 0;
+   }
+
+   //Final setup
+   offset = mRowXBorderOffset;
+   for (int i = 0; i < elCount; ++i)
+   {
+      auto el = row->elements[i];
+      float elWidth = 0;
+
+      if (i == selectedIndex)
       {
-         auto el = row->elements[i];
-         float eSize;
-         if (mSelectedElement != el)
+         elWidth = finalSelectedModuleSpace;
+      }
+      else
+      {
+         if (formula == 1)
          {
-            eSize = el->GetMinimumWidth() / ratio;
+            elWidth = el->GetCompactWidth()+(el->GetPreferredWidth()-el->GetCompactWidth())*ratio;
+         }
+         else if (formula == 2)
+         {
+            elWidth = el->GetMinWidth()+(el->GetCompactWidth()-el->GetMinWidth())*ratio;
          }
          else
          {
-            eSize = el->GetPreferredWidth() / ratio;
+            elWidth = el->GetMinWidth();
          }
-
-         el->SetRectRelativeToGrid(ofRectangle(offset, yOffset, eSize, mRowYSize));
-         offset += eSize + mElementXSpacing;
       }
 
-      if (updateFillState)
+      row->elements[i]->SetRectRelativeToGrid(ofRectangle(offset, yOffset, elWidth, mRowYSize));
+      if (i+1<elCount)
+         offset += elWidth + spaceSize;
+   }
+
+   if (updateFillState)
+   {
+      if (formula == 1)
+      {
+         row->isFilled = true;
+         row->isOverfilled = false;
+      }
+      else
       {
          row->isFilled = true;
          row->isOverfilled = true;
       }
-      RowNotifyPostResize(index);
-      return;
    }
 
-   //TODO Test the block below.
-   //This is the difficult one, where we squeeze items together based on a consistent ratio.
-   //Apply formula: t = (S - (totalMinimumWidth)) / ((totalPreferredWidth - totalMinimumWidth)
-   float availableSpace = maxRowSize - totalSpacing;
-   float t = (availableSpace - totalMinimumWidth) / (totalPreferredWidth - totalMinimumWidth);
-   offset = mRowXBorderOffset;
-   for (int i = 0; i < row->elements.size(); ++i)
-   {
-      auto e = row->elements[i];
-      float eSize;
-      if (mSelectedElement == e)
-      {
-         //Selected element uses its preferred size
-         eSize = e->GetPreferredWidth();
-      }
-      else
-      {
-         //Interpolate between minimum and preferred based on t
-         eSize = e->GetMinimumWidth() + t * (e->GetPreferredWidth() - e->GetMinimumWidth());
-      }
-      e->SetRectRelativeToGrid(ofRectangle(offset, yOffset, eSize, mRowYSize));
-      offset += eSize + mElementXSpacing;
-   }
-   if (updateFillState)
-   {
-      row->isFilled = true;
-      row->isOverfilled = true;
-   }
    RowNotifyPostResize(index);
 }
 
