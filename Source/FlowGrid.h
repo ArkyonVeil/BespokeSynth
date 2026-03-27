@@ -119,6 +119,9 @@ private:
 
    FlowGridElement* mSelectedElement{ nullptr };
    FlowGridElement* mHoveredElement{ nullptr };
+
+   FlowGridElement* mLastHoveredElement{ nullptr };
+   FlowGridElement* mLastSelectedElement{ nullptr };
    IFlowGridListener* mListener;
    std::vector<FlowGridElement*> mElementList;
    float mRowScalingSize[30];
