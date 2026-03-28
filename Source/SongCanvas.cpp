@@ -1666,6 +1666,7 @@ void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool 
             GetSelectedRackPart()->SetRenameState(false);
          }
       }
+      mCurrentElementBeingRenamed = element;
       mRackRenameTextBox->SetShowing(true);
       mRackRenameTextBox->SetText(*element->GetName());
       mRackRenameTextBox->UpdateDisplayString();
@@ -1678,11 +1679,13 @@ void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool 
       mRackRenameTextBox->SetShowing(false);
       mRackRenameTextBox->ClearInput();
       mRackRenameTextBox->ClearActiveKeyboardFocus(false);
-      if (element != nullptr)
-      {
 
-         GetSelectedRackPart()->SetRenameState(false);
+      if (mCurrentElementBeingRenamed!=nullptr)
+      {
+            mCurrentElementBeingRenamed->SetRenameState(false);
+         mCurrentElementBeingRenamed = nullptr;
       }
+
    }
 }
 
@@ -1691,8 +1694,10 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
    mRightClickDropdownElementContext = element;
 }
 
-void SongCanvas::DeleteRackElement(SongCanvasRackElement* element) const
+void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
 {
+   if (element == mCurrentElementBeingRenamed)
+      mCurrentElementBeingRenamed = nullptr;
    auto res = GetAllCanvasElementsOfRack(element);
    for (auto re : res)
    {

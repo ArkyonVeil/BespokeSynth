@@ -61,6 +61,8 @@ public:
    void SetRenameState(bool newState) { mRenameActive = newState; }
    void OnTimeEvent(double time) override{};
    void OnClicked(float x, float y, bool right) override;
+   bool MouseMoved(float x, float y) override;
+   void MouseReleased() override;
    void ButtonClicked(ClickButton* button, double time) override{};
 
    int mInternalRackID;
@@ -92,6 +94,7 @@ private:
 
    float mLastRenameSize = 0;
    int mLastNameSize = 0;
+   bool mBufferQuickRename = false;
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;

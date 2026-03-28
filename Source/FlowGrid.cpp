@@ -95,9 +95,14 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    }
    else
    {
-      int rowToUpdate = GetRowIndexOfElement(mSelectedElement);
-      mSelectedElement = nullptr;
-      UpdateRow(rowToUpdate,false);
+      int rowToUpdate = -1;
+      if (mSelectedElement!=nullptr)
+      {
+         mListener->onFlowGridSelectionCleared(mSelectedElement);
+         rowToUpdate = GetRowIndexOfElement(mSelectedElement);
+         mSelectedElement = nullptr;
+         UpdateRow(rowToUpdate,false);
+      }
 
       if (mHoveredElement != nullptr)//We also reset the hovered state if this happens. So you can have a clean workspace.
       {
@@ -147,7 +152,7 @@ bool FlowGrid::MouseMoved(float x, float y)
    if (mPressed == true && mStartDragMouse.distanceSquared(ofVec2f(x, y)) > 10)
    {
       mDragging = true;
-
+      mDraggedElement = mSelectedElement;
       float elPX, elPY;
       elPX = mX + mRackPartDragGhostRect.x + x - mStartDragMouse.x;
       elPY = mY + mRackPartDragGhostRect.y + y - mStartDragMouse.y;
@@ -228,6 +233,7 @@ void FlowGrid::MouseReleased()
 {
    mPressed = false;
    mRowCountOnDragStart = -1;
+   mDraggedElement = nullptr;
    if (mDragging)
    {
       mDragging = false;

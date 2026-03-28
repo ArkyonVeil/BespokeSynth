@@ -151,15 +151,41 @@ void SongCanvasRackElement::OnClicked(float x, float y, bool right)
    }
    else
    {
+      if (mFlowGridParent->GetDraggedGridElement() == this) //Suppresses renaming if being dragged.
+      {
+         mLastClickTime = 0;
+      }
+
       if (TheSynth->GetGlobalTime() < mLastClickTime + 0.5)
       {
-         mSongCanvas->SetRackElementRenameState(this, true);
+         mBufferQuickRename = true;
          mLastClickTime = 0;
       }
       else
       {
          mLastClickTime = TheSynth->GetGlobalTime();
       }
+   }
+}
+bool SongCanvasRackElement::MouseMoved(float x, float y)
+{
+   bool val = FlowGridElement::MouseMoved(x, y);
+
+   if (mFlowGridParent->GetDraggedGridElement() == this)
+   {
+      mBufferQuickRename = false;
+   }
+
+   return val;
+}
+void SongCanvasRackElement::MouseReleased()
+{
+   FlowGridElement::MouseReleased();
+
+   if (mBufferQuickRename)
+   {
+      mSongCanvas->SetRackElementRenameState(this, true);
+      mBufferQuickRename = false;
    }
 }
 void SongCanvasRackElement::DrawModule()
@@ -403,7 +429,7 @@ void SongCanvasRackPulser::OnPostResize()
 {
    if (!mOnePulseMode)
    {
-      if (mWidth < GetPreferredWidth()-20)
+      if (mWidth < GetPreferredWidth() - 20)
       {
          mIntervalSelector->SetShowing(false);
       }

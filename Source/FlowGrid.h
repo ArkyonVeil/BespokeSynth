@@ -3,7 +3,7 @@
 #include "FlowGridElement.h"
 #include "ModuleContainer.h"
 
-//Docs in FlowGrid.cpp
+//Docs in FlowGrid.cpp -Ark
 
 struct FlowNameAssigment
 {
@@ -17,7 +17,8 @@ class IFlowGridListener
 public:
    virtual ~IFlowGridListener() = default;
 
-   virtual void onFlowGridNewSelection(FlowGridElement* element){};
+   virtual void onFlowGridNewSelection(FlowGridElement* element){};//Always returns a valid element.
+   virtual void onFlowGridSelectionCleared(FlowGridElement* element){};//Refers to the old selected element before selection being cleared.
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY){}; //The grid is resizing in some direction, ignore, and it may clip.
 };
 
@@ -52,11 +53,11 @@ public:
 
    void AddFlowElement(FlowGridElement* newElement, bool preSetup = false);
    void AddToRow(FlowGridElement* element, int row);
+   void RowNotifyPostResize(int row) const;
    void InsertToRow(FlowGridElement* element, int row, int index);
    void MoveToRow(FlowGridElement* element, int row, int index);
    void CheckCleanupRows();
    void UpdateRow(int index, bool updateFillState);
-   void RowNotifyPostResize(int row) const;
    int GetRowIndexOfElement(FlowGridElement* element) const;
    void RecalculateFlowGrid();
    void RemoveFlowElement(FlowGridElement* element);
@@ -77,6 +78,7 @@ public:
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
    FlowGridElement* GetHoveredGridElement() const { return mHoveredElement; }
+   FlowGridElement* GetDraggedGridElement() const {return mDraggedElement;}
 
    struct FlowGridRow
    {
@@ -120,6 +122,7 @@ private:
 
    FlowGridElement* mSelectedElement{ nullptr };
    FlowGridElement* mHoveredElement{ nullptr };
+   FlowGridElement* mDraggedElement {nullptr};
 
    FlowGridElement* mLastHoveredElement{ nullptr };
    FlowGridElement* mLastSelectedElement{ nullptr };

@@ -103,7 +103,7 @@ public:
    void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
-   void DeleteRackElement(SongCanvasRackElement* element) const;
+   void DeleteRackElement(SongCanvasRackElement* element);
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
@@ -192,27 +192,29 @@ private:
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mMeasureSlider{ nullptr };
-   FloatSlider* mTransportSlider{};
-   std::vector<ofColor> mRowColors{};
-   ClickButton* mResetButton;
-   ClickButton* mPlayPauseButton;
-   ClickButton* mSyncButton;
+   FloatSlider* mTransportSlider{ nullptr};
+   std::vector<ofColor> mRowColors {};
+   ClickButton* mResetButton {nullptr};
+   ClickButton* mPlayPauseButton {nullptr};
+   ClickButton* mSyncButton {nullptr};
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
-   DropdownList* mOnFinalMeasureDropdown;
-   DropdownList* mCanvasIntervalDropdown;
-   TextEntry* mRackRenameTextBox;
+   DropdownList* mOnFinalMeasureDropdown { nullptr };
+   DropdownList* mCanvasIntervalDropdown { nullptr };
+   TextEntry* mRackRenameTextBox { nullptr };
    std::string mRackRenameString;
+   SongCanvasRackElement* mCurrentElementBeingRenamed { nullptr };
 
-   TextEntry* mMeasureBaseTextbox;
-   TextEntry* mMeasureCountTextbox;
-   TextEntry* mMeasureEndTextbox;
 
-   Checkbox* mLocalModeCheckbox;
+   TextEntry* mMeasureBaseTextbox {nullptr};
+   TextEntry* mMeasureCountTextbox {nullptr};
+   TextEntry* mMeasureEndTextbox {nullptr};
+
+   Checkbox* mLocalModeCheckbox {nullptr};
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
-   FlowGrid* mRackGrid;
-   CanvasTimeline* mCanvasTimeline;
+   FlowGrid* mRackGrid {nullptr};
+   CanvasTimeline* mCanvasTimeline {nullptr};
 
    static constexpr int MaxLayers = 101; //Further increasing this may cause crashes.
    float mTime{ 0 };
@@ -303,9 +305,9 @@ private:
 
    ClickButton* mRackAddNewButton = nullptr;
 
-   DropdownList* mRackAddNewDropdown;
-   DropdownList* mRackElementRightClickDropdown;
-   DropdownList* mLayerDropdownOptions;
+   DropdownList* mRackAddNewDropdown { nullptr };
+   DropdownList* mRackElementRightClickDropdown { nullptr };
+   DropdownList* mLayerDropdownOptions { nullptr };
 
 
    enum class RackElementRightClickBaseOptions
