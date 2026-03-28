@@ -143,6 +143,7 @@ public:
    void DrawRackGraphics() override;
    void CreateUIControls() override;
    void Init() override;
+   void OnPostResize() override;
    static IDrawableModule* Create() { return new SongCanvasRackPulser("Part", nullptr); };
    PatchCableSource* mPulserCable;
    NoteInterval GetInterval() { return mPulserInterval; }

@@ -126,6 +126,8 @@ bool FlowGrid::MouseMoved(float x, float y)
          mHoveredElement = el;
          if (mLastHoveredElement!=mHoveredElement)
          {
+            if (mPressed)
+               break;//We ignore hovers if we're currently pressing something, just as dragging. Makes the UI less jerky.
             if (mLastHoveredElement == nullptr)
             {
                mHoveredElement->UpdateRow();
@@ -167,9 +169,20 @@ bool FlowGrid::MouseMoved(float x, float y)
       }
 
 
+
       //Go through the rows and find to the most likely place to snap to.
       int rowSnap = MAX(0, floor(y / (mRows.size() * mRowYSize + mRowYBorderOffset * 2) * mRows.size()));
       rowSnap = MIN(mRows.size() - 1, rowSnap);
+      auto rowObj = mRows[rowSnap];
+
+      if (rowObj.isOverfilled)
+      {
+         if (rowSnap != mDragElementRow)
+         {
+            return false;//Cannot snap/move to overfilled rows.
+         }
+         //If its from the same row, it may still be moved around.
+      }
 
       float xOffset = mRowXBorderOffset;
       float xSnapPos = mRowXBorderOffset;
@@ -272,7 +285,7 @@ void FlowGrid::DrawModule()
       ofSetColor(ofColor::yellow);
       ofLine(mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y, mDragSnapIndicatorPos.x, mDragSnapIndicatorPos.y + mHeight / GetRowCount());
    }
-
+   /*
    //Debug colours, shows the state/formula of the row:
    for (int i = 0; i < mRows.size(); ++i)
    {
@@ -287,7 +300,7 @@ void FlowGrid::DrawModule()
          ofSetColor(ofColor::red);
          ofLine(17,offset,17,offset+mRowYSize);
       }
-   }
+   }*/
 
    ofPopStyle();
    ofPopMatrix();

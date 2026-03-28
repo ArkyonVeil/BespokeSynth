@@ -80,7 +80,7 @@ public:
 
    struct FlowGridRow
    {
-      bool isOverfilled; //No more elements allowed to be moved.
+      bool isOverfilled; //No more elements allowed to be placed inside. Already inside may still move freely.
       bool isFilled; //Currently packed, free elements cannot be moved there automatically.
       std::vector<FlowGridElement*> elements;
    };

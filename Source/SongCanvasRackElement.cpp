@@ -86,11 +86,11 @@ void SongCanvasRackElement::CreateUIControls()
 float SongCanvasRackElement::GetPreferredWidth() const
 {
    int baseSize = 30;
-   std::string rackName = TruncateString(*mElementName, mMaxNameSize,true);
+   std::string rackName = TruncateString(*mElementName, mMaxNameSize, true);
 
-   int textSize = MAX(50,GetStringWidth(rackName));
+   int textSize = MAX(50, GetStringWidth(rackName));
 
-   return baseSize+textSize;
+   return baseSize + textSize;
 }
 
 
@@ -191,7 +191,7 @@ void SongCanvasRackElement::DrawModule()
       if (form < 0)
          form = 0;
 
-      if (mLastRenameSize!= mElementRenameTextBox->GetRect(true).width)
+      if (mLastRenameSize != mElementRenameTextBox->GetRect(true).width)
       {
          mLastRenameSize = mElementRenameTextBox->GetRect(true).width;
          UpdateRow();
@@ -359,7 +359,6 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
-
 }
 SongCanvasRackPulser::~SongCanvasRackPulser()
 {
@@ -377,7 +376,7 @@ void SongCanvasRackPulser::CreateUIControls()
    this->AddPatchCableSource(mPulserCable);
    mPulserCable->SetAllowMultipleTargets(true);
 
-   mIntervalSelector = new DropdownList(this, "interval", mWidth-50, 3, (int*)(&mPulserInterval));
+   mIntervalSelector = new DropdownList(this, "interval", mWidth - 50, 3, (int*)(&mPulserInterval));
    mIntervalSelector->AddLabel("16", kInterval_16);
    mIntervalSelector->AddLabel("8", kInterval_8);
    mIntervalSelector->AddLabel("4", kInterval_4);
@@ -400,18 +399,32 @@ void SongCanvasRackPulser::Init()
    mTransportListenerInfo = TheTransport->AddListener(this, mPulserInterval, OffsetInfo(0, true), true);
    UpdateMode();
 }
+void SongCanvasRackPulser::OnPostResize()
+{
+   if (!mOnePulseMode)
+   {
+      if (mWidth < GetPreferredWidth()-20)
+      {
+         mIntervalSelector->SetShowing(false);
+      }
+      else
+      {
+         mIntervalSelector->SetShowing(true);
+      }
+   }
+}
 
 void SongCanvasRackPulser::OnEnter()
 {
    if (mOnePulseMode)
    {
-   double time = NextBufferTime(mSongCanvas);
-   const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
-   mPulserCable->AddHistoryEvent(time, true, 0);
-   mPulserCable->AddHistoryEvent(time + 15, false);
-   Excite(1);
-   for (auto* receiver : receivers)
-      receiver->OnPulse(time, 1, 0);
+      double time = NextBufferTime(mSongCanvas);
+      const std::vector<IPulseReceiver*>& receivers = mPulserCable->GetPulseReceivers();
+      mPulserCable->AddHistoryEvent(time, true, 0);
+      mPulserCable->AddHistoryEvent(time + 15, false);
+      Excite(1);
+      for (auto* receiver : receivers)
+         receiver->OnPulse(time, 1, 0);
    }
 }
 void SongCanvasRackPulser::OnExit()
@@ -465,10 +478,10 @@ void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvas_CanvasElement* elem
 {
    if (mOnePulseMode)
    {
-   ofPushStyle();
-      ofSetColor(200,200,0);
-      ofRect(rect.x,rect.y,2, rect.height,0);
-   ofPopStyle();
+      ofPushStyle();
+      ofSetColor(200, 200, 0);
+      ofRect(rect.x, rect.y, 2, rect.height, 0);
+      ofPopStyle();
    }
 }
 
@@ -542,15 +555,15 @@ void SongCanvasRackPulser::DrawRackGraphics()
    if (!mOnePulseMode)
    {
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
-      mIntervalSelector->SetPosition(mWidth - 64, mHeight / 4+1);
+      mIntervalSelector->SetPosition(mWidth - 64, mHeight / 4 + 1);
       mIntervalSelector->Draw();
    }
    else
    {
       ofPushStyle();
       ofFill();
-      ofSetColor(ofColor{200,200,0});
-      ofRect(0,0,4,mHeight,0);
+      ofSetColor(ofColor{ 200, 200, 0 });
+      ofRect(0, 0, 4, mHeight, 0);
       ofPopStyle();
       mPulserCable->SetManualPosition(mWidth - 12, mHeight / 2);
    }
@@ -576,7 +589,6 @@ void SongCanvasRackKeyer::LoadState(FileStreamIn& in, int rev)
 {
    SongCanvasRackElement::LoadState(in, rev);
 }
-
 
 
 /////////////
