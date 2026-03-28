@@ -1741,7 +1741,7 @@ void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
 
 void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
 {
-   switch (mRackElementRightClickIndex)
+   switch (static_cast<RackElementRightClickBaseOptions>(mRackElementRightClickIndex))
    {
       case RackElementRightClickBaseOptions::Nothing: break;
       case RackElementRightClickBaseOptions::Rename:
