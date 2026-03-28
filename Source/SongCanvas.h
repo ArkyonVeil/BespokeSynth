@@ -71,6 +71,7 @@ public:
    static bool AcceptsAudio() { return false; }
    static bool AcceptsNotes() { return false; }
    static bool AcceptsPulses() { return false; }
+   bool ShouldSuppressAutomaticOutputCable() override {return true;}
 
    void CreateUIControls() override;
 
@@ -110,6 +111,7 @@ public:
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
+   int GetNumTargets() override { return 0;}
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
