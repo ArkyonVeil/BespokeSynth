@@ -69,8 +69,8 @@ public:
    void SetRect(ofRectangle rect);
    void SetRectRelativeToGrid(ofRectangle rect);
 
-   void SetHighlight(bool highlight) { mHighlighted = highlight; }
-   bool GetHighlighted() const { return mHighlighted; }
+   void SetHighlight(bool highlight) { mSelected = highlight; }
+   bool GetHighlighted() const { return mSelected; }
    void SetColor(ofColor color);
    void SetColorOutline(ofColor color);
    void SetColorsManually(ofColor mainColor, ofColor outlineColor, ofColor highlightColor, ofColor highlightOutlineColor);
@@ -107,7 +107,7 @@ protected:
    float mOutlineThickness{ 0.8F };
 
 private:
-   bool mHighlighted = false;
+   bool mSelected = false;
    bool mHovered = false;
    bool mInitialized = false;
    float mDebugNumX = 0;

@@ -129,11 +129,14 @@ void FlowGridElement::DrawModule()
    ofPushStyle();
    ofFill();
 
-   mHighlighted = mFlowGridParent->GetSelectedGridElement() == this;
+   mSelected = mFlowGridParent->GetSelectedGridElement() == this;
 
-   if (!mHighlighted)
+   if (!mSelected)
    {
-      ofSetColor(mMainColor);
+      if (!mHovered)
+         ofSetColor(mMainColor);
+      else
+         ofSetColor(ofColor::lerp(mMainColor,ofColor::white,0.075f));
    }
    else
    {
@@ -141,21 +144,21 @@ void FlowGridElement::DrawModule()
    }
    ofRect(0, 0, mWidth, mHeight);
 
-   if (!mHighlighted)
+   if (!mSelected || !mHovered)
       ofSetLineWidth(mOutlineThickness);
    else
       ofSetLineWidth(mOutlineThickness + 0.4F);
    ofNoFill();
 
-   if (!mHovered && !mHighlighted)
+   if (!mHovered && !mSelected)
       ofSetColor(mOutlineColor);
-   else if (!mHovered && mHighlighted)
+   else if (!mHovered && mSelected)
    {
-      ofSetColor(mHighlightOutlineColor);
+      ofSetColor(0, 255, 255);
    }
    else
    {
-      ofSetColor(0, 255, 255);
+      ofSetColor(mHighlightOutlineColor);
    }
    //ofFill();
    ofRect(0, 0, mWidth, mHeight);
