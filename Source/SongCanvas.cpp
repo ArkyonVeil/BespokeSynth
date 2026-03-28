@@ -128,7 +128,7 @@ void SongCanvas::CreateUIControls()
 
    mMeasureSlider = new FloatSlider(this, "measurebar", mStartCanvasXOffset, mOffsetFromTopSpacing - 16, mCanvas->GetWidth(), 15, &mTime, 0, 32);
    mMeasureSlider->SetNoHover(true);
-   mMeasureSlider->SetCableTargetable(false);
+   mMeasureSlider->SetCableTargetable(false);//TODO, this still isn't safe. These controls may still be targeted by self-created LFOs
    mMeasureSlider->SetTextAlpha(0);
 
    mRackGrid = new FlowGrid(8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
@@ -137,6 +137,7 @@ void SongCanvas::CreateUIControls()
    mRackRenameTextBox = new TextEntry{ this, "rename", -500, -500, 7, &mRackRenameString };
    mRackRenameTextBox->SetRequireEnter(true);
    mRackRenameTextBox->SetFlexibleWidth(true);
+   mRackRenameTextBox->SetCableTargetable(false);
 
 
    auto mgp = mRackGrid->GetPosition();
@@ -148,6 +149,7 @@ void SongCanvas::CreateUIControls()
    mRackAddNewButton->SetPosition(mgp.x + mRackGrid->GetWidth() - bWidth * 1.5, mgp.y);
    mRackAddNewButton->SetDimensions(bWidth * 1.5, mRackGrid->GetHeight());
    mRackAddNewButton->SetIconAlignment(ButtonIconAlignment::kCenter);
+   mRackAddNewButton->SetCableTargetable(false);
 
    mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, FlowGridRowHeightSize);
 
@@ -157,10 +159,13 @@ void SongCanvas::CreateUIControls()
    mRackAddNewDropdown->AddLabel("Enabler", enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", enumPulser);
    mRackAddNewDropdown->AddLabel("Sampler", enumSample);
+   mRackAddNewDropdown->SetCableTargetable(false);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
+   mRackElementRightClickDropdown->SetCableTargetable(false);
 
    mLayerDropdownOptions = new DropdownList(this, "", -100, -100, (int*)&mLayerDropDownOptions);
+   mLayerDropdownOptions->SetCableTargetable(false);
 
    int headerYOffset = 8;
    int mHeaderOffset = 4;
@@ -178,21 +183,26 @@ void SongCanvas::CreateUIControls()
    mMeasureBaseTextbox = new TextEntry(this, "measure", mHeaderOffset, headerYOffset, 3, &mMeasureStart, 0, 999999);
    mMeasureBaseTextbox->DrawLabel(true);
    mMeasureBaseTextbox->SetRequireEnter(false);
+   mMeasureBaseTextbox->SetCableTargetable(false);
 
    mHeaderOffset += mMeasureBaseTextbox->GetRect(true).width + 6;
    mMeasureCountTextbox = new TextEntry(this, "count", mHeaderOffset, headerYOffset, 3, &mMeasureCount, 0, 999999);
    mMeasureCountTextbox->DrawLabel(true);
    mMeasureCountTextbox->SetRequireEnter(false);
+   mMeasureCountTextbox->SetCableTargetable(false);
 
    mMeasureEndTextbox = new TextEntry(this, "end", mHeaderOffset, headerYOffset, 3, &mMeasureEnd, 0, 999999);
    mMeasureEndTextbox->DrawLabel(true);
    mMeasureEndTextbox->SetRequireEnter(false);
    mMeasureEndTextbox->SetShowing(false);
+   mMeasureEndTextbox->SetCableTargetable(false);
 
    mSyncButton = new ClickButton(this, "sync", 0, 0, ButtonDisplayStyle::kText);
    mOnFinalMeasureDropdown = new DropdownList(this, "on finish", 0, 0, &mOnEndMeasure);
    mOnFinalMeasureDropdown->DrawLabel(true);
+   mOnFinalMeasureDropdown->SetCableTargetable(false);
    mLocalModeCheckbox = new Checkbox(this, "local", 0, 0, &mLocalMode);
+   mLocalModeCheckbox->SetCableTargetable(false);
 
    mCanvasIntervalDropdown = new DropdownList(this, "canvas interval", 0, 0, &mCanvasIntervalInt);
    mCanvasIntervalDropdown->DrawLabel(false);
@@ -206,6 +216,7 @@ void SongCanvas::CreateUIControls()
    mCanvasIntervalDropdown->AddLabel("16nt", kInterval_16nt);
    mCanvasIntervalDropdown->AddLabel("32n", kInterval_32n);
    mCanvasIntervalDropdown->AddLabel("64n", kInterval_64n);
+   mCanvasIntervalDropdown->SetCableTargetable(false);
 
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
@@ -758,9 +769,11 @@ void SongCanvas::AddNewLayer(int index, SongCanvasLayer layer)
    float midCentering = layerPosSpacing / 4;
 
    mLayerNameTextbox[lIndex] = new TextEntry(this, ("layer" + std::to_string(lIndex)).c_str(), 28, GetCanvasYOffset() + midCentering + lIndex * layerPosSpacing, 12, &seqLayers[lIndex].layerName);
+   mLayerNameTextbox[lIndex]->SetCableTargetable(false);
    mLayerEnableCheckbox[lIndex] = new Checkbox(this, ("checkbox" + std::to_string(lIndex)).c_str(), mStartCanvasXOffset - 8, GetCanvasYOffset() + midCentering + lIndex * layerPosSpacing, &seqLayers[lIndex].enabled);
    mLayerEnableCheckbox[lIndex]->SetDisplayText(false);
    mLayerSettingsButton[lIndex] = new ClickButton(this, ("setting" + std::to_string(lIndex)).c_str(), mStartCanvasXOffset - 28, GetCanvasYOffset() + midCentering + lIndex * layerPosSpacing, ButtonDisplayStyle::kHamburger);
+   mLayerSettingsButton[lIndex]->SetCableTargetable(false);
    //mCanvas->SetRowColor(i,ofColor::clear)
    MoveLayerTo(lIndex, index);
 }
