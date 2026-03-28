@@ -223,8 +223,13 @@ void SongCanvasRackElement::DrawModule()
          UpdateRow();
       }
 
-      if (mWidth > 20)
-         DrawTextNormal(displayString, 8, mHeight / 2 + 5.5);
+      if (mWidth >= 30)
+      {
+         if (mFlowGridParent->GetSelectedGridElement() != this)
+            DrawTextNormal(displayString, 8, mHeight / 2 + 5.5);
+         else
+            DrawTextBold(displayString, 8, mHeight / 2 + 5.5);
+      }
    }
    ofPopStyle();
 }
