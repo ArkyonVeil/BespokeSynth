@@ -45,8 +45,8 @@ FlowGrid::FlowGrid(int x, int y, int w, int rowHeight, int startNumRows, IDrawab
    mOwner = owner;
    mMinRows = startNumRows;
    mWidth = w;
-   mHeight = rowHeight * startNumRows;
    mRowYSize = rowHeight;
+   mHeight = rowHeight * startNumRows+mRowYBorderOffset*2 + mElementYSpacing*(startNumRows-1);
 }
 FlowGrid::~FlowGrid()
 {
@@ -91,6 +91,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
       mStartDragMouse = ofVec2f(x, y);
       mRackPartDragGhostRect = mSelectedElement->GetRectRelativeToGrid();
       mPressed = true;
+      mRowCountOnDragStart = mRows.size();
    }
    else
    {
@@ -151,10 +152,24 @@ bool FlowGrid::MouseMoved(float x, float y)
       elPX = CLAMP(elPX, mX, mX + mWidth - mSelectedElement->GetWidth());
       elPY = CLAMP(elPY, mY, mY + mHeight - mSelectedElement->GetHeight());
       mSelectedElement->SetPosition(elPX, elPY);
+
+      //If hovering on the current lowest row, spawn one more.
+      float suggestionBorder = mRowYBorderOffset+(mRowCountOnDragStart-1)*mRowYSize;
+      if (y > suggestionBorder && !mSuggestedRowActive && mRows.size() < mMaxRows)
+      {
+         mSuggestedRowActive = true;
+         AddRow();
+      }
+      else if (mSuggestedRowActive && y <= suggestionBorder-12)//Pop it if too far.
+      {
+         mSuggestedRowActive = false;
+         PopRow();
+      }
+
+
       //Go through the rows and find to the most likely place to snap to.
       int rowSnap = MAX(0, floor(y / (mRows.size() * mRowYSize + mRowYBorderOffset * 2) * mRows.size()));
       rowSnap = MIN(mRows.size() - 1, rowSnap);
-      //TODO if we're at lowest row, spawn a new one if possible.
 
       float xOffset = mRowXBorderOffset;
       float xSnapPos = mRowXBorderOffset;
@@ -199,6 +214,7 @@ bool FlowGrid::MouseMoved(float x, float y)
 void FlowGrid::MouseReleased()
 {
    mPressed = false;
+   mRowCountOnDragStart = -1;
    if (mDragging)
    {
       mDragging = false;
@@ -206,16 +222,27 @@ void FlowGrid::MouseReleased()
 
       MoveToRow(mSelectedElement, mSnapDragRow, mSnapDragIndex);
    }
+   //Check if we have displayed a preview row, if its empty, we pop it.
+   if (mSuggestedRowActive)
+   {
+      mSuggestedRowActive = false;
+      if (mRows[mRows.size()-1].elements.empty())
+      {
+         PopRow();
+      }
+   }
 }
 
 bool FlowGrid::MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll)
 {
    return false;
 }
-void FlowGrid::SetDimensions(float width, float height)
+void FlowGrid::SetDimensions(float width, float yRowSize)
 {
+   if (yRowSize != -1)
+      mRowYSize = yRowSize;
    mWidth = width;
-   mHeight = height;
+   mHeight = mRowYSize*mRows.size()+(MAX(0,mRows.size()-1))*mElementYSpacing+mRowYBorderOffset*2;
    RecalculateFlowGrid();
 }
 
@@ -409,7 +436,7 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
                //Either of these indexes will result in a no-move situation so we skip it.
                if (sourceIndex == index || sourceIndex == index - 1)
                {
-                  ofLog() << "FlowGrid move rejected: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
+                  //ofLog() << "FlowGrid move rejected: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
                   return;
                }
             }
@@ -428,7 +455,7 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
 
       //Put in
       mRows[row].elements.insert(mRows[row].elements.begin() + index, element);
-      ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
+      //ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
       UpdateRow(sourceRow, true);
       UpdateRow(row, true);
    }
@@ -442,12 +469,12 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
       bool isLast = false;
       if (sourceIndex > index)
       {
-         ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
+         //ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index);
          tIdx = mRows[sourceRow].elements.begin() + index;
       }
       else
       {
-         ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index - 1);
+         //ofLog() << "FlowGrid move: sR" + ofToString(sourceRow) + " sI" + ofToString(sourceIndex) + " -> R" + ofToString(row) + " I" + ofToString(index - 1);
          if (index - 1 == mRows[sourceRow].elements.size())
             isLast = true;
          else
@@ -459,15 +486,30 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
          mRows[row].elements.push_back(element);
       UpdateRow(row, true);
    }
+   CheckCleanupRows();
+}
+
+void FlowGrid::CheckCleanupRows()
+{
+   while (mRows.size()>mMinRows)
+   {
+      if (mRows[mRows.size()-1].elements.empty())
+      {
+         PopRow();
+      }
+      else
+      {
+         break;
+      }
+   }
 }
 
 //Updates cached data, and visuals. Does not trigger a resize.
 void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
-
    int const rowCount = mRows.size();
-   if (rowCount <= index)
-      return; //???
+   if (rowCount <= index || index < 0)
+      return; //Invalid request.
 
    if (mRows[index].elements.empty())
    {
@@ -654,6 +696,8 @@ void FlowGrid::RowNotifyPostResize(int row) const
 
 int FlowGrid::GetRowIndexOfElement(FlowGridElement* element) const
 {
+   if (element == nullptr)
+      return -1;
    if (element->mPreferredRow != -1)
       return element->mPreferredRow;
 
@@ -700,6 +744,7 @@ void FlowGrid::RemoveFlowElement(FlowGridElement* element)
    mOwner->RemoveChild(element);
    delete element;
    RecalculateFlowGrid();
+   CheckCleanupRows();
 }
 
 void FlowGrid::ReturnName(FlowNameAssigment* nAssign)
@@ -737,8 +782,10 @@ void FlowGrid::PopRow()
 
 void FlowGrid::ResizeFlowGrid()
 {
-   SetDimensions(mWidth, mRows.size() * mRowYSize);
-   mListener->onFlowGridResize(mWidth, mRows.size() * mRowYSize);
+   float oldX = mWidth;
+   float oldY = mHeight;
+   SetDimensions(mWidth);
+   mListener->onFlowGridResize(mWidth, mHeight, oldX, oldY);
 }
 void FlowGrid::InitAllFlowElements() const
 {

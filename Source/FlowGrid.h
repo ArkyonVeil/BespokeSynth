@@ -18,7 +18,7 @@ public:
    virtual ~IFlowGridListener() = default;
 
    virtual void onFlowGridNewSelection(FlowGridElement* element){};
-   virtual void onFlowGridResize(float newBoundsX, float newBoundsY){}; //The grid is resizing in some direction, ignore, and it may clip.
+   virtual void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY){}; //The grid is resizing in some direction, ignore, and it may clip.
 };
 
 class FlowGridElementFactory
@@ -41,7 +41,7 @@ public:
    bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll);
    int GetRowCount() const { return mRows.size(); }
 
-   void SetDimensions(float width, float height);
+   void SetDimensions(float width, float mRowHeight = -1);
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
@@ -54,6 +54,7 @@ public:
    void AddToRow(FlowGridElement* element, int row);
    void InsertToRow(FlowGridElement* element, int row, int index);
    void MoveToRow(FlowGridElement* element, int row, int index);
+   void CheckCleanupRows();
    void UpdateRow(int index, bool updateFillState);
    void RowNotifyPostResize(int row) const;
    int GetRowIndexOfElement(FlowGridElement* element) const;
@@ -150,9 +151,11 @@ private:
    IDrawableModule* mOwner;
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
-   int mMaxRows = -1;
+   int mMaxRows = 201;
    int mMinRows = 2; //Number of rows to always display.
    int mDebugIter = 0;
+   int mRowCountOnDragStart = -1;
+   bool mSuggestedRowActive = false;
 
    float mWidth = 0;
    float mHeight = 0;

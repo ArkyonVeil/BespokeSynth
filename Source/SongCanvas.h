@@ -121,7 +121,7 @@ public:
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void OnTransportAdvanced(float amount) override;
 
-   void onFlowGridResize(float newBoundsX, float newBoundsY) override;
+   void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY) override;
    void onFlowGridNewSelection(FlowGridElement* element) override;
 
    void DisposeElement(IClickable* element);

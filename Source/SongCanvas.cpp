@@ -149,7 +149,7 @@ void SongCanvas::CreateUIControls()
    mRackAddNewButton->SetDimensions(bWidth * 1.5, mRackGrid->GetHeight());
    mRackAddNewButton->SetIconAlignment(ButtonIconAlignment::kCenter);
 
-   mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, mFlowGridRows * FlowGridRowHeightSize);
+   mRackGrid->SetDimensions(mCanvas->GetWidth() - 16 + GetCanvasStartXOffset() - bWidth * 1.5f, FlowGridRowHeightSize);
 
    //HACK, but this is just to avoid having to do further changes to the dropdown element.
    //TL DR: Don't draw it, but send over the events with the button.
@@ -708,7 +708,7 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w, 300);
-   h = MAX(h, 100 + seqLayers.size() * MinRowSize + mFlowGridRows * FlowGridRowHeightSize);
+   h = MAX(h, 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight());
 
    if (mMeasureSize == 0)
    {
@@ -721,7 +721,7 @@ void SongCanvas::Resize(float w, float h)
    mWidth = w;
    mHeight = h;
 
-   float canvasHeight = h - (16 + GetCanvasYOffset() + mFlowGridRows * FlowGridRowHeightSize);
+   float canvasHeight = h - (16 + GetCanvasYOffset() + mRackGrid->GetHeight());
    mCanvas->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset());
    mMeasureSlider->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset() - 16);
    mCanvas->SetDimensions(w - mStartCanvasXOffset, canvasHeight);
@@ -739,10 +739,9 @@ void SongCanvas::Resize(float w, float h)
 
    int xEndRackSpacing = 46;
    mRackGrid->SetPosition(8, GetRackGridStartYOffset());
-   mRackGrid->SetDimensions(mWidth - xEndRackSpacing, mFlowGridRows * FlowGridRowHeightSize);
-   mRackGrid->RecalculateFlowGrid();
+   mRackGrid->SetDimensions(mWidth - xEndRackSpacing);
    mRackAddNewButton->SetPosition(8 + mWidth - xEndRackSpacing, GetRackGridStartYOffset());
-   mRackAddNewButton->SetDimensions(28, mFlowGridRows * FlowGridRowHeightSize);
+   mRackAddNewButton->SetDimensions(28, mRackGrid->GetHeight());
 
    ReloadHeader();
 }
@@ -1365,12 +1364,15 @@ void SongCanvas::OnTransportAdvanced(float amount)
       }
    }
 }
-void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY)
+void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY)
 {
    if (mRackAddNewButton == nullptr)
       return; //Not yet ready.
+
+   float diff = newBoundsY - oldBoundsY;
    mRackAddNewButton->GetDimensions(newBoundsX, newBoundsY);
    mRackAddNewButton->SetDimensions(newBoundsX, mFlowGridRows * FlowGridRowHeightSize);
+   FeatureResize(0,diff);
 }
 void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 {
