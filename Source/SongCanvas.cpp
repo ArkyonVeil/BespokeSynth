@@ -158,7 +158,9 @@ void SongCanvas::CreateUIControls()
    mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mRackGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
    mRackAddNewDropdown->AddLabel("Enabler", enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", enumPulser);
+#if DEBUG
    mRackAddNewDropdown->AddLabel("Sampler", enumSample);
+#endif
    mRackAddNewDropdown->SetCableTargetable(false);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);

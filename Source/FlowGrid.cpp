@@ -387,10 +387,6 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
 
    assert(r != -1); //If you fail this, the grid has been specified to not have enough room, but no check was done to prevent this.
    //Now we have a rogue class object and nowhere to put it . <>(
-   if (r == -1)
-   {
-      throw std::exception("Error: Tried to push in a new element to an already full FlowGrid.");
-   }
 
    if (!preSetup)
    {
