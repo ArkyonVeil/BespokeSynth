@@ -1409,7 +1409,6 @@ void SongCanvas::OnTimeEvent(double time)
 }
 
 //Attempt to resize based on the addition/removal of a feature.
-
 void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
 {
    mModuleSaveData.LoadBool("show_real_time", moduleInfo, false);

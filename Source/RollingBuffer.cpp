@@ -69,6 +69,7 @@ void RollingBuffer::Accum(int samplesAgo, float sample, int channel)
    mBuffer.GetChannel(channel)[(Size() + mOffsetToNow[channel] - samplesAgo) % Size()] += sample;
 }
 
+//Write a batch of samples to the internal buffer for rendering.
 void RollingBuffer::WriteChunk(float* samples, int size, int channel)
 {
    assert(size < Size());

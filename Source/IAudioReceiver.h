@@ -40,8 +40,8 @@ public:
    : mInputBuffer(bufferSize)
    {}
    virtual ~IAudioReceiver() {}
-   virtual ChannelBuffer* GetBuffer() { return &mInputBuffer; }
-   virtual InputMode GetInputMode() { return kInputMode_Multichannel; }
+   virtual ChannelBuffer* GetBuffer() { return &mInputBuffer; }//Returns this module's input buffer.
+   virtual InputMode GetInputMode() { return kInputMode_Multichannel; }//Defines if this module expects mono, or more channels. (If mono, it will crunch multi-channel to mono)
 
 protected:
    void SyncInputBuffer();

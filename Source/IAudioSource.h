@@ -37,13 +37,13 @@ class IAudioSource : public virtual IPatchable
 {
 public:
    IAudioSource()
-   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate)
+   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate)//Initialize the visual buffer with 10% the resolution of the real one.
    {}
    virtual ~IAudioSource() {}
    virtual void Process(double time) = 0;
    IAudioReceiver* GetTarget(int index = 0);
    virtual int GetNumTargets() { return 1; }
-   RollingBuffer* GetVizBuffer() { return &mVizBuffer; }
+   RollingBuffer* GetVizBuffer() { return &mVizBuffer; }//Gets this module's visual buffer for animating audio cables and other FX.
 
 protected:
    void SyncOutputBuffer(int numChannels);

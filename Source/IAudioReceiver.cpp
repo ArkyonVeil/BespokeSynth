@@ -27,6 +27,7 @@
 
 #include "IAudioReceiver.h"
 
+//Merges multi-channel input to mono if module is set to Mono
 void IAudioReceiver::SyncInputBuffer()
 {
    if (GetInputMode() == kInputMode_Mono && GetBuffer()->NumActiveChannels() > 1)
@@ -34,6 +35,7 @@ void IAudioReceiver::SyncInputBuffer()
       for (int i = 1; i < GetBuffer()->NumActiveChannels(); ++i)
          Add(GetBuffer()->GetChannel(0), GetBuffer()->GetChannel(i), GetBuffer()->BufferSize());
       //Mult(GetBuffer()->GetChannel(0), 1.0f / GetBuffer()->NumActiveChannels(), GetBuffer()->BufferSize());
+      //Reset the channel use count
       GetBuffer()->SetNumActiveChannels(1);
    }
 }

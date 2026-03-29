@@ -27,13 +27,18 @@
 
 #include "IAudioProcessor.h"
 
+//Syncs module buffers with attached module's buffers. Preparing them for data transfer. + Some situational cleanup
 void IAudioProcessor::SyncBuffers(int overrideNumOutputChannels)
 {
+   //If this module expects mono input only, automatically merges stereo into mono (by adding the two together).
+   //Otherwise does nothing.
    SyncInputBuffer();
 
+   //Optionally overrides the number of active channels
    int numOutputChannels = GetBuffer()->NumActiveChannels();
    if (overrideNumOutputChannels != -1)
       numOutputChannels = overrideNumOutputChannels;
 
+   //Ensures the attached modules have enough active channels to receive our data.
    SyncOutputBuffer(numOutputChannels);
 }

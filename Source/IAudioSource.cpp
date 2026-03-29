@@ -27,19 +27,26 @@
 #include "IAudioReceiver.h"
 #include "PatchCableSource.h"
 
+
+//Returns the IAudioReceiver module on that index, by default index 0. Should ALWAYS be an index that fits under the number of available audio output cables.
 IAudioReceiver* IAudioSource::GetTarget(int index)
 {
    assert(index < GetNumTargets());
    return GetPatchCableSource(index)->GetAudioReceiver();
 }
 
+
 void IAudioSource::SyncOutputBuffer(int numChannels)
 {
+   //Go through all the attached modules
    for (int i = 0; i < GetNumTargets(); ++i)
    {
+      //If said module is in fact attached (not null)
       if (GetTarget(i))
       {
+         //Gets the input buffer of the connected module.
          ChannelBuffer* out = GetTarget(i)->GetBuffer();
+         //Sets the number of channels on the other module that we'll be using.
          out->SetNumActiveChannels(MAX(numChannels, out->NumActiveChannels()));
       }
    }
