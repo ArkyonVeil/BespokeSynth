@@ -47,11 +47,12 @@
 #include "TextEntry.h"
 #include "FlowGrid.h"
 #include "SongCanvasRackElement.h"
-#include "SwitchAndRamp.h"
 
 
+class SongCanvasMixer;
 class SongCanvas_CanvasElement;
 class SongCanvasRackElement;
+class SongCanvasAudioRackElement;
 class SongCanvas : public IAudioSource,
                    public IDrawableModule,
                    public ICanvasListener,
@@ -80,9 +81,9 @@ public:
    void Resize(float w, float h) override;
    void Init() override;
 
-   virtual void LoadLayout(const ofxJSONElement& moduleInfo) override;
-   virtual void SetUpFromSaveData() override;
-   virtual void SaveLayout(ofxJSONElement& moduleInfo) override;
+   void LoadLayout(const ofxJSONElement& moduleInfo) override;
+   void SetUpFromSaveData() override;
+   void SaveLayout(ofxJSONElement& moduleInfo) override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
 
@@ -99,6 +100,7 @@ public:
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
+   void AddNewRackPart(SongCanvasRackElement* element);
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
@@ -115,6 +117,8 @@ public:
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
+   SongCanvasMixer* GetMixer(int index);
+   void SortMixers();
 
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
    bool IsRackActive(SongCanvasRackElement* rackPart) const;//True if there's a part on the canvas with the same rack that is currently playing.
@@ -128,12 +132,13 @@ public:
 
    void DisposeElement(IClickable* element);
 
-
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
 
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override { return 5; }
+
+   void PostRepatch(PatchCableSource* cableSource, bool fromUserClick) override;
 
    enum EnumSongCanvasStyle
    {
@@ -164,14 +169,6 @@ public:
    static std::array<ofColor, 4> ESTransColours;
 
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
-
-
-   //Audio Sample Methods
-   void DebugSetSample(Sample* newSample)
-   {
-      mSample = newSample;
-   }
-   void PlaySample();
 
 private:
    struct SongCanvasLayer
@@ -358,13 +355,10 @@ private:
    int mLayerDropdownOptionButtonIndex;
 
 
+   //Audio Handling
+   std::vector<SongCanvasMixer*> mMixers {};
+   std::vector<SongCanvasAudioRackElement*> mAudioRacks {};
+
    //Expert variables
    bool expertPanelEnabled = false;
-
-   //Audio/Sample stuff
-   Sample* mSample{ nullptr };
-   bool mPlayingSample{ false };
-   ::ADSR mAdsr{ 10, 1, 1, 10 };
-   SwitchAndRamp mSwitchAndRamp;
-   ChannelBuffer mWriteBuffer;
 };

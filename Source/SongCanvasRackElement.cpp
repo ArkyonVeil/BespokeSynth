@@ -12,6 +12,7 @@
 /// This means that you only really need to mostly work on the Rack Elements for new behavior! <>]
 
 #pragma once
+#include "INoteReceiver.h"
 #include "ModularSynth.h"
 #include "SongCanvas.h"
 #include "Sample.h"
@@ -259,6 +260,42 @@ void SongCanvasRackElement::DrawModule()
    }
    ofPopStyle();
 }
+
+///////////////////
+///AUDIO GENERIC///
+///////////////////
+
+SongCanvasAudioRackElement::~SongCanvasAudioRackElement()
+{
+   RemoveUIControl(mChannelPicker);
+}
+void SongCanvasAudioRackElement::CreateUIControls()
+{
+   SongCanvasRackElement::CreateUIControls();
+
+   mChannelPicker = new TextEntry(this,"mixer",mWidth-36,mHeight/2,2,&mMixerIndex,0,99);
+   mChannelPicker->SetCableTargetable(false);
+   mChannelPicker->SetRequireEnter(false);
+}
+void SongCanvasAudioRackElement::DrawRackGraphics()
+{
+   mChannelPicker->Draw();
+}
+void SongCanvasAudioRackElement::SetMixer(SongCanvasMixer* mixer)
+{
+   mMixer = mixer;
+   mMixerIndex = mMixer->mMixerIndex;
+   mMixerBuffer = mMixer->GetBuffer();
+}
+void SongCanvasAudioRackElement::TextEntryComplete(TextEntry* entry)
+{
+   SwapMixers(mMixerIndex);
+}
+void SongCanvasAudioRackElement::SwapMixers(int newIndex)
+{
+    SetMixer(mSongCanvas->GetMixer(newIndex));
+}
+
 
 /////////////
 ///Enabler///
@@ -622,30 +659,37 @@ void SongCanvasRackKeyer::LoadState(FileStreamIn& in, int rev)
 /////////////
 
 SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas)
-: SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
+: SongCanvasAudioRackElement(partName, GetFlowGridElementType(), songCanvas)
+, mWriteBuffer(gBufferSize)
+, mPolyMgr(this)
 {
    SetColor(ofColor::green);
 
-   mSampleLoaderButton = new ClickButton(songCanvas, "sample", 60, 2, ButtonDisplayStyle::kText);
+   mSampleLoaderButton = new ClickButton(this, "sample", 60, 2, ButtonDisplayStyle::kText);
+   mVoiceParams.mVol = 0.5f;
+   mVoiceParams.mAdsr.Set(10, 0, 1, 10);
+   mVoiceParams.mSample = mSample;
+   mVoiceParams.mSamplePitch = 48;
+
+   mPolyMgr.Init(kVoiceType_Sampler, &mVoiceParams);
 }
 SongCanvasRackSampler::~SongCanvasRackSampler()
 {
-   mSongCanvas->DisposeElement(mSampleLoaderButton);
-
-   //TODO I have strong suspicions that more will be needed here.
+   delete mSample;
+   RemoveUIControl(mSampleLoaderButton);
 }
-
 
 void SongCanvasRackSampler::OnEnter()
 {
    if (!mSample->IsSampleLoading())
    {
       Excite(1);
-      mSongCanvas->PlaySample();
+      PlaySample();
    }
 }
 void SongCanvasRackSampler::OnExit()
 {
+   //TODO
 }
 
 void SongCanvasRackSampler::LoadFileSample()
@@ -675,11 +719,50 @@ void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
 }
 void SongCanvasRackSampler::SetSample(Sample* sample)
 {
+   delete mSample;
    mSample = sample;
-   mSongCanvas->DebugSetSample(mSample);
    sample->SetPlayPosition(0);
    mSampleLoaderButton->SetOverrideDisplayName(mSample->Name());
 }
+
+void SongCanvasRackSampler::PlaySample()
+{
+   NoteMessage note(mLastProcessTime,48,127);
+   mPolyMgr.Start(note.time, note.pitch, note.velocity / 127.0f, note.voiceIdx, note.modulation);
+}
+
+void SongCanvasRackSampler::Process(double time)
+{
+   //PROFILE stuff is in the Song Canvas
+
+   //TODO: Look for optimization opportunities, this might be doing pointless work.
+
+   if (!mEnabled ||  !mSample->LengthInSamples())
+      return;
+
+   mLastProcessTime = time;
+
+   int numChannels = 2;
+   int bufferSize = GetMixerBuffer()->BufferSize();
+
+   SyncOutputBuffer(numChannels);
+
+   //Cleanup
+   mWriteBuffer.SetNumActiveChannels(numChannels);
+   mWriteBuffer.Clear();
+
+   //Sample data is processed by the mPolyMgr, saving us a ton of work here.
+   mSample->LockDataMutex(true);
+   mPolyMgr.Process(time, &mWriteBuffer, bufferSize);
+   mSample->LockDataMutex(false);
+
+   //Send it over to the mixer.
+   for (int ch = 0; ch < mWriteBuffer.NumActiveChannels(); ++ch)
+   {
+      Add(GetMixerBuffer()->GetChannel(ch), mWriteBuffer.GetChannel(ch), gBufferSize);
+   }
+}
+
 void SongCanvasRackSampler::DrawRackGraphics()
 {
    mSampleLoaderButton->SetPosition(12 + GetStringWidth(*mElementName), 7);
@@ -690,6 +773,7 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
    element->mCurrentColor = mCanvasSamplerColor;
    element->mCurrentColorGrad = mCanvasSamplerColor2;
 }
+
 void SongCanvasRackSampler::SaveState(FileStreamOut& out)
 {
    SongCanvasRackElement::SaveState(out);
@@ -698,6 +782,7 @@ void SongCanvasRackSampler::LoadState(FileStreamIn& in, int rev)
 {
    SongCanvasRackElement::LoadState(in, rev);
 }
+
 
 /////////
 ///LFO///

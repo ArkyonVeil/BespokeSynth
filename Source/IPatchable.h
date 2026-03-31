@@ -32,7 +32,7 @@ class IPatchable
 public:
    virtual ~IPatchable() {}
    virtual PatchCableSource* GetPatchCableSource(int index = 0) = 0;
-   virtual void PreRepatch(PatchCableSource* cableSource) {}
-   virtual void PostRepatch(PatchCableSource* cableSource, bool fromUserClick) {}
+   virtual void PreRepatch(PatchCableSource* cableSource) {}//Triggers before a cable attaches/detaches one of this module's output cables to another module.
+   virtual void PostRepatch(PatchCableSource* cableSource, bool fromUserClick) {}//Triggers after a cable attaches/detaches one of this module's output cables to another module.
    virtual void OnCableGrabbed(PatchCableSource* cableSource) {}
 };

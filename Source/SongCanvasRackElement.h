@@ -3,10 +3,15 @@
 //
 #pragma once
 #include "FlowGrid.h"
+#include "PolyphonyMgr.h"
+#include "Sample.h"
+#include "SampleVoice.h"
+#include "SongCanvasMixer.h"
 
 
 class SongCanvas;
 class SongCanvas_CanvasElement;
+class SongCanvasMixer;
 class PatchCableSource;
 
 class SongCanvasRackFactory : public FlowGridElementFactory
@@ -38,7 +43,7 @@ public:
 
    void CreateUIControls() override;
    virtual void OnEnter() = 0;
-   virtual void OnProcess(){};
+   virtual void OnProcessTransport(){};
    virtual void OnExit() = 0;
    float GetPreferredWidth() const override;
    virtual void HandleRightClickDropdown(int optionValue){};
@@ -98,6 +103,31 @@ private:
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;
+};
+
+//Rack elements that produce sound should inherit this for consistent support and convenience methods such as channel assigment.
+class SongCanvasAudioRackElement: public SongCanvasRackElement, public  IAudioSource, public ITextEntryListener
+{
+public:
+   SongCanvasAudioRackElement(const std::string& partName, const std::string& internalName, SongCanvas* songCanvas)
+   : SongCanvasRackElement(partName, internalName, songCanvas)
+   {}
+   ~SongCanvasAudioRackElement();
+
+   SongCanvasMixer* GetMixer() {return mMixer;};
+   ChannelBuffer* GetMixerBuffer() {return mMixerBuffer;};
+   int GetMixerIndex(){return mMixerIndex;}
+   void CreateUIControls() override;
+   void DrawRackGraphics() override;
+   void SetMixer(SongCanvasMixer* mixer);
+   void TextEntryComplete(TextEntry* entry) override;
+protected:
+   void SwapMixers(int newIndex);
+   int mMixerIndex {-1};
+private:
+   SongCanvasMixer* mMixer;
+   ChannelBuffer* mMixerBuffer;
+   TextEntry* mChannelPicker;
 };
 
 /////////////
@@ -184,7 +214,7 @@ public:
 
 
 private:
-   PatchCableSource* mKeyerCable;
+   PatchCableSource* mKeyerCable {nullptr};
    void OnEnter() override{};
    void OnExit() override{};
    void DrawRackGraphics() override;
@@ -196,7 +226,7 @@ private:
 ///Sampler///
 /////////////
 
-class SongCanvasRackSampler : public SongCanvasRackElement
+class SongCanvasRackSampler : public SongCanvasAudioRackElement
 {
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
@@ -208,19 +238,28 @@ public:
    void LoadFileSample();
    void ButtonClicked(ClickButton* button, double time);
    void SetSample(Sample* sample);
+   void PlaySample();
    void DrawRackGraphics() override;
+
+   ChannelBuffer* GetBuffer(){return &mWriteBuffer;}
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
+   void Process(double time) override;
 
 private:
-   Sample* mSample{};
-   float mSamplerPitch{ 0 };
-   float mSamplerVolume{ 0 };
-   ClickButton* mSampleLoaderButton{};
-   PatchCableSource* mSamplerCable;
+   Sample* mSample {nullptr};
+   ClickButton* mSampleLoaderButton {nullptr};
+   PatchCableSource* mSamplerCable {nullptr};
+
+   ChannelBuffer mWriteBuffer;
+   int mSamplesPlaying {0};
+   PolyphonyMgr mPolyMgr;
+   SampleVoiceParams mVoiceParams{};
+
+   double mLastProcessTime;
 };
 
 /////////

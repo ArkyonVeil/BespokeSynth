@@ -37,6 +37,7 @@
 #include "ModularSynth.h"
 #include "Profiler.h"
 #include "Sample.h"
+#include "SongCanvasMixer.h"
 
 #include <cstring>
 
@@ -66,7 +67,6 @@ std::array<ofColor, 4> SongCanvas::ESTransColours{
 };
 
 SongCanvas::SongCanvas()
-: mWriteBuffer(gBufferSize)
 {
    mRowColors.push_back(ofColor::black);
    seqLayers.reserve(MaxLayers + 1);
@@ -85,6 +85,8 @@ SongCanvas::~SongCanvas()
 {
    mCanvas->SetListener(nullptr);
    TheTransport->RemoveAudioPoller(this);
+
+   //TODO, it needs to do some REAL cleanup
 }
 
 void SongCanvas::CreateUIControls()
@@ -345,6 +347,7 @@ void SongCanvas::ReloadHeader()
    }
    mLocalModeCheckbox->SetPosition(mWidth - 47, 8);
 }
+
 ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
 {
    switch (style)
@@ -647,7 +650,6 @@ void SongCanvas::DrawModule()
    mMainScrollbarHorizontal->Draw();
    ofPopStyle();
 
-
    int s = seqLayers.size();
    for (int i = 0; i < s; i++)
    {
@@ -667,15 +669,26 @@ void SongCanvas::DrawModule()
    }
    mRackGrid->DrawModule();
    mRackAddNewButton->Draw();
+
+   //Mixers
+   float offsetY = mHeight;
+   float mixerPadding = 32;
+   float offsetX = mixerPadding;
+   for (int i = 0; i < mMixers.size(); ++i)
+   {
+      offsetX += mixerPadding;
+      mMixers[i]->Draw(offsetX,offsetY);
+   }
+
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-
+/*
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
    dText += "mWidth: " + ofToString(mWidth) + "\n";
    dText += "mHeight: " + ofToString(mHeight) + "\n";
-   DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);
+   DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);*/
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
@@ -1341,7 +1354,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
                   cL[i]->GetRackElement()->OnEnter();
                }
                if (seqLayers[cL[i]->mRow].enabled)
-                  cL[i]->GetRackElement()->OnProcess();
+                  cL[i]->GetRackElement()->OnProcessTransport();
                else
                {
                   cL[i]->GetRackElement()->OnExit();
@@ -1690,9 +1703,28 @@ void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool 
    }
 }
 
+
 void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 {
    mRightClickDropdownElementContext = element;
+}
+
+void SongCanvas::AddNewRackPart(SongCanvasRackElement* element)
+{
+   mRackGrid->AddFlowElement(element);
+
+   if (auto audioR = dynamic_cast<SongCanvasAudioRackElement*>(element))
+   {
+      if (audioR->GetMixerIndex() == -1)
+      {
+         //No mixer defined yet, setting as 0
+
+         //Ensure we have a mixer available.
+         GetMixer(0);
+         audioR->SetMixer(0);
+      }
+      mAudioRacks.push_back(audioR);
+   }
 }
 
 void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
@@ -1769,63 +1801,6 @@ void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
    }
 }
 
-////////////////////
-///Sample Playing///
-////////////////////
-
-void SongCanvas::Process(double time)
-{
-   PROFILER(SongCanvas);
-
-   if (mSample == nullptr)
-      return;
-   IAudioReceiver* target = GetTarget();
-
-   if (!mEnabled || target == nullptr)
-      return;
-
-   int numChannels = 2;
-
-   ComputeSliders(0);
-   SyncOutputBuffer(numChannels);
-   mWriteBuffer.SetNumActiveChannels(numChannels);
-
-   int bufferSize = target->GetBuffer()->BufferSize();
-   assert(bufferSize == gBufferSize);
-
-   mWriteBuffer.Clear();
-
-   if (mPlayingSample)
-   {
-      if (mSample->ConsumeData(time, &mWriteBuffer, bufferSize, true))
-      {
-         //This is where you muck with the data to do fun stuff with
-         /*
-         for (int ch = 0; ch < gWorkChannelBuffer.NumActiveChannels(); ++ch)
-         {
-            for (int i = 0; i < bufferSize; ++i)
-               gWorkChannelBuffer.GetChannel(ch)[i] *= 0.9f * mAdsr.Value(time + i * gInvSampleRateMs);
-         }*/
-      }
-      else
-      {
-         gWorkChannelBuffer.Clear();
-         mPlayingSample = false;
-         mSample->SetPlayPosition(0);
-         mAdsr.Stop(time);
-      }
-   }
-   else
-   {
-      gWorkChannelBuffer.Clear();
-   }
-
-   for (int ch = 0; ch < mWriteBuffer.NumActiveChannels(); ++ch)
-   {
-      GetVizBuffer()->WriteChunk(mWriteBuffer.GetChannel(ch), mWriteBuffer.BufferSize(), ch);
-      Add(target->GetBuffer()->GetChannel(ch), mWriteBuffer.GetChannel(ch), gBufferSize);
-   }
-}
 bool SongCanvas::IsRackActive(SongCanvasRackElement* rackPart) const
 {
    for (auto p : mActiveElements)
@@ -1836,12 +1811,92 @@ bool SongCanvas::IsRackActive(SongCanvasRackElement* rackPart) const
    return false;
 }
 
-void SongCanvas::PlaySample()
+//////////////////////
+///Audio Processing///
+//////////////////////
+
+void SongCanvas::Process(double time)
 {
-   if (mSample != nullptr)
+   PROFILER(SongCanvas);
+
+   if (!mEnabled)
+      return;
+
+   //Process the audio making racks
+   for (int i = 0; i < mAudioRacks.size(); ++i)
    {
-      mPlayingSample = true;
-      mAdsr.Clear();
-      mAdsr.Start(NextBufferTime(true) * gInvSampleRateMs, 1);
+      mAudioRacks[i]->Process(time);
+   }
+   //Process the outputting mixers
+   for (int i = 0; i < mMixers.size(); ++i)
+   {
+      mMixers[i]->Process();
    }
 }
+
+//Gets the mixer in that index. If no mixer of that index exists, one is created automatically.
+SongCanvasMixer* SongCanvas::GetMixer(int index)
+{
+   assert(index>=0);//No negative mixers please.
+   assert(index<=99);//Keep it sane please.
+
+   for (auto mixer : mMixers)
+   {
+      if (mixer->mMixerIndex == index)
+      {
+         return mixer;
+      }
+   }
+   auto mixer = new SongCanvasMixer(this,index);
+   mMixers.push_back(mixer);
+
+   SortMixers();
+   return mixer;
+}
+
+//Sorts and cleans up unused mixers.
+void SongCanvas::SortMixers()
+{
+   std::sort(mMixers.begin(),mMixers.end(),[](SongCanvasMixer* a, SongCanvasMixer* b)
+   {
+     return a->mMixerIndex < b->mMixerIndex;
+   });
+   std::vector<int> mixUsers(mMixers.size(),0);
+
+   //Get all the users in audio racks
+   for (auto mixerUsers : mAudioRacks)
+   {
+      auto idx = mixerUsers->GetMixer()->mMixerIndex;
+      for (int i = 0; i < mMixers.size(); ++i)
+      {
+         auto mixer = mMixers[i];
+         if (mixer->mMixerIndex == idx)
+         {
+            mixUsers[i]++;
+         }
+      }
+   }
+   //Now delete the mixers who don't have any.
+   for (int i = 0; i < mixUsers.size(); ++i)
+   {
+      if (mixUsers[i]==0)
+      {
+         auto gg = mMixers[i];
+         mMixers.erase(mMixers.begin()+i);
+         delete gg;
+         mixUsers.erase(mixUsers.begin()+i);
+         i--;
+      }
+   }
+}
+
+void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
+{
+   //Mixers are currently responsible for knowing if the cable belongs to them.
+   for (auto m : mMixers)
+   {
+      m->PostRepatch(cableSource, fromUserClick);
+   }
+}
+
+

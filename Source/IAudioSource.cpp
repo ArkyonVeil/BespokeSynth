@@ -50,5 +50,6 @@ void IAudioSource::SyncOutputBuffer(int numChannels)
          out->SetNumActiveChannels(MAX(numChannels, out->NumActiveChannels()));
       }
    }
+   //Ensures the visual buffer has the same number of channels as the main.
    GetVizBuffer()->SetNumChannels(numChannels);
 }

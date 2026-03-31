@@ -97,8 +97,6 @@ void AudioSplitter::Process(double time)
    //Flushes and resets our input buffer. Don't forget to call this, or you might get exploding audio levels.
    GetBuffer()->Reset();
 }
-
-//Triggers after a user attaches/detaches of this module's output cables to another module. Includes said cable.
 //Not as often seen is PreRepatch, which does the same, but it's before a patching operation.
 void AudioSplitter::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
 {

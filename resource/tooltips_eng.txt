@@ -2190,7 +2190,7 @@ binaryvalue~convert modulated value to binary and send each bit to separate modu
 velocitytoduration~use a note's velocity to set its duration
 ~max duration~duration (in measures) corresponding to the maximum velocity value
 
-songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules, trigger pulses and more in a timeline canvas.
+songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules, trigger pulses, play samples and more in a timeline canvas.
 ~canvas~select a part in the rack and place it on the canvas. parts will activate their rack elements when their timing is reached\n\n-shift-click to place a new part\n\n-ctrl-click-drag a part corner freely without snapping\n-alt-click-drag a part to move it without snapping\n-ctrl-alt-drag for fully free tweaking.\n\n-shift-scrollwheel to zoom in/out
 ~reset~sets the time to the first measure
 ~add~add a new pattern to the rack
@@ -2211,13 +2211,17 @@ songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules
 ~on finish~what happens when the transport reaches the final measure (outside the canvas or out of the loop range)\n-continue: does nothing, keeps going past the canvas bounds. Still respects the loop region if active (Global only)\n-loop: resets to the first possible measure and keeps playing.\n-stop: resets to the first possible measure and stops
 ~sync~syncs the local time to the global transport. looping if needed.
 ~part rack~holds the parts for the canvas. it's like a palette!\n\nselect a part, and shift-click on the canvas to add it. canvas parts will activate their counterparts on cue.
+~mixerslot*~outputs audio from a combined set of audio outputting racks.\nclick to toggle.\n\ntip: you can use an audio splitter module to split an audio output to several other inputs.
+~mixerpanleft*~lowers volume on the left channel, panning audio.
+~mixerpanright*~lowers volume on the right channel, panning audio.
+~mixervolume*~modulate the audio level of this mixer.
 
-partenabler~test
+partenabler~toggle elements on when on cue. right-click to invert its behavior, turning them off on cue instead.\n\nshift-click on the canvas with this rack selected to place parts.
 
-partpulser~test
+partpulser~send pulses on cue. right-click to make it send one pulse only.\n\nshift-click on the canvas with this rack selected to place parts.
 
-partkeyer~test
+partkeyer~todo
 
-partsampler~test
+partsampler~play samples on cue. sends audio to the songcanvas's mixer tab.\n\nshift-click on the canvas with this rack selected to place parts.
 
-partlfo~test
+partlfo~todo

@@ -652,6 +652,7 @@ void IDrawableModule::AddPatchCableSource(PatchCableSource* source)
    mPatchCableSources.push_back(source);
 }
 
+//Removes the cable source and frees up its memory.
 void IDrawableModule::RemovePatchCableSource(PatchCableSource* source)
 {
    RemoveFromVector(source, mPatchCableSources);
