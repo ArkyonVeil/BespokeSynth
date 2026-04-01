@@ -17,9 +17,9 @@ class IFlowGridListener
 public:
    virtual ~IFlowGridListener() = default;
 
-   virtual void onFlowGridNewSelection(FlowGridElement* element) {}//Always returns a valid element.
-   virtual void OnElementLoaded(FlowGridElement* element){}//Returns a freshly pre-initialized element from the factory. Will be initialized after this call.
-   virtual void onFlowGridSelectionCleared(FlowGridElement* element){};//Refers to the old selected element before selection being cleared.
+   virtual void onFlowGridNewSelection(FlowGridElement* element) {} //Always returns a valid element.
+   virtual void OnElementLoaded(FlowGridElement* element) {} //Returns a freshly pre-initialized element from the factory. Will be initialized after this call.
+   virtual void onFlowGridSelectionCleared(FlowGridElement* element){}; //Refers to the old selected element before selection being cleared.
    virtual void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY){}; //The grid is resizing in some direction, ignore, and it may clip.
 };
 
@@ -79,7 +79,7 @@ public:
 
    FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
    FlowGridElement* GetHoveredGridElement() const { return mHoveredElement; }
-   FlowGridElement* GetDraggedGridElement() const {return mDraggedElement;}
+   FlowGridElement* GetDraggedGridElement() const { return mDraggedElement; }
 
    struct FlowGridRow
    {
@@ -123,7 +123,7 @@ private:
 
    FlowGridElement* mSelectedElement{ nullptr };
    FlowGridElement* mHoveredElement{ nullptr };
-   FlowGridElement* mDraggedElement {nullptr};
+   FlowGridElement* mDraggedElement{ nullptr };
 
    FlowGridElement* mLastHoveredElement{ nullptr };
    FlowGridElement* mLastSelectedElement{ nullptr };

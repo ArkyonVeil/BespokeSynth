@@ -130,7 +130,7 @@ void SongCanvas::CreateUIControls()
 
    mMeasureSlider = new FloatSlider(this, "measurebar", mStartCanvasXOffset, mOffsetFromTopSpacing - 16, mCanvas->GetWidth(), 15, &mTime, 0, 32);
    mMeasureSlider->SetNoHover(true);
-   mMeasureSlider->SetCableTargetable(false);//TODO, this still isn't safe. These controls may still be targeted by self-created LFOs
+   mMeasureSlider->SetCableTargetable(false); //TODO, this still isn't safe. These controls may still be targeted by self-created LFOs
    mMeasureSlider->SetTextAlpha(0);
 
    mRackGrid = new FlowGrid(8, GetRackGridStartYOffset(), mCanvas->GetWidth() - 16 + GetCanvasStartXOffset(), 32, mFlowGridRows, this, this);
@@ -676,13 +676,13 @@ void SongCanvas::DrawModule()
    for (int i = 0; i < mMixers.size(); ++i)
    {
       offsetX += mixerPadding;
-      mMixers[i]->Draw(offsetX,offsetY);
+      mMixers[i]->Draw(offsetX, offsetY);
    }
 
    ofPushStyle();
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-/*
+   /*
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
    dText += "mWidth: " + ofToString(mWidth) + "\n";
@@ -1246,7 +1246,7 @@ SongCanvasRackElement* SongCanvas::GetSelectedRackPart() const
 }
 void SongCanvas::OnElementLoaded(FlowGridElement* element)
 {
-   AddNewRackPart(dynamic_cast<SongCanvasRackElement*>(element),false);
+   AddNewRackPart(dynamic_cast<SongCanvasRackElement*>(element), false);
 }
 void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 {
@@ -1403,7 +1403,7 @@ void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY, float oldB
    float diff = newBoundsY - oldBoundsY;
    mRackAddNewButton->GetDimensions(newBoundsX, newBoundsY);
    mRackAddNewButton->SetDimensions(newBoundsX, mFlowGridRows * FlowGridRowHeightSize);
-   FeatureResize(0,diff);
+   FeatureResize(0, diff);
 }
 void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 {
@@ -1697,12 +1697,11 @@ void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool 
       mRackRenameTextBox->ClearInput();
       mRackRenameTextBox->ClearActiveKeyboardFocus(false);
 
-      if (mCurrentElementBeingRenamed!=nullptr)
+      if (mCurrentElementBeingRenamed != nullptr)
       {
-            mCurrentElementBeingRenamed->SetRenameState(false);
+         mCurrentElementBeingRenamed->SetRenameState(false);
          mCurrentElementBeingRenamed = nullptr;
       }
-
    }
 }
 
@@ -1860,13 +1859,13 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
 
 void SongCanvas::SortMixers(int reserveIndex)
 {
-   std::sort(mMixers.begin(),mMixers.end(),[](SongCanvasMixer* a, SongCanvasMixer* b)
-   {
-     return a->mMixerIndex < b->mMixerIndex;
-   });
-   std::vector<int> mixUsers(mMixers.size(),0);
+   std::sort(mMixers.begin(), mMixers.end(), [](SongCanvasMixer* a, SongCanvasMixer* b)
+             {
+                return a->mMixerIndex < b->mMixerIndex;
+             });
+   std::vector<int> mixUsers(mMixers.size(), 0);
 
-   if (reserveIndex!=-1)
+   if (reserveIndex != -1)
    {
       int idx = 0;
       for (auto mixer : mMixers)
@@ -1896,12 +1895,12 @@ void SongCanvas::SortMixers(int reserveIndex)
    //Now delete the mixers who don't have any.
    for (int i = 0; i < mixUsers.size(); ++i)
    {
-      if (mixUsers[i]==0)
+      if (mixUsers[i] == 0)
       {
          auto gg = mMixers[i];
-         mMixers.erase(mMixers.begin()+i);
+         mMixers.erase(mMixers.begin() + i);
          delete gg;
-         mixUsers.erase(mixUsers.begin()+i);
+         mixUsers.erase(mixUsers.begin() + i);
          i--;
       }
    }
@@ -1915,5 +1914,3 @@ void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
       m->PostRepatch(cableSource, fromUserClick);
    }
 }
-
-

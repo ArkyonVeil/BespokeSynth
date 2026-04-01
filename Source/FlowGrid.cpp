@@ -46,7 +46,7 @@ FlowGrid::FlowGrid(int x, int y, int w, int rowHeight, int startNumRows, IDrawab
    mMinRows = startNumRows;
    mWidth = w;
    mRowYSize = rowHeight;
-   mHeight = rowHeight * startNumRows+mRowYBorderOffset*2 + mElementYSpacing*(startNumRows-1);
+   mHeight = rowHeight * startNumRows + mRowYBorderOffset * 2 + mElementYSpacing * (startNumRows - 1);
 }
 FlowGrid::~FlowGrid()
 {
@@ -68,7 +68,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    //Center the cords.
    if (mHovered && mHoveredElement != nullptr && gHoveredUIControl == nullptr)
    {
-      if (mHoveredElement->TestClick(x,y,false,true))//So we don't accidentally drag the module while dragging cables
+      if (mHoveredElement->TestClick(x, y, false, true)) //So we don't accidentally drag the module while dragging cables
          return;
       mSelectedElement = mHoveredElement;
       if (mSelectedElement != mLastSelectedElement)
@@ -82,9 +82,9 @@ void FlowGrid::OnClicked(float x, float y, bool right)
          {
             int rowNew = GetRowIndexOfElement(mSelectedElement);
             int rowOld = GetRowIndexOfElement(mLastSelectedElement);
-            if (rowNew!=rowOld)
-               UpdateRow(rowOld,false);
-            UpdateRow(rowNew,false);
+            if (rowNew != rowOld)
+               UpdateRow(rowOld, false);
+            UpdateRow(rowNew, false);
             mLastSelectedElement = mSelectedElement;
          }
       }
@@ -96,20 +96,20 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    else
    {
       int rowToUpdate = -1;
-      if (mSelectedElement!=nullptr)
+      if (mSelectedElement != nullptr)
       {
          mListener->onFlowGridSelectionCleared(mSelectedElement);
          rowToUpdate = GetRowIndexOfElement(mSelectedElement);
          mSelectedElement = nullptr;
-         UpdateRow(rowToUpdate,false);
+         UpdateRow(rowToUpdate, false);
       }
 
-      if (mHoveredElement != nullptr)//We also reset the hovered state if this happens. So you can have a clean workspace.
+      if (mHoveredElement != nullptr) //We also reset the hovered state if this happens. So you can have a clean workspace.
       {
          int rowHov = GetRowIndexOfElement(mHoveredElement);
          mHoveredElement = nullptr;
-         if (rowHov!=rowToUpdate)
-            UpdateRow(rowHov,false);
+         if (rowHov != rowToUpdate)
+            UpdateRow(rowHov, false);
       }
    }
 }
@@ -129,10 +129,10 @@ bool FlowGrid::MouseMoved(float x, float y)
       if (el->GetRectRelativeToGrid().contains(x, y))
       {
          mHoveredElement = el;
-         if (mLastHoveredElement!=mHoveredElement)
+         if (mLastHoveredElement != mHoveredElement)
          {
             if (mPressed)
-               break;//We ignore hovers if we're currently pressing something, just as dragging. Makes the UI less jerky.
+               break; //We ignore hovers if we're currently pressing something, just as dragging. Makes the UI less jerky.
             if (mLastHoveredElement == nullptr)
             {
                mHoveredElement->UpdateRow();
@@ -141,10 +141,10 @@ bool FlowGrid::MouseMoved(float x, float y)
             }
             int rowNew = GetRowIndexOfElement(mHoveredElement);
             int rowOld = GetRowIndexOfElement(mLastHoveredElement);
-            if (rowNew!=rowOld)
-               UpdateRow(rowOld,false);
+            if (rowNew != rowOld)
+               UpdateRow(rowOld, false);
             mLastHoveredElement = mHoveredElement;
-            UpdateRow(rowNew,false);
+            UpdateRow(rowNew, false);
          }
          break;
       }
@@ -161,18 +161,17 @@ bool FlowGrid::MouseMoved(float x, float y)
       mSelectedElement->SetPosition(elPX, elPY);
 
       //If hovering on the current lowest row, spawn one more.
-      float suggestionBorder = mRowYBorderOffset+(mRowCountOnDragStart-1)*mRowYSize;
+      float suggestionBorder = mRowYBorderOffset + (mRowCountOnDragStart - 1) * mRowYSize;
       if (y > suggestionBorder && !mSuggestedRowActive && mRows.size() < mMaxRows)
       {
          mSuggestedRowActive = true;
          AddRow();
       }
-      else if (mSuggestedRowActive && y <= suggestionBorder-12)//Pop it if too far.
+      else if (mSuggestedRowActive && y <= suggestionBorder - 12) //Pop it if too far.
       {
          mSuggestedRowActive = false;
          PopRow();
       }
-
 
 
       //Go through the rows and find to the most likely place to snap to.
@@ -184,7 +183,7 @@ bool FlowGrid::MouseMoved(float x, float y)
       {
          if (rowSnap != mDragElementRow)
          {
-            return false;//Cannot snap/move to overfilled rows.
+            return false; //Cannot snap/move to overfilled rows.
          }
          //If its from the same row, it may still be moved around.
       }
@@ -245,7 +244,7 @@ void FlowGrid::MouseReleased()
    if (mSuggestedRowActive)
    {
       mSuggestedRowActive = false;
-      if (mRows[mRows.size()-1].elements.empty())
+      if (mRows[mRows.size() - 1].elements.empty())
       {
          PopRow();
       }
@@ -261,7 +260,7 @@ void FlowGrid::SetDimensions(float width, float yRowSize)
    if (yRowSize != -1)
       mRowYSize = yRowSize;
    mWidth = width;
-   mHeight = mRowYSize*mRows.size()+(MAX(0,mRows.size()-1))*mElementYSpacing+mRowYBorderOffset*2;
+   mHeight = mRowYSize * mRows.size() + (MAX(0, mRows.size() - 1)) * mElementYSpacing + mRowYBorderOffset * 2;
    RecalculateFlowGrid();
 }
 
@@ -390,16 +389,16 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
 
    if (!preSetup)
    {
-   //Add it to the pipeline
-   newElement->CreateUIControls();
-   if (mOwner->IsInitialized())
-   {
-      newElement->Init();
-   }
-   //auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
+      //Add it to the pipeline
+      newElement->CreateUIControls();
+      if (mOwner->IsInitialized())
+      {
+         newElement->Init();
+      }
+      //auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
 
-   newElement->SetName(newElement->mElementTypeName.c_str());
-   newElement->SetTypeName(newElement->mElementTypeName, kModuleCategory_Other);
+      newElement->SetName(newElement->mElementTypeName.c_str());
+      newElement->SetTypeName(newElement->mElementTypeName, kModuleCategory_Other);
    }
    //newElement->NameData = rec;
    newElement->SetParent(mOwner);
@@ -506,9 +505,9 @@ void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
 
 void FlowGrid::CheckCleanupRows()
 {
-   while (mRows.size()>mMinRows)
+   while (mRows.size() > mMinRows)
    {
-      if (mRows[mRows.size()-1].elements.empty())
+      if (mRows[mRows.size() - 1].elements.empty())
       {
          PopRow();
       }
@@ -540,7 +539,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
    float totalCompactWidth = 0; //Minimum size to lerp to, not necessarily the smallest possible size. Less priority than selected modules.
    float totalMinWidth = 0; //Absolute minimum size all(except selected) modules can be squeezed into, takes priority over selected.
    float offset = mRowXBorderOffset;
-   float totalSpacing = mElementXSpacing*(elCount-1);//Same priority as module's compact size. Minimum is 0.
+   float totalSpacing = mElementXSpacing * (elCount - 1); //Same priority as module's compact size. Minimum is 0.
 
    int selectedIndex = -1; //If one is selected, in the squeeze step if applicable, we set it to its largest possible size.
    float selectedPreferredSize = 0;
@@ -563,7 +562,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
          selectedIndex = i;
          selectedPreferredSize = el->GetPreferredWidth();
       }
-      else if (mHoveredElement == el)//Neither hovered ones.
+      else if (mHoveredElement == el) //Neither hovered ones.
       {
          hoveredIndex = i;
          hoveredPreferredSize = el->GetPreferredWidth();
@@ -598,17 +597,17 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
 
    //Note Spacing is treated as a module with min 0, compact 4.
    //We'll start by setting aside the space we'll dedicate for the selected module. Usually preferredSize, but exceptions may apply.
-   float priorityModuleRatio = MIN(1,(maxRowSize-totalMinWidth)/(hoveredPreferredSize+selectedPreferredSize));
+   float priorityModuleRatio = MIN(1, (maxRowSize - totalMinWidth) / (hoveredPreferredSize + selectedPreferredSize));
    float ratio;
    float spaceSize;
    int formula = 1;
    //Now we need to know which formula we'll apply for compression.
 
    //1 -> Squeezed, non-overfilled. (Mod size -> Preferred Size ~ Compact Size | Selected -> Preferred Size | Spacing -> default)
-   if (selectedPreferredSize+hoveredPreferredSize+totalCompactWidth+totalSpacing <= maxRowSize)
+   if (selectedPreferredSize + hoveredPreferredSize + totalCompactWidth + totalSpacing <= maxRowSize)
    {
 
-      float scaleRange = totalPreferredWidth-totalCompactWidth;//Aka difference
+      float scaleRange = totalPreferredWidth - totalCompactWidth; //Aka difference
       ratio = (maxRowSize - totalSpacing - selectedPreferredSize - hoveredPreferredSize - totalCompactWidth) / scaleRange;
       spaceSize = mElementXSpacing;
 
@@ -633,13 +632,13 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       //Solution: Remove the stuff that doesn't matter from the calculations.
    }
    //2 -> Squeezed, overfilled. (Mod size -> Compact Size ~ Min Size | Selected -> Preferred Size | Spacing -> default ~ 0)
-   else if (hoveredPreferredSize + selectedPreferredSize+totalMinWidth <= maxRowSize)
+   else if (hoveredPreferredSize + selectedPreferredSize + totalMinWidth <= maxRowSize)
    {
       formula = 2;
 
-      float scaleRange = totalSpacing+totalCompactWidth - totalMinWidth;
-      ratio = (maxRowSize-totalMinWidth-selectedPreferredSize - hoveredPreferredSize) / scaleRange;
-      spaceSize = mElementXSpacing*ratio;
+      float scaleRange = totalSpacing + totalCompactWidth - totalMinWidth;
+      ratio = (maxRowSize - totalMinWidth - selectedPreferredSize - hoveredPreferredSize) / scaleRange;
+      spaceSize = mElementXSpacing * ratio;
    }
    //3 -> Squeezed, minimum. (Mod size -> Min Size | Selected -> Constrained Size | Spacing -> 0)
    else
@@ -657,21 +656,21 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
 
       if (i == selectedIndex)
       {
-         elWidth = selectedPreferredSize*priorityModuleRatio;
+         elWidth = selectedPreferredSize * priorityModuleRatio;
       }
       else if (i == hoveredIndex)
       {
-         elWidth = hoveredPreferredSize*priorityModuleRatio;
+         elWidth = hoveredPreferredSize * priorityModuleRatio;
       }
       else
       {
          if (formula == 1)
          {
-            elWidth = el->GetCompactWidth()+(el->GetPreferredWidth()-el->GetCompactWidth())*ratio;
+            elWidth = el->GetCompactWidth() + (el->GetPreferredWidth() - el->GetCompactWidth()) * ratio;
          }
          else if (formula == 2)
          {
-            elWidth = el->GetMinWidth()+(el->GetCompactWidth()-el->GetMinWidth())*ratio;
+            elWidth = el->GetMinWidth() + (el->GetCompactWidth() - el->GetMinWidth()) * ratio;
          }
          else
          {
@@ -680,7 +679,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       }
 
       row->elements[i]->SetRectRelativeToGrid(ofRectangle(offset, yOffset, elWidth, mRowYSize));
-      if (i+1<elCount)
+      if (i + 1 < elCount)
          offset += elWidth + spaceSize;
    }
 
@@ -719,7 +718,7 @@ int FlowGrid::GetRowIndexOfElement(FlowGridElement* element) const
    int idx = 0;
    for (auto row : mRows)
    {
-      for (auto el: row.elements)
+      for (auto el : row.elements)
       {
          if (el == element)
             return idx;

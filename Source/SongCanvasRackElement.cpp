@@ -87,9 +87,9 @@ void SongCanvasRackElement::CreateUIControls()
 float SongCanvasRackElement::GetPreferredWidth() const
 {
    int baseSize = 30;
-   std::string rackName = TruncateStringLegacy(*mElementName, mMaxNameSize, true);
+   std::string rackName = TruncateString(*mElementName, 200);
 
-   int textSize = MAX(50, GetStringWidth(rackName));
+   int textSize = MIN(200, GetStringWidth(rackName));
 
    return baseSize + textSize;
 }
@@ -189,6 +189,18 @@ void SongCanvasRackElement::MouseReleased()
       mBufferQuickRename = false;
    }
 }
+float SongCanvasRackElement::GetLeftWidthPadding()
+{
+   return 8;
+}
+float SongCanvasRackElement::GetPartNameWidth() const
+{
+   return mDisplayStringPxWidth;
+}
+float SongCanvasRackElement::GetGeneralReservedWidth()
+{
+   return GetLeftWidthPadding() + mDisplayStringPxWidth + 8;
+}
 void SongCanvasRackElement::DrawModule()
 {
    FlowGridElement::DrawModule();
@@ -232,6 +244,7 @@ void SongCanvasRackElement::DrawModule()
    }
    else
    {
+      //TODO: This truncation code is stinky. Replace it soon
       int textSize = (mWidth - 15) / 7.0;
       std::string displayString;
       if (textSize <= 3)
@@ -248,6 +261,7 @@ void SongCanvasRackElement::DrawModule()
       if (displayString.size() != mLastNameSize)
       {
          mLastNameSize = displayString.size();
+         mDisplayStringPxWidth = GetStringWidth(displayString);
          UpdateRow();
       }
 
@@ -255,7 +269,7 @@ void SongCanvasRackElement::DrawModule()
       {
          /*
          if (mFlowGridParent->GetSelectedGridElement() != this)*/
-            DrawTextNormal(displayString, 8, mHeight / 2 + 5.5);
+         DrawTextNormal(displayString, GetLeftWidthPadding(), mHeight / 2 + 5.5);
          /*else
             DrawTextBold(displayString, 8, mHeight / 2 + 5.5);*/
       }
@@ -293,6 +307,14 @@ void SongCanvasAudioRackElement::SetMixer(SongCanvasMixer* mixer)
 void SongCanvasAudioRackElement::TextEntryComplete(TextEntry* entry)
 {
    SwapMixers(mMixerIndex);
+}
+float SongCanvasAudioRackElement::GetPreferredWidth() const
+{
+   return SongCanvasRackElement::GetPreferredWidth() + 34;
+}
+float SongCanvasAudioRackElement::GetAudioReservedWidth() const
+{
+   return 34;
 }
 void SongCanvasAudioRackElement::OnPostResize()
 {
@@ -689,12 +711,6 @@ SongCanvasRackSampler::~SongCanvasRackSampler()
    RemoveUIControl(mSampleLoaderButton);
 }
 
-float SongCanvasRackSampler::GetPreferredWidth() const
-{
-   float val = SongCanvasRackElement::GetPreferredWidth();
-      val += mSampleLoaderButton->GetRect(true).width;
-   return val;
-}
 
 void SongCanvasRackSampler::OnEnter()
 {
@@ -756,7 +772,7 @@ void SongCanvasRackSampler::Process(double time)
 
    //TODO: Look for optimization opportunities, this might be doing pointless work.
 
-   if (!mEnabled ||  mSample == nullptr)
+   if (!mEnabled || mSample == nullptr)
       return;
 
    mLastProcessTime = time;
@@ -786,10 +802,20 @@ void SongCanvasRackSampler::DrawRackGraphics()
 {
    mSampleLoaderButton->Draw();
 }
+
+float SongCanvasRackSampler::GetPreferredWidth() const
+{
+   float val = SongCanvasAudioRackElement::GetPreferredWidth();
+   val += mSampleLoaderButton->GetPreferredWidth() - 12;
+   return val;
+}
+
 void SongCanvasRackSampler::OnPostResize()
 {
    SongCanvasAudioRackElement::OnPostResize();
-   mSampleLoaderButton->SetPosition(12 + GetStringWidth(*mElementName), 9);
+   mSampleLoaderButton->SetPosition(GetGeneralReservedWidth(), 9);
+   float bMax = mWidth - GetGeneralReservedWidth() - GetAudioReservedWidth();
+   mSampleLoaderButton->SetMaxWidth(MAX(0, bMax));
 }
 void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {

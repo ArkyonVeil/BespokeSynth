@@ -262,7 +262,7 @@ struct TextTruncationSettings
    TextFont font = TextFont::Normal;
    float fontSize = 13;
    std::string cutOffStyle = "...";
-   float maxTextWidth = 999;
+   float maxTextWidth = 9999;
    float perCharPadding = 0;
 };
 

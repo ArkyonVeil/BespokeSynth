@@ -8,7 +8,7 @@ class SongCanvas_CanvasElement : public CanvasElement
 {
 public:
    SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length);
-   SongCanvas_CanvasElement(Canvas* canvas);//Simplified constructor, uses default values and skips the setup based on selected call. For loading.
+   SongCanvas_CanvasElement(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
    void SetupBase(SongCanvasRackElement* templateElement);
    static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvas_CanvasElement(canvas, col, row, 0, 1); }
 

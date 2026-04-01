@@ -138,16 +138,22 @@ IDrawableModule* IClickable::GetModuleParent()
    }
    return dynamic_cast<IDrawableModule*>(parent);
 }
+
+TextTruncationSettings IClickable::GetTextTruncationSettings()
+{
+   return mTruncationSettings;
+}
+
 void IClickable::SetTextTruncationSettings(TextTruncationSettings newSettings)
 {
    mTruncationSettings = newSettings;
    if (mHasOverrideDisplayName)
    {
-      mCachedName = TruncateString(mOverrideDisplayName,mTruncationSettings);
+      mCachedName = TruncateString(mOverrideDisplayName, mTruncationSettings);
    }
    else
    {
-      mCachedName = TruncateString(mName,mTruncationSettings);
+      mCachedName = TruncateString(mName, mTruncationSettings);
    }
 }
 

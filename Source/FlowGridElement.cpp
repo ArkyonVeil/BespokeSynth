@@ -136,7 +136,7 @@ void FlowGridElement::DrawModule()
       if (!mHovered)
          ofSetColor(mMainColor);
       else
-         ofSetColor(ofColor::lerp(mMainColor,ofColor::white,0.075f));
+         ofSetColor(ofColor::lerp(mMainColor, ofColor::white, 0.075f));
    }
    else
    {

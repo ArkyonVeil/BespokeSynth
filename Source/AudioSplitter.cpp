@@ -120,7 +120,7 @@ void AudioSplitter::PostRepatch(PatchCableSource* cableSource, bool fromUserClic
                AddPatchCableSource(cable);
                mDestinationCables.push_back(cable);
             }
-         }//Otherwise we remove that cable, to resize the splitter back. (Works on any cable)
+         } //Otherwise we remove that cable, to resize the splitter back. (Works on any cable)
          else if (cableSource->GetTarget() == nullptr)
          {
             RemoveFromVector(cableSource, mDestinationCables);
@@ -146,8 +146,8 @@ void AudioSplitter::DrawModule()
    for (const auto cablesource : mDestinationCables)
    {
       //Iteration based offset
-      cablesource->SetManualPosition(offset += 20, 12);//Wait, you can set values INSIDE a function call? Oh wow - Ark
-      cablesource->SetOverrideCableDir(ofVec2f(0, 1), PatchCableSource::Side::kBottom);//Cables draw their lines going down, looks visually neat.
+      cablesource->SetManualPosition(offset += 20, 12); //Wait, you can set values INSIDE a function call? Oh wow - Ark
+      cablesource->SetOverrideCableDir(ofVec2f(0, 1), PatchCableSource::Side::kBottom); //Cables draw their lines going down, looks visually neat.
    }
 }
 //How big the module should be, automatically based on the number of cables it contains, give or take some hardcoded padding.

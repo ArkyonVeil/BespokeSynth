@@ -474,34 +474,34 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
    //Not a particularly stellar implementation, cache this if possible. -Ark
 
    RetinaTrueTypeFont lFont;
-   if (font==TextFont::Normal)
+   if (font == TextFont::Normal)
    {
       lFont = gFont;
    }
-   else if (font==TextFont::Bold)
+   else if (font == TextFont::Bold)
    {
       lFont = gFontBold;
    }
-   else if (font==TextFont::Mono)
+   else if (font == TextFont::Mono)
    {
       lFont = gFontFixedWidth;
    }
    //First check if the size is ok.
-   if (lFont.GetStringWidth(text,fontSize)+text.size()*extraPaddingPerChar <= maxWidth)
+   if (lFont.GetStringWidth(text, fontSize) + text.size() * extraPaddingPerChar <= maxWidth)
    {
       return text;
    }
 
    //Size is not ok
    int stringLength = text.size();
-   while (true)//Keep making it smaller until it fits
+   while (true) //Keep making it smaller until it fits
    {
       stringLength--;
-      if (stringLength<=0)
+      if (stringLength <= 0)
          return "";
 
       std::string newStr = text.substr(0, stringLength - 1).append(cutoffStyle);
-      if (lFont.GetStringWidth(newStr,fontSize)+newStr.size()*extraPaddingPerChar<=maxWidth)
+      if (lFont.GetStringWidth(newStr, fontSize) + newStr.size() * extraPaddingPerChar <= maxWidth)
          return newStr;
    }
 }

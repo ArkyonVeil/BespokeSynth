@@ -33,7 +33,7 @@ public:
    void Init() override;
    void Render() override;
    bool HasTitleBar() const override { return false; };
-   void SetEnabled(bool enabled) override { true; };//Must be true, or the IDrawableModule will try to spawn an enabled checkbox which will crash it.
+   void SetEnabled(bool enabled) override { true; }; //Must be true, or the IDrawableModule will try to spawn an enabled checkbox which will crash it.
    bool CanMinimize() override { return false; }; //Must be false so <IDrawableModule* IClickable::GetModuleParent()> traverses the chain correctly.
    ofRectangle CustomTooltipBounds() const override { return { 0, 0, mWidth, mHeight }; };
 
@@ -84,7 +84,7 @@ public:
    void UpdateRow();
    //Called after the module has been resized in the grid. Use to show/hide things depending on the new size.
    //You are strongly encouraged, NOT to do any resizing/preferred width altering here.
-   virtual void OnPostResize() {};
+   virtual void OnPostResize(){};
 
    std::string mElementTypeName;
    int mPreferredRow = -1;

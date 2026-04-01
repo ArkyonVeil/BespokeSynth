@@ -13,7 +13,7 @@ SongCanvasMixer::SongCanvasMixer(SongCanvas* owner, int index)
 }
 SongCanvasMixer::~SongCanvasMixer()
 {
-   if (mCableOut!=nullptr)
+   if (mCableOut != nullptr)
       mOwner->RemovePatchCableSource(mCableOut);
 
    delete mVizBuffer;
@@ -23,7 +23,7 @@ void SongCanvasMixer::CreateUIControls()
 {
    mCableOut = new PatchCableSource(mOwner, kConnectionType_Audio);
    mCableOut->SetOverrideVizBuffer(mVizBuffer);
-   mCableOut->SetOverrideCableDir(ofVec2f(0,1),PatchCableSource::Side::kBottom);
+   mCableOut->SetOverrideCableDir(ofVec2f(0, 1), PatchCableSource::Side::kBottom);
    mOwner->AddPatchCableSource(mCableOut);
 }
 
@@ -62,29 +62,28 @@ void SongCanvasMixer::Process()
 void SongCanvasMixer::Draw(float x, float y)
 {
    mCableOut->SetManualPosition(x, y);
-   DrawTextNormal(ofToString(mMixerIndex),-8,-8,8);//Channel name
-
+   DrawTextNormal(ofToString(mMixerIndex), -8, -8, 8); //Channel name
 }
 void SongCanvasMixer::Save(FileStreamOut& out)
 {
-   out<<mMixerVersion;
+   out << mMixerVersion;
 
-   out<<mMixerIndex;
-   out<<mEnabled;
-   out<<mVolume;
-   out<<mPanLeft;
-   out<<mPanRight;
+   out << mMixerIndex;
+   out << mEnabled;
+   out << mVolume;
+   out << mPanLeft;
+   out << mPanRight;
 }
 void SongCanvasMixer::Load(FileStreamIn& in)
 {
    int rev;
-   in>>rev;
+   in >> rev;
 
-   in>>mMixerIndex;
-   in>>mEnabled;
-   in>>mVolume;
-   in>>mPanLeft;
-   in>>mPanRight;
+   in >> mMixerIndex;
+   in >> mEnabled;
+   in >> mVolume;
+   in >> mPanLeft;
+   in >> mPanRight;
 }
 void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
 {

@@ -38,7 +38,7 @@ public:
 
    float* GetChannel(int channel);
 
-   void Clear() const;//Sets all audio data in buffer to 0. Resetting it.
+   void Clear() const; //Sets all audio data in buffer to 0. Resetting it.
 
    void SetMaxAllowedChannels(int channels);
    void SetNumActiveChannels(int channels) { mActiveChannels = MIN(mNumChannels, channels); }
@@ -52,7 +52,7 @@ public:
    {
       Clear();
       mRecentActiveChannels = mActiveChannels;
-      SetNumActiveChannels(1);//Resets back to the default. (1/mono)
+      SetNumActiveChannels(1); //Resets back to the default. (1/mono)
    }
    void Resize(int bufferSize);
 

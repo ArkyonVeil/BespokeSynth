@@ -162,7 +162,6 @@ enum class StepVelocityType
 };
 
 
-
 constexpr float kVelocityOff = 0.0f;
 constexpr float kVelocityGhost = 0.4f;
 constexpr float kVelocityNormal = 0.75f;
@@ -222,7 +221,7 @@ void DrawTextBold(std::string text, int x, int y, float size = 13);
 void DrawTextMono(std::string text, int x, int y, float size = 13);
 void DrawTextMonoRightJustify(std::string text, int x, int y, float size = 13);
 std::string TruncateString(std::string text, float maxWidth, TextFont font = TextFont::Normal, const std::string& cutoffStyle = "...", float fontSize = 13, float extraPaddingPerChar = 0);
-inline std::string TruncateString (const std::string& text, const TextTruncationSettings& settings) {return TruncateString(text,settings.maxTextWidth,settings.font,settings.cutOffStyle,settings.fontSize,settings.perCharPadding);}
+inline std::string TruncateString(const std::string& text, const TextTruncationSettings& settings) { return TruncateString(text, settings.maxTextWidth, settings.font, settings.cutOffStyle, settings.fontSize, settings.perCharPadding); }
 float GetStringWidth(std::string text, float size = 13);
 void AssertIfDenormal(float input);
 float GetInterpolatedSample(double offset, const float* buffer, int bufferSize);

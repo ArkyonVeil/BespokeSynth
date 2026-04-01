@@ -10,7 +10,7 @@ SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int 
    mSongCanvas->SetupCanvasElement(this);
 }
 SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas)
-: CanvasElement(canvas,0,0,0,4)
+: CanvasElement(canvas, 0, 0, 0, 4)
 {
    mLength *= 4;
    mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());

@@ -69,13 +69,16 @@ public:
    bool MouseMoved(float x, float y) override;
    void MouseReleased() override;
    void ButtonClicked(ClickButton* button, double time) override{};
-   float GetCenteredElementY(IUIControl* element) const { return (mHeight-element->GetRect(true).height)/2;}
+   float GetCenteredElementY(IUIControl* element) const { return (mHeight - element->GetRect(true).height) / 2; }
 
    int mInternalRackID;
    bool mRackEnabled;
 
 protected:
-   virtual void DrawExtendedBaseGraphics() {};
+   virtual void DrawExtendedBaseGraphics(){};
+   float GetLeftWidthPadding(); //Padding from left of rack to text
+   float GetPartNameWidth() const; //Raw size of part text
+   float GetGeneralReservedWidth(); //Includes size of part text + padding. Should place unique stuff after this.
    SongCanvas* mSongCanvas;
    std::string* mElementName;
 
@@ -100,6 +103,7 @@ private:
    int mMaxNameSize = 32; //If the text is longer than this we truncate it
 
    float mLastRenameSize = 0;
+   float mDisplayStringPxWidth{ 0 };
    int mLastNameSize = 0;
    bool mBufferQuickRename = false;
 
@@ -108,7 +112,7 @@ private:
 };
 
 //Rack elements that produce sound should inherit this for consistent support and convenience methods such as channel assigment.
-class SongCanvasAudioRackElement: public SongCanvasRackElement, public  IAudioSource, public ITextEntryListener
+class SongCanvasAudioRackElement : public SongCanvasRackElement, public IAudioSource, public ITextEntryListener
 {
 public:
    SongCanvasAudioRackElement(const std::string& partName, const std::string& internalName, SongCanvas* songCanvas)
@@ -116,20 +120,23 @@ public:
    {}
    ~SongCanvasAudioRackElement();
 
-   SongCanvasMixer* GetMixer() {return mMixer;};
-   ChannelBuffer* GetMixerBuffer() {return mMixerBuffer;};
-   int GetMixerIndex(){return mMixerIndex;}
+   SongCanvasMixer* GetMixer() { return mMixer; };
+   ChannelBuffer* GetMixerBuffer() { return mMixerBuffer; };
+   int GetMixerIndex() { return mMixerIndex; }
    void CreateUIControls() override;
    void SetMixer(SongCanvasMixer* mixer);
    void TextEntryComplete(TextEntry* entry) override;
+   float GetPreferredWidth() const override;
 
-   int GetNumTargets() override {return 0;};
-   bool ShouldSuppressAutomaticOutputCable() override {return true;};
+   int GetNumTargets() override { return 0; };
+   bool ShouldSuppressAutomaticOutputCable() override { return true; };
+   float GetAudioReservedWidth() const;
    void OnPostResize() override;
 
 protected:
    void SwapMixers(int newIndex);
-   int mMixerIndex {-1};
+   int mMixerIndex{ -1 };
+
 private:
    void DrawExtendedBaseGraphics() override;
    SongCanvasMixer* mMixer;
@@ -221,7 +228,7 @@ public:
 
 
 private:
-   PatchCableSource* mKeyerCable {nullptr};
+   PatchCableSource* mKeyerCable{ nullptr };
    void OnEnter() override{};
    void OnExit() override{};
    void DrawRackGraphics() override;
@@ -237,20 +244,20 @@ class SongCanvasRackSampler : public SongCanvasAudioRackElement
 {
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
-   float GetPreferredWidth() const;
    ~SongCanvasRackSampler();
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
    void OnEnter() override;
    void OnExit() override;
    void LoadFileSample();
+   float GetPreferredWidth() const;
    void ButtonClicked(ClickButton* button, double time);
    void SetSample(Sample* sample);
    void PlaySample();
    void OnPostResize() override;
 
 
-   ChannelBuffer* GetBuffer(){return &mWriteBuffer;}
+   ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 
@@ -260,12 +267,12 @@ public:
    void DrawRackGraphics();
 
 private:
-   Sample* mSample {nullptr};
-   ClickButton* mSampleLoaderButton {nullptr};
-   PatchCableSource* mSamplerCable {nullptr};
+   Sample* mSample{ nullptr };
+   ClickButton* mSampleLoaderButton{ nullptr };
+   PatchCableSource* mSamplerCable{ nullptr };
 
    ChannelBuffer mWriteBuffer;
-   int mSamplesPlaying {0};
+   int mSamplesPlaying{ 0 };
    PolyphonyMgr mPolyMgr;
    SampleVoiceParams mVoiceParams{};
 
@@ -290,5 +297,4 @@ public:
    void DrawRackGraphics() override{};
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
-
 };

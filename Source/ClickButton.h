@@ -92,7 +92,12 @@ public:
          UpdateWidth();
       }
    }
-   void SetMaxWidth(float maxWidth){mMaxWidth = maxWidth;}
+   void SetMaxWidth(float maxWidth)
+   {
+      mMaxWidth = maxWidth;
+      UpdateWidth();
+   }
+   virtual float GetPreferredWidth() { return mPreferredWidth; };
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
@@ -128,6 +133,7 @@ private:
    void OnClicked(float x, float y, bool right) override;
    float mWidth{ 20 };
    float mMaxWidth{ 999 };
+   float mPreferredWidth{ 20 };
    float mIconOffsetMulX{ 0 };
    float mIconOffsetMulY{ 0 };
    float mIconOffsetX{ 0 };

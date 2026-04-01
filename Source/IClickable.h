@@ -67,7 +67,7 @@ public:
    {
       if (mName != name)
          StringCopy(mName, name, MAX_TEXTENTRY_LENGTH);
-      mCachedName = TruncateString(mName,mTruncationSettings);
+      mCachedName = TruncateString(mName, mTruncationSettings);
    }
    const char* Name() const { return mName; }
    char* NameMutable() { return mName; }
@@ -80,14 +80,19 @@ public:
    void DrawBeacon(int x, int y);
    IClickable* GetRootParent();
    IDrawableModule* GetModuleParent();
+   TextTruncationSettings GetTextTruncationSettings();
    void SetOverrideDisplayName(std::string name)
    {
       mHasOverrideDisplayName = true;
       mOverrideDisplayName = name;
-      mCachedName = TruncateString(mOverrideDisplayName,mTruncationSettings);
+      mCachedName = TruncateString(mOverrideDisplayName, mTruncationSettings);
       UpdateWidth();
    }
-   void SetMaxDisplayNameWidth(float width){ mTruncationSettings.maxTextWidth = width; SetTextTruncationSettings(mTruncationSettings);}
+   void SetMaxDisplayNameWidth(float width)
+   {
+      mTruncationSettings.maxTextWidth = width;
+      SetTextTruncationSettings(mTruncationSettings);
+   }
    std::string GetDisplayName()
    {
       return mCachedName;
@@ -108,6 +113,7 @@ protected:
    virtual bool MouseMoved(float x, float y) { return false; } //Return bool is unused.
    virtual bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll) { return false; }
    virtual void UpdateWidth() {}
+   std::string GetRawDisplayName() { return mHasOverrideDisplayName ? mOverrideDisplayName : mName; }
 
    float mX{ 0 };
    float mY{ 0 };
@@ -118,9 +124,9 @@ private:
    char mName[MAX_TEXTENTRY_LENGTH]{};
    double mBeaconTime{ -999 };
    bool mHasOverrideDisplayName{ false };
-   TextTruncationSettings mTruncationSettings {};
+   TextTruncationSettings mTruncationSettings{};
    std::string mOverrideDisplayName{ "" };
-   std::string mCachedName{""};
+   std::string mCachedName{ "" };
 };
 
 template <class T>

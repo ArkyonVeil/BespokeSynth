@@ -37,7 +37,7 @@ class IAudioSource : public virtual IPatchable
 {
 public:
    IAudioSource()
-   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate)//Initialize the visual buffer.
+   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate) //Initialize the visual buffer.
    {}
    virtual ~IAudioSource() {}
    //Called by the Audio Processing thread to do audio work. Here, work is done resetting audio buffers, writing to attached modules's buffers, applying effects to samples, etc.
@@ -45,7 +45,7 @@ public:
    virtual void Process(double time) = 0;
    IAudioReceiver* GetTarget(int index = 0);
    virtual int GetNumTargets() { return 1; }
-   RollingBuffer* GetVizBuffer() { return &mVizBuffer; }//Gets this module's visual buffer for animating audio cables and other FX.
+   RollingBuffer* GetVizBuffer() { return &mVizBuffer; } //Gets this module's visual buffer for animating audio cables and other FX.
 
 protected:
    void SyncOutputBuffer(int numChannels);

@@ -41,6 +41,9 @@ ClickButton::ClickButton(IButtonListener* owner, const char* label, int x, int y
    (dynamic_cast<IDrawableModule*>(owner))->AddUIControl(this);
    SetParent(dynamic_cast<IClickable*>(owner));
    SetShouldSaveState(false);
+   TextTruncationSettings truncationDefaults;
+   //truncationDefaults.perCharPadding = 0.25f;
+   SetTextTruncationSettings(truncationDefaults);
 }
 
 ClickButton::ClickButton(IButtonListener* owner, const char* label, IUIControl* anchor, AnchorDirection anchorDirection, ButtonDisplayStyle displayStyle /*= ButtonDisplayStyle::kText*/)
@@ -63,21 +66,27 @@ void ClickButton::UpdateWidth()
 {
    if (mDisplayStyle == ButtonDisplayStyle::kText || mDisplayStyle == ButtonDisplayStyle::kSampleIcon || mDisplayStyle == ButtonDisplayStyle::kFolderIcon)
    {
-      mWidth = GetStringWidth(GetDisplayName()) + 3 + .25f * strnlen(GetDisplayName().c_str(), 50);
+      mWidth = GetStringWidth(GetRawDisplayName()) + 3 + .25f * strnlen(GetRawDisplayName().c_str(), 50);
       float nonStringSpace = 3;
       if (mDisplayStyle == ButtonDisplayStyle::kSampleIcon || mDisplayStyle == ButtonDisplayStyle::kFolderIcon)
       {
          mWidth += 20;
          nonStringSpace += 20;
       }
+      mPreferredWidth = mWidth;
 
       if (mWidth >= mMaxWidth)
       {
          mWidth = mMaxWidth;
-         TextTruncationSettings tts;
-         tts.maxTextWidth = mWidth-nonStringSpace;
-         SetTextTruncationSettings(tts);
+         mDynamicTooltip = "\n\n" + GetRawDisplayName();
       }
+      else
+      {
+         mDynamicTooltip = "";
+      }
+      auto tts = GetTextTruncationSettings();
+      tts.maxTextWidth = mWidth - nonStringSpace;
+      SetTextTruncationSettings(tts);
    }
 }
 

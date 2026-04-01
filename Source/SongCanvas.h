@@ -72,7 +72,7 @@ public:
    static bool AcceptsAudio() { return false; }
    static bool AcceptsNotes() { return false; }
    static bool AcceptsPulses() { return false; }
-   bool ShouldSuppressAutomaticOutputCable() override {return true;}
+   bool ShouldSuppressAutomaticOutputCable() override { return true; }
 
    void CreateUIControls() override;
 
@@ -114,15 +114,15 @@ public:
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
-   int GetNumTargets() override { return 0;}
+   int GetNumTargets() override { return 0; }
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
    SongCanvasMixer* GetMixer(int index);
-   void SortMixers(int reserveIndex = -1);//Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
+   void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
 
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
-   bool IsRackActive(SongCanvasRackElement* rackPart) const;//True if there's a part on the canvas with the same rack that is currently playing.
+   bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.
 
    void IncrementInternalRackId() { mInternalRackIDCounter++; }
    int GetInternalRackId() const { return mInternalRackIDCounter; }
@@ -192,29 +192,29 @@ private:
 
    Canvas* mCanvas{ nullptr };
    FloatSlider* mMeasureSlider{ nullptr };
-   FloatSlider* mTransportSlider{ nullptr};
-   std::vector<ofColor> mRowColors {};
-   ClickButton* mResetButton {nullptr};
-   ClickButton* mPlayPauseButton {nullptr};
-   ClickButton* mSyncButton {nullptr};
+   FloatSlider* mTransportSlider{ nullptr };
+   std::vector<ofColor> mRowColors{};
+   ClickButton* mResetButton{ nullptr };
+   ClickButton* mPlayPauseButton{ nullptr };
+   ClickButton* mSyncButton{ nullptr };
    CanvasScrollbar* mMainScrollbarHorizontal{ nullptr };
-   DropdownList* mOnFinalMeasureDropdown { nullptr };
-   DropdownList* mCanvasIntervalDropdown { nullptr };
-   TextEntry* mRackRenameTextBox { nullptr };
+   DropdownList* mOnFinalMeasureDropdown{ nullptr };
+   DropdownList* mCanvasIntervalDropdown{ nullptr };
+   TextEntry* mRackRenameTextBox{ nullptr };
    std::string mRackRenameString;
-   SongCanvasRackElement* mCurrentElementBeingRenamed { nullptr };
+   SongCanvasRackElement* mCurrentElementBeingRenamed{ nullptr };
 
 
-   TextEntry* mMeasureBaseTextbox {nullptr};
-   TextEntry* mMeasureCountTextbox {nullptr};
-   TextEntry* mMeasureEndTextbox {nullptr};
+   TextEntry* mMeasureBaseTextbox{ nullptr };
+   TextEntry* mMeasureCountTextbox{ nullptr };
+   TextEntry* mMeasureEndTextbox{ nullptr };
 
-   Checkbox* mLocalModeCheckbox {nullptr};
+   Checkbox* mLocalModeCheckbox{ nullptr };
 
    TransportListenerInfo* mTransportListenerInfo{ nullptr };
 
-   FlowGrid* mRackGrid {nullptr};
-   CanvasTimeline* mCanvasTimeline {nullptr};
+   FlowGrid* mRackGrid{ nullptr };
+   CanvasTimeline* mCanvasTimeline{ nullptr };
 
    static constexpr int MaxLayers = 101; //Further increasing this may cause crashes.
    float mTime{ 0 };
@@ -305,9 +305,9 @@ private:
 
    ClickButton* mRackAddNewButton = nullptr;
 
-   DropdownList* mRackAddNewDropdown { nullptr };
-   DropdownList* mRackElementRightClickDropdown { nullptr };
-   DropdownList* mLayerDropdownOptions { nullptr };
+   DropdownList* mRackAddNewDropdown{ nullptr };
+   DropdownList* mRackElementRightClickDropdown{ nullptr };
+   DropdownList* mLayerDropdownOptions{ nullptr };
 
 
    enum class RackElementRightClickBaseOptions
@@ -357,8 +357,8 @@ private:
 
 
    //Audio Handling
-   std::vector<SongCanvasMixer*> mMixers {};
-   std::vector<SongCanvasAudioRackElement*> mAudioRacks {};
+   std::vector<SongCanvasMixer*> mMixers{};
+   std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
 
    //Expert variables
    bool expertPanelEnabled = false;
