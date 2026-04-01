@@ -871,6 +871,7 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       std::string type;
       in >> type;
       auto el = factory->Create(type);
+      mListener->OnElementLoaded(el);
       el->CreateUIControls();
       el->Init();
       el->SetName(el->mElementTypeName.c_str());

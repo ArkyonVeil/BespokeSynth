@@ -64,8 +64,20 @@ void ClickButton::UpdateWidth()
    if (mDisplayStyle == ButtonDisplayStyle::kText || mDisplayStyle == ButtonDisplayStyle::kSampleIcon || mDisplayStyle == ButtonDisplayStyle::kFolderIcon)
    {
       mWidth = GetStringWidth(GetDisplayName()) + 3 + .25f * strnlen(GetDisplayName().c_str(), 50);
+      float nonStringSpace = 3;
       if (mDisplayStyle == ButtonDisplayStyle::kSampleIcon || mDisplayStyle == ButtonDisplayStyle::kFolderIcon)
+      {
          mWidth += 20;
+         nonStringSpace += 20;
+      }
+
+      if (mWidth >= mMaxWidth)
+      {
+         mWidth = mMaxWidth;
+         TextTruncationSettings tts;
+         tts.maxTextWidth = mWidth-nonStringSpace;
+         SetTextTruncationSettings(tts);
+      }
    }
 }
 

@@ -9,11 +9,12 @@ SongCanvasMixer::SongCanvasMixer(SongCanvas* owner, int index)
    mOwner = owner;
    mMixerIndex = index;
    mVizBuffer = new RollingBuffer(VIZ_BUFFER_SECONDS * gSampleRate);
-   mAudioBuffer = new ChannelBuffer(gSampleRate);
+   mAudioBuffer = new ChannelBuffer(gBufferSize);
 }
 SongCanvasMixer::~SongCanvasMixer()
 {
-   mOwner->RemovePatchCableSource(mCableOut);
+   if (mCableOut!=nullptr)
+      mOwner->RemovePatchCableSource(mCableOut);
 
    delete mVizBuffer;
    delete mAudioBuffer;
@@ -22,11 +23,14 @@ void SongCanvasMixer::CreateUIControls()
 {
    mCableOut = new PatchCableSource(mOwner, kConnectionType_Audio);
    mCableOut->SetOverrideVizBuffer(mVizBuffer);
+   mCableOut->SetOverrideCableDir(ofVec2f(0,1),PatchCableSource::Side::kBottom);
    mOwner->AddPatchCableSource(mCableOut);
 }
 
 void SongCanvasMixer::Process()
 {
+   mNumChannels = GetBuffer()->NumActiveChannels();
+
    //Sync with output buffer
    if (mTarget)
    {

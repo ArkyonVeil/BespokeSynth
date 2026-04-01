@@ -86,7 +86,13 @@ public:
    {
       mWidth = width;
       mHeight = height;
+      if (mWidth > mMaxWidth)
+      {
+         mWidth = mMaxWidth;
+         UpdateWidth();
+      }
    }
+   void SetMaxWidth(float maxWidth){mMaxWidth = maxWidth;}
 
    //IUIControl
    void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
@@ -121,6 +127,7 @@ private:
 
    void OnClicked(float x, float y, bool right) override;
    float mWidth{ 20 };
+   float mMaxWidth{ 999 };
    float mIconOffsetMulX{ 0 };
    float mIconOffsetMulY{ 0 };
    float mIconOffsetX{ 0 };

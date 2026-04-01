@@ -67,6 +67,7 @@ public:
    {
       if (mName != name)
          StringCopy(mName, name, MAX_TEXTENTRY_LENGTH);
+      mCachedName = TruncateString(mName,mTruncationSettings);
    }
    const char* Name() const { return mName; }
    char* NameMutable() { return mName; }
@@ -83,11 +84,13 @@ public:
    {
       mHasOverrideDisplayName = true;
       mOverrideDisplayName = name;
+      mCachedName = TruncateString(mOverrideDisplayName,mTruncationSettings);
       UpdateWidth();
    }
+   void SetMaxDisplayNameWidth(float width){ mTruncationSettings.maxTextWidth = width; SetTextTruncationSettings(mTruncationSettings);}
    std::string GetDisplayName()
    {
-      return mHasOverrideDisplayName ? mOverrideDisplayName : mName;
+      return mCachedName;
    }
 
    static void SetLoadContext(IClickable* context) { sPathLoadContext = context->Path() + "~"; }
@@ -97,6 +100,8 @@ public:
 
    static std::string sPathLoadContext;
    static std::string sPathSaveContext;
+
+   void SetTextTruncationSettings(TextTruncationSettings newSettings);
 
 protected:
    virtual void OnClicked(float x, float y, bool right) {}
@@ -113,7 +118,9 @@ private:
    char mName[MAX_TEXTENTRY_LENGTH]{};
    double mBeaconTime{ -999 };
    bool mHasOverrideDisplayName{ false };
+   TextTruncationSettings mTruncationSettings {};
    std::string mOverrideDisplayName{ "" };
+   std::string mCachedName{""};
 };
 
 template <class T>

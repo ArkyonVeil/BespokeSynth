@@ -244,7 +244,7 @@ void SongCanvas::Init()
    int dPartIter = 1;
    for (int i = 0; i < 3; ++i)
    {
-      mRackGrid->AddFlowElement(new SongCanvasRackEnabler("Part " + std::to_string(dPartIter), this));
+      AddNewRackPart(new SongCanvasRackEnabler("Part " + std::to_string(dPartIter), this), true);
       dPartIter++;
       IncrementInternalRackId();
    }
@@ -492,7 +492,6 @@ void SongCanvas::DrawModule()
    ofColor softLineColor = ofColor{ 255, 255, 255, 20 };
    ofColor hardLineColor = ofColor{ 255, 255, 255, 50 };
    ofColor labelColor = ofColor{ 0, 0, 0, 130 };
-
 
    mMeasureSlider->SetDimensions(mCanvas->GetWidth() + 2, 15); //+2 fixes a very slight but annoying visual disconnect between it and the Canvas transport line.
    mMeasureSlider->SetExtents(mMeasureStart + mCanvas->mViewStart, mMeasureStart + mCanvas->mViewEnd);
@@ -994,14 +993,14 @@ void SongCanvas::DropdownUpdated(DropdownList* list, int oldVal, double time)
       switch (mRackAddNewElementIndex)
       {
          case enumEnabler:
-            mRackGrid->AddFlowElement(new SongCanvasRackEnabler(newPartName, this));
+            AddNewRackPart(new SongCanvasRackEnabler(newPartName, this), true);
             break;
          case enumPulser:
-            mRackGrid->AddFlowElement(new SongCanvasRackPulser(newPartName, this));
+            AddNewRackPart(new SongCanvasRackPulser(newPartName, this), true);
             break;
          case enumModulator: break;
          case enumSample:
-            mRackGrid->AddFlowElement(new SongCanvasRackSampler(newPartName, this));
+            AddNewRackPart(new SongCanvasRackSampler(newPartName, this), true);
             break;
          case enumKeyer:
             break;
@@ -1244,6 +1243,10 @@ SongCanvasRackElement* SongCanvas::GetSelectedRackPart() const
    if (e == nullptr)
       return nullptr;
    return dynamic_cast<SongCanvasRackElement*>(e);
+}
+void SongCanvas::OnElementLoaded(FlowGridElement* element)
+{
+   AddNewRackPart(dynamic_cast<SongCanvasRackElement*>(element),false);
 }
 void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 {
@@ -1709,9 +1712,10 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
    mRightClickDropdownElementContext = element;
 }
 
-void SongCanvas::AddNewRackPart(SongCanvasRackElement* element)
+void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool addToGrid)
 {
-   mRackGrid->AddFlowElement(element);
+   if (addToGrid)
+      mRackGrid->AddFlowElement(element);
 
    if (auto audioR = dynamic_cast<SongCanvasAudioRackElement*>(element))
    {
@@ -1720,8 +1724,7 @@ void SongCanvas::AddNewRackPart(SongCanvasRackElement* element)
          //No mixer defined yet, setting as 0
 
          //Ensure we have a mixer available.
-         GetMixer(0);
-         audioR->SetMixer(0);
+         audioR->SetMixer(GetMixer(0));
       }
       mAudioRacks.push_back(audioR);
    }
@@ -1837,8 +1840,8 @@ void SongCanvas::Process(double time)
 //Gets the mixer in that index. If no mixer of that index exists, one is created automatically.
 SongCanvasMixer* SongCanvas::GetMixer(int index)
 {
-   assert(index>=0);//No negative mixers please.
-   assert(index<=99);//Keep it sane please.
+   assert(index >= 0); //No negative mixers please.
+   assert(index <= 99); //Keep it sane please.
 
    for (auto mixer : mMixers)
    {
@@ -1847,21 +1850,35 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
          return mixer;
       }
    }
-   auto mixer = new SongCanvasMixer(this,index);
+   auto mixer = new SongCanvasMixer(this, index);
+   mixer->CreateUIControls();
    mMixers.push_back(mixer);
 
-   SortMixers();
+   SortMixers(index);
    return mixer;
 }
 
-//Sorts and cleans up unused mixers.
-void SongCanvas::SortMixers()
+void SongCanvas::SortMixers(int reserveIndex)
 {
    std::sort(mMixers.begin(),mMixers.end(),[](SongCanvasMixer* a, SongCanvasMixer* b)
    {
      return a->mMixerIndex < b->mMixerIndex;
    });
    std::vector<int> mixUsers(mMixers.size(),0);
+
+   if (reserveIndex!=-1)
+   {
+      int idx = 0;
+      for (auto mixer : mMixers)
+      {
+         if (mixer->mMixerIndex == reserveIndex)
+         {
+            mixUsers[idx]++;
+            break;
+         }
+         idx++;
+      }
+   }
 
    //Get all the users in audio racks
    for (auto mixerUsers : mAudioRacks)

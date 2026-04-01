@@ -251,6 +251,20 @@ private:
    bool mLoaded{ false };
    std::string mFontPath;
 };
+enum class TextFont
+{
+   Normal = 0,
+   Bold = 1,
+   Mono = 2
+};
+struct TextTruncationSettings
+{
+   TextFont font = TextFont::Normal;
+   float fontSize = 13;
+   std::string cutOffStyle = "...";
+   float maxTextWidth = 999;
+   float perCharPadding = 0;
+};
 
 typedef ofVec2f ofPoint;
 

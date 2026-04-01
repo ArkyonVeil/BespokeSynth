@@ -100,7 +100,8 @@ public:
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
-   void AddNewRackPart(SongCanvasRackElement* element);
+   void AddNewRackPart(SongCanvasRackElement* element, bool addToGrid = true);
+   void OnElementLoaded(FlowGridElement* element) override;
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
    void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
@@ -118,7 +119,7 @@ public:
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
    SongCanvasMixer* GetMixer(int index);
-   void SortMixers();
+   void SortMixers(int reserveIndex = -1);//Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
 
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
    bool IsRackActive(SongCanvasRackElement* rackPart) const;//True if there's a part on the canvas with the same rack that is currently playing.

@@ -138,6 +138,18 @@ IDrawableModule* IClickable::GetModuleParent()
    }
    return dynamic_cast<IDrawableModule*>(parent);
 }
+void IClickable::SetTextTruncationSettings(TextTruncationSettings newSettings)
+{
+   mTruncationSettings = newSettings;
+   if (mHasOverrideDisplayName)
+   {
+      mCachedName = TruncateString(mOverrideDisplayName,mTruncationSettings);
+   }
+   else
+   {
+      mCachedName = TruncateString(mName,mTruncationSettings);
+   }
+}
 
 std::string IClickable::Path(bool ignoreContext /*=false*/, bool useDisplayName /*=false*/, IClickable* relativeTo /*=nullptr*/)
 {

@@ -37,7 +37,7 @@ class IAudioSource : public virtual IPatchable
 {
 public:
    IAudioSource()
-   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate)//Initialize the visual buffer with 10% the resolution of the real one.
+   : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate)//Initialize the visual buffer.
    {}
    virtual ~IAudioSource() {}
    //Called by the Audio Processing thread to do audio work. Here, work is done resetting audio buffers, writing to attached modules's buffers, applying effects to samples, etc.

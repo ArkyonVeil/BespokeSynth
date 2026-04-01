@@ -19,8 +19,8 @@ public:
    void PostRepatch(PatchCableSource* cable, bool fromUserClick);
 
    int mMixerIndex;//Please do not write to this.
-
    int mMixerVersion{0};
+
 private:
    SongCanvas* mOwner;
    RollingBuffer* mVizBuffer;//Animation buffer

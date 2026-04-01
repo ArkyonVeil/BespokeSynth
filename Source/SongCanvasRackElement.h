@@ -69,11 +69,13 @@ public:
    bool MouseMoved(float x, float y) override;
    void MouseReleased() override;
    void ButtonClicked(ClickButton* button, double time) override{};
+   float GetCenteredElementY(IUIControl* element) const { return (mHeight-element->GetRect(true).height)/2;}
 
    int mInternalRackID;
    bool mRackEnabled;
 
 protected:
+   virtual void DrawExtendedBaseGraphics() {};
    SongCanvas* mSongCanvas;
    std::string* mElementName;
 
@@ -118,13 +120,18 @@ public:
    ChannelBuffer* GetMixerBuffer() {return mMixerBuffer;};
    int GetMixerIndex(){return mMixerIndex;}
    void CreateUIControls() override;
-   void DrawRackGraphics() override;
    void SetMixer(SongCanvasMixer* mixer);
    void TextEntryComplete(TextEntry* entry) override;
+
+   int GetNumTargets() override {return 0;};
+   bool ShouldSuppressAutomaticOutputCable() override {return true;};
+   void OnPostResize() override;
+
 protected:
    void SwapMixers(int newIndex);
    int mMixerIndex {-1};
 private:
+   void DrawExtendedBaseGraphics() override;
    SongCanvasMixer* mMixer;
    ChannelBuffer* mMixerBuffer;
    TextEntry* mChannelPicker;
@@ -230,6 +237,7 @@ class SongCanvasRackSampler : public SongCanvasAudioRackElement
 {
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
+   float GetPreferredWidth() const;
    ~SongCanvasRackSampler();
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
@@ -239,7 +247,8 @@ public:
    void ButtonClicked(ClickButton* button, double time);
    void SetSample(Sample* sample);
    void PlaySample();
-   void DrawRackGraphics() override;
+   void OnPostResize() override;
+
 
    ChannelBuffer* GetBuffer(){return &mWriteBuffer;}
 
@@ -248,6 +257,7 @@ public:
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
    void Process(double time) override;
+   void DrawRackGraphics();
 
 private:
    Sample* mSample {nullptr};
