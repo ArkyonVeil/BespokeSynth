@@ -115,6 +115,7 @@ public:
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
    int GetNumTargets() override { return 0; }
+   float GetModuleMinHeight(){ return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
@@ -138,6 +139,8 @@ public:
    void OnTimeEvent(double time) override;
    void FeatureResize(int extraW, int extraH);
    int GetModuleSaveStateRev() const override { return 5; }
+   float RescaleAnimationSpeedDelta() { return ofGetDeltaTime()* 96 * mDeltaAnimSpeedMultiplier;}
+   void SetAnimationSpeedMultiplier(float mul) { mDeltaAnimSpeedMultiplier = mul; }
 
    void PostRepatch(PatchCableSource* cableSource, bool fromUserClick) override;
 
@@ -171,6 +174,9 @@ public:
 
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
+   void SetMixerControlsState(bool active, int mixerIndex);
+   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
+   bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
 private:
    struct SongCanvasLayer
    {
@@ -235,6 +241,9 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
+   float mBottomOffsetSize = 16;
+   float mBottomOffsetTarget = 16;
+   bool mFlagResizeAnimationNeeded = false;
 
    bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
@@ -249,6 +258,7 @@ private:
    bool mLocalSynced{ true }; //Used in local mode's on end loop
    bool mLocalStopped{ false };
    bool mAlteredIntervalFlag{ false };
+
 
    bool mShowRealTime{ false };
 
@@ -355,8 +365,24 @@ private:
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
+   float mDeltaAnimSpeedMultiplier { 1 };
 
    //Audio Handling
+   float mMixerStartingXOffset = 26;
+   float GetMixerPadding() { return 54;};
+   SongCanvasMixer* mMixerControlsSelected {nullptr};
+   void UpdateSongCanvasMixerSpacing();
+   float mMixerControlsHeight = 60;
+   float mMixerControlsWidth = 120;
+   float mMixerControlsYOffset = 5;
+   float mMixerControlsDrawHeight = 0;
+   float mMixerControlsDrawHeightTarget = 0;
+   float mMixerControlsEdgeMin = 8;
+
+
+   //Temp mixer cords, not updated if no mixer is selected.
+   float mSelectedMixerX;
+
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
 

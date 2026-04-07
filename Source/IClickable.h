@@ -75,8 +75,10 @@ public:
    virtual bool CheckNeedsDraw();
    virtual void SetShowing(bool showing) { mShowing = showing; }
    bool IsShowing() const { return mShowing; }
+   //Triggers a short (typically yellow) glow effect over the element when triggered remotely by invisible cables such as from midicontroller
    virtual void StartBeacon() { mBeaconTime = gTime; }
    float GetBeaconAmount() const;
+   //Animates a short (typically yellow) glow effect over the element when triggered remotely by invisible cables such as from midicontroller
    void DrawBeacon(int x, int y);
    IClickable* GetRootParent();
    IDrawableModule* GetModuleParent();

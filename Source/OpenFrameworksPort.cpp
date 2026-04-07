@@ -467,6 +467,11 @@ float ofGetFrameRate()
    return TheSynth->GetFrameRate();
 }
 
+float ofGetDeltaTime()
+{
+   return TheSynth->GetDeltaTime();
+}
+
 double ofGetGlobalTime()
 {
    return TheSynth->GetGlobalTime();

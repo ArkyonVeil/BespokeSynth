@@ -311,6 +311,7 @@ unsigned long long ofGetSystemTimeNanos();
 float ofGetWidth();
 float ofGetHeight();
 float ofGetFrameRate();
+float ofGetDeltaTime();
 double ofGetGlobalTime();
 float ofLerp(float start, float stop, float amt);
 float ofDistSquared(float x1, float y1, float x2, float y2);

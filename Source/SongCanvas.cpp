@@ -222,12 +222,16 @@ void SongCanvas::CreateUIControls()
    mCanvasIntervalDropdown->AddLabel("64n", kInterval_64n);
    mCanvasIntervalDropdown->SetCableTargetable(false);
 
+
    //Layers
    for (int i = 0; i < layerBuffer.size(); ++i)
    {
       AddNewLayer(i, layerBuffer[i]);
    }
    layerBuffer.clear();
+
+   //
+
 
    //mCanvas->mViewEnd = mMeasureCount;
    //mLayerName[0]->SetNoHover(false);
@@ -348,6 +352,7 @@ void SongCanvas::ReloadHeader()
    mLocalModeCheckbox->SetPosition(mWidth - 47, 8);
 }
 
+
 ofColor SongCanvas::GetFancyStyleColour(EnumSongCanvasStyle style, float time)
 {
    switch (style)
@@ -432,6 +437,11 @@ void SongCanvas::DrawModule()
    if (Minimized() || IsVisible() == false)
       return;
 
+   if (mFlagResizeAnimationNeeded)
+   {
+      Resize(mWidth, mHeight);
+   }
+
    int startCanvasOffset;
    if (expertPanelEnabled)
       startCanvasOffset = LayersListWidthSize + AdvancedConfigHSize;
@@ -514,6 +524,7 @@ void SongCanvas::DrawModule()
    ofLine(mHeaderSplitter2.x - 8, mHeaderSplitter2.y, mHeaderSplitter2.x - 8, mHeaderSplitter2.y + 15);
    ofPopStyle();
 
+   ofPushStyle();
    mMeasureBaseTextbox->Draw();
    if (!mStartEndMeasureMode)
       mMeasureCountTextbox->Draw();
@@ -649,6 +660,7 @@ void SongCanvas::DrawModule()
    mMainScrollbarHorizontal->Draw();
    ofPopStyle();
 
+   ofPushStyle();
    int s = seqLayers.size();
    for (int i = 0; i < s; i++)
    {
@@ -669,17 +681,71 @@ void SongCanvas::DrawModule()
    mRackGrid->DrawModule();
    mRackAddNewButton->Draw();
 
-   //Mixers
-   float offsetY = mHeight;
-   float mixerPadding = 32;
-   float offsetX = mixerPadding;
-   for (int i = 0; i < mMixers.size(); ++i)
-   {
-      offsetX += mixerPadding;
-      mMixers[i]->Draw(offsetX, offsetY);
-   }
+   ofPopStyle();
 
    ofPushStyle();
+   //Mixers
+   float offsetY = mHeight;
+   float mixerPadding = GetMixerPadding();
+   for (int i = 0; i < mMixers.size(); ++i)
+   {
+      float mMixerXPos = mMixerStartingXOffset + i * mixerPadding;
+      if (mMixers[i] == mMixerControlsSelected)
+      {
+         mSelectedMixerX = mMixerXPos;
+      }
+      mMixers[i]->Draw(mMixerXPos, offsetY);
+   }
+   ofPopStyle();
+
+
+
+   float prog = RescaleAnimationSpeedDelta();
+   mDeltaAnimSpeedMultiplier = 1;
+   if (mMixerControlsDrawHeight != mMixerControlsDrawHeightTarget)
+   {
+      mDeltaAnimSpeedMultiplier = 4;
+      if (mMixerControlsDrawHeight > mMixerControlsDrawHeightTarget)
+         mMixerControlsDrawHeight = MAX(mMixerControlsDrawHeightTarget, mMixerControlsDrawHeight - prog);
+      else
+         mMixerControlsDrawHeight = MIN(mMixerControlsDrawHeightTarget, mMixerControlsDrawHeight + prog);
+   }
+   if (mMixerControlsDrawHeight > 0)
+   {
+      ofPushStyle();
+
+      //Draw the controls background.
+      ofSetColor(0, 0, 0, 75);
+      ofFill();
+
+      float controlXOffset = mSelectedMixerX-mMixerControlsWidth/2;
+      controlXOffset = CLAMP(controlXOffset,mMixerControlsEdgeMin,mWidth-mMixerControlsEdgeMin-mMixerControlsWidth);
+
+      float controlYOffset = mHeight-mBottomOffsetSize+12;
+      ofRect(controlXOffset,controlYOffset,mMixerControlsWidth,mMixerControlsDrawHeight);
+
+      ofSetColor(255,255,255,80);
+      ofNoFill();
+      ofRect(controlXOffset,controlYOffset,mMixerControlsWidth,mMixerControlsDrawHeight);
+
+      float triBaseX = mSelectedMixerX;
+      float triBaseY = controlYOffset+mMixerControlsDrawHeight+1;
+      ofFill();
+      ofSetColor(255,255,255,200);
+      ofTriangle(triBaseX-4,triBaseY,triBaseX+4,triBaseY,triBaseX,triBaseY+8);
+
+      if (MixerControlsEnabled())
+      {
+         if (mMixerControlsDrawHeightTarget == mMixerControlsDrawHeight)
+         {
+            //Sent the top left coord of the
+            GetSelectedMixer()->DrawMixerControls(controlXOffset,controlYOffset);
+         }
+      }
+
+      ofPopStyle();
+   }
+
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
    /*
@@ -733,7 +799,7 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 void SongCanvas::Resize(float w, float h)
 {
    w = MAX(w, 300);
-   h = MAX(h, 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight());
+   h = MAX(h, GetModuleMinHeight());
 
    if (mMeasureSize == 0)
    {
@@ -746,7 +812,28 @@ void SongCanvas::Resize(float w, float h)
    mWidth = w;
    mHeight = h;
 
-   float canvasHeight = h - (16 + GetCanvasYOffset() + mRackGrid->GetHeight());
+   //int bottomSpacing = 96;
+
+   float prog = RescaleAnimationSpeedDelta();
+   if (mBottomOffsetSize == mBottomOffsetTarget)
+   {
+      mFlagResizeAnimationNeeded = false;
+   }
+   else
+   {
+      mFlagResizeAnimationNeeded = true;
+
+      if (mBottomOffsetSize < mBottomOffsetTarget)
+      {
+         mBottomOffsetSize = MIN(mBottomOffsetTarget, mBottomOffsetSize + prog);
+      }
+      else
+      {
+         mBottomOffsetSize = MAX(mBottomOffsetTarget, mBottomOffsetSize - prog);
+      }
+   }
+
+   float canvasHeight = h - (mBottomOffsetSize + GetCanvasYOffset() + mRackGrid->GetHeight());
    mCanvas->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset());
    mMeasureSlider->SetPosition(GetCanvasStartXOffset(), GetCanvasYOffset() - 16);
    mCanvas->SetDimensions(w - mStartCanvasXOffset, canvasHeight);
@@ -1159,13 +1246,41 @@ void SongCanvas::OnClicked(float x, float y, bool right)
 {
    IDrawableModule::OnClicked(x, y, right);
    mRackGrid->OnClicked(x, y, right);
+
+   //If there's mixers we may have to count on moving events over them.
+   if (!mMixers.empty())
+   {
+      float offsetY = mHeight;
+      float mixerPadding = GetMixerPadding();
+      for (int i = 0; i < mMixers.size(); ++i)
+      {
+         float mX = x - mMixerStartingXOffset - i * mixerPadding;
+         float mY = y - offsetY;
+         mMixers[i]->MouseClick(mX, mY, right);
+      }
+   }
 }
+
 bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
    mRackGrid->MouseMoved(x, y);
+
+   //If there's mixers we may have to count on moving events over them.
+   if (!mMixers.empty())
+   {
+      float offsetY = mHeight;
+      float mixerPadding = GetMixerPadding();
+      for (int i = 0; i < mMixers.size(); ++i)
+      {
+         float mX = x - mMixerStartingXOffset - i * mixerPadding;
+         float mY = y - offsetY;
+         mMixers[i]->MouseMove(mX, mY);
+      }
+   }
    return false;
 }
+
 void SongCanvas::MouseReleased()
 {
    IDrawableModule::MouseReleased();
@@ -1904,6 +2019,9 @@ void SongCanvas::SortMixers(int reserveIndex)
          i--;
       }
    }
+
+   //Now set the footer size depending on the number of mixers.
+   UpdateSongCanvasMixerSpacing();
 }
 
 void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
@@ -1913,4 +2031,50 @@ void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
    {
       m->PostRepatch(cableSource, fromUserClick);
    }
+}
+
+void SongCanvas::SetMixerControlsState(bool active, int mixerIndex)
+{
+   if (!active)
+   {
+      mMixerControlsSelected = nullptr;
+   }
+   else
+   {
+      for (auto mixer : mMixers)
+      {
+         if (mixer->mMixerIndex == mixerIndex)
+         {
+            mMixerControlsSelected = mixer;
+         }
+      }
+   }
+   UpdateSongCanvasMixerSpacing();
+}
+
+void SongCanvas::UpdateSongCanvasMixerSpacing()
+{
+   float target;
+   if (!mMixers.empty())
+   {
+      target = 30;
+   }
+   else
+   {
+      target = 16;
+   }
+
+   if (MixerControlsEnabled())
+   {
+      target += mMixerControlsYOffset + mMixerControlsHeight;
+      mMixerControlsDrawHeightTarget = mMixerControlsHeight;
+   }
+   else
+   {
+      mMixerControlsDrawHeightTarget = 0;
+   }
+
+   mBottomOffsetTarget = target;
+   if (mBottomOffsetSize != mBottomOffsetTarget)
+      mFlagResizeAnimationNeeded = true;
 }
