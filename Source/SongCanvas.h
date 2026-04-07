@@ -369,10 +369,10 @@ private:
 
    //Audio Handling
    float mMixerStartingXOffset = 26;
-   float GetMixerPadding() { return 54;};
+   float GetMixerXPadding() { return 54;};
    SongCanvasMixer* mMixerControlsSelected {nullptr};
    void UpdateSongCanvasMixerSpacing();
-   float mMixerControlsHeight = 60;
+   float mMixerControlsHeight = 44;
    float mMixerControlsWidth = 120;
    float mMixerControlsYOffset = 5;
    float mMixerControlsDrawHeight = 0;

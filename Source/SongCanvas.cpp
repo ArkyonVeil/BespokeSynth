@@ -686,7 +686,7 @@ void SongCanvas::DrawModule()
    ofPushStyle();
    //Mixers
    float offsetY = mHeight;
-   float mixerPadding = GetMixerPadding();
+   float mixerPadding = GetMixerXPadding();
    for (int i = 0; i < mMixers.size(); ++i)
    {
       float mMixerXPos = mMixerStartingXOffset + i * mixerPadding;
@@ -1251,7 +1251,7 @@ void SongCanvas::OnClicked(float x, float y, bool right)
    if (!mMixers.empty())
    {
       float offsetY = mHeight;
-      float mixerPadding = GetMixerPadding();
+      float mixerPadding = GetMixerXPadding();
       for (int i = 0; i < mMixers.size(); ++i)
       {
          float mX = x - mMixerStartingXOffset - i * mixerPadding;
@@ -1270,7 +1270,7 @@ bool SongCanvas::MouseMoved(float x, float y)
    if (!mMixers.empty())
    {
       float offsetY = mHeight;
-      float mixerPadding = GetMixerPadding();
+      float mixerPadding = GetMixerXPadding();
       for (int i = 0; i < mMixers.size(); ++i)
       {
          float mX = x - mMixerStartingXOffset - i * mixerPadding;

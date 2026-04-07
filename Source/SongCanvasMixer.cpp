@@ -131,8 +131,8 @@ void SongCanvasMixer::Draw(float x, float y)
    if (!IsSelected())
    {
       float miniPosX, miniPosY;
-      miniPosX = x-24;
-      miniPosY = y-8;
+      miniPosX = x-20;
+      miniPosY = y-2;
       mPanSlider->SetPosition(miniPosX,miniPosY);
       mVolumeSlider->SetPosition(miniPosX,miniPosY);
    }
@@ -142,8 +142,12 @@ void SongCanvasMixer::Draw(float x, float y)
 
 void SongCanvasMixer::DrawMixerControls(float x, float y)
 {
-   mPanSlider->SetPosition(x+6,y+6);
-   mVolumeSlider->SetPosition(x+6,y+6+18);
+   ofSetColor(ofColor(220,220,220));
+   float offsetX = x+6;
+   float offsetY = y+6;
+   mPanSlider->SetPosition(offsetX,offsetY);
+   offsetY += 18;
+   mVolumeSlider->SetPosition(offsetX,offsetY);
 
    mPanSlider->Draw();
    mVolumeSlider->Draw();
@@ -221,13 +225,18 @@ void SongCanvasMixer::SetMixerControlsVisibility(bool state)
 {
    mVolumeSlider->SetNoHover(!state);
    mPanSlider->SetNoHover(!state);
+
    if (state)
    {
       mVolumeSlider->SetDimensions(108,13);
       mPanSlider->SetDimensions(108,13);
+      mVolumeSlider->ClearOverridePatchCableInputDirection();
+      mPanSlider->ClearOverridePatchCableInputDirection();
    }
    else
    {
+      mVolumeSlider->SetOverridePatchCableInputDirection(ofVec2f(0,1));
+      mPanSlider->SetOverridePatchCableInputDirection(ofVec2f(0,1));
       mVolumeSlider->SetDimensions(1,1);
       mPanSlider->SetDimensions(1,1);
    }
