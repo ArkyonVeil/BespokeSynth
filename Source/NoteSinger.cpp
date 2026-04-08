@@ -132,7 +132,7 @@ void NoteSinger::OnScaleChanged()
       mBands[i].SetFilterType(kFilterType_Bandpass);
       mBands[i].SetFilterParams(f, 40 + mNumBuckets * 2 - i * 2);
 
-      mPeaks[i].SetDecayTime(.05f);
+      mPeaks[i].SetDecaySpeed(.05f);
    }
 }
 

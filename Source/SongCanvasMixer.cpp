@@ -30,6 +30,11 @@ void SongCanvasMixer::CreateUIControls()
 
    mVolumeSlider->SetOverrideDisplayName("volume");
    mPanSlider->SetOverrideDisplayName("pan");
+   mLeftChannelLevel.SetLimit(1);
+   mLeftChannelLevel.SetLevelFillDirection(LevelMeterDisplay::LevelMeterFillDirection::RightToLeft);
+   mRightChannelLevel.SetLimit(1);
+   mLeftChannelLevel.SetNumSegments(8);
+   mRightChannelLevel.SetNumSegments(8);
 
    SetMixerControlsVisibility(false);
 }
@@ -46,6 +51,26 @@ void SongCanvasMixer::Process()
    }
    mVizBuffer->SetNumChannels(mNumChannels);
 
+   //Process the buffers, applying the changes
+   auto bufferSize = GetBuffer()->BufferSize();
+   float pan;
+   for (int ch = 0; ch < mNumChannels; ++ch)
+   {
+      if (ch==0)
+      { //left pan (-1 to 0)
+         pan = 1-MAX(0,mPan);
+      }
+      else
+      { //right pan (0 to 1)
+         pan = 1-MAX(0,-mPan);
+      }
+      auto bAddress = GetBuffer()->GetChannel(ch);
+      for (int i = 0; i < bufferSize; ++i)
+      {
+         bAddress[i] *= mVolume * pan;
+      }
+   }
+
    //Send the Data
    if (mTarget)
    {
@@ -61,6 +86,8 @@ void SongCanvasMixer::Process()
    {
       mVizBuffer->WriteChunk(GetBuffer()->GetChannel(ch), GetBuffer()->BufferSize(), ch);
    }
+   mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
+   mRightChannelLevel.Process(0, GetBuffer()->GetChannel(1), gBufferSize);
 
    //Flush our stuff
    GetBuffer()->Reset();
@@ -121,6 +148,13 @@ void SongCanvasMixer::Draw(float x, float y)
 
    //Righthand Marker
    ofRect(offsetX+barSize,offsetY,2,mMixerBarVPanHeight,0);
+
+   offsetY += 8;
+
+   //Levels
+   float levelPadding = 3;
+   mLeftChannelLevel.Draw(offsetX-3,offsetY,barSize/2-levelPadding,4,1);
+   mRightChannelLevel.Draw(offsetX+barSize/2+levelPadding+2,offsetY,barSize/2-levelPadding,4,1);
 
    if (mHovered)
    {

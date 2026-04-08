@@ -30,8 +30,9 @@ LevelMeterDisplay::LevelMeterDisplay()
 {
    for (size_t i = 0; i < mLevelMeters.size(); ++i)
    {
-      mLevelMeters[i].mPeakTrackerSlow.SetDecayTime(3);
+      mLevelMeters[i].mPeakTrackerSlow.SetDecaySpeed(0.5f);
       mLevelMeters[i].mPeakTrackerSlow.SetLimit(1);
+      mLevelMeters[i].mPeakTrackerSlow.SetDecayTime(1.0f);
    }
 }
 
@@ -58,6 +59,18 @@ void LevelMeterDisplay::GetLevel(int channel, float& level, float& watermarkLeve
       watermarkLevel = 0;
    }
 }
+void LevelMeterDisplay::SetNumSegments(int num)
+{
+   mNumSegments = num;
+   mRedSegmentStart = round(mNumSegments*0.15f);
+   if (mRedSegmentStart <= 1)
+      mRedSegmentStart = 2;
+   mYellowSegmentStart = round(mNumSegments*0.3f);
+   if (mYellowSegmentStart <= mRedSegmentStart)
+   {
+      mYellowSegmentStart = mRedSegmentStart+1;
+   }
+}
 
 void LevelMeterDisplay::Draw(float x, float y, float width, float height, int numChannels)
 {
@@ -65,32 +78,47 @@ void LevelMeterDisplay::Draw(float x, float y, float width, float height, int nu
    {
       float limit = mLevelMeters[i].mPeakTrackerSlow.GetLimit();
 
-      const int kNumSegments = 20;
       const int kPaddingBetween = 1;
       const int kPaddingVertical = 2;
       float barHeight = (height - (kPaddingVertical * (numChannels - 1))) / numChannels;
-      float segmentWidth = width / kNumSegments;
+      float segmentWidth = width / mNumSegments;
       float level, watermarkLevel;
       GetLevel(i, level, watermarkLevel);
       level = level / (limit > 0 ? limit : 1);
       watermarkLevel = watermarkLevel / (limit > 0 ? limit : 1);
-      for (int j = 0; j < kNumSegments; ++j)
+      for (int j = 0; j < mNumSegments; ++j)
       {
          ofPushStyle();
          ofFill();
          ofColor color(0, 255, 0);
-         if (j > kNumSegments - 3)
+         if (j > mNumSegments - mRedSegmentStart)
             color.set(255, 0, 0);
-         else if (j > kNumSegments - 6)
+         else if (j > mNumSegments - mYellowSegmentStart)
             color.set(255, 255, 0);
 
-         if (watermarkLevel > 0 && ofClamp(int(watermarkLevel * kNumSegments), 0, kNumSegments - 1) == j)
+         if (watermarkLevel > 0.02f && ofClamp(int(watermarkLevel * mNumSegments), 0, mNumSegments - 1) == j)
             ofSetColor(color);
-         else if (level > 0 && level >= j / (float)kNumSegments)
+         else if (level > 0 && level >= j / (float)mNumSegments)
             ofSetColor(color * .9f);
          else
             ofSetColor(color * .5f);
-         ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+
+         switch (mLevelMeterFillDirection)
+         {
+            case LevelMeterFillDirection::LeftToRight:
+               ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               break;
+            case LevelMeterFillDirection::RightToLeft:
+               ofRect(x + width - segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               break;
+            case LevelMeterFillDirection::UpToDown:
+               //ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               break;
+            case LevelMeterFillDirection::DownToUp:
+               //ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               break;
+         }
+
          ofPopStyle();
       }
 

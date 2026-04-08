@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "LevelMeterDisplay.h"
 #include "SongCanvas.h"
 
 class SongCanvasMixer : IFloatSliderListener
@@ -38,6 +39,8 @@ private:
 
    FloatSlider* mPanSlider { nullptr };
    FloatSlider* mVolumeSlider { nullptr };
+   LevelMeterDisplay mLeftChannelLevel;
+   LevelMeterDisplay mRightChannelLevel;
 
    int mNumChannels{ 1 };
 

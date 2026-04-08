@@ -33,25 +33,30 @@ void PeakTracker::Process(float* buffer, int bufferSize)
 
    for (int j = 0; j < bufferSize; ++j)
    {
-      float scalar = powf(0.5f, 1.0f / (mDecayTime * gSampleRate));
+      float scalar = powf(0.5f, 1.0f / (mDecaySpeed * gSampleRate));
       float input = fabsf(buffer[j]);
 
       if (input >= mPeak)
       {
          /* When we hit a peak, ride the peak to the top. */
          mPeak = input;
+         mLastPeakTime = ofGetGlobalTime() + mPeakDecayTime;
+
          if (mLimit > std::numeric_limits<float>::epsilon() && mPeak >= mLimit)
          {
             mPeak = mLimit;
-            mHitLimitTime = gTime;
+            mHitLimitTime = ofGetGlobalTime();
          }
       }
       else
       {
-         /* Exponential decay of output when signal is low. */
-         mPeak = mPeak * scalar;
-         if (mPeak < std::numeric_limits<float>::epsilon())
-            mPeak = 0.0;
+         if (ofGetGlobalTime() >= mLastPeakTime)
+         {
+            /* Exponential decay of output when signal is low. */
+            mPeak = mPeak * scalar;
+            if (mPeak < std::numeric_limits<float>::epsilon())
+               mPeak = 0.0;
+         }
       }
    }
 }

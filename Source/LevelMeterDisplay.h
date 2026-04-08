@@ -38,6 +38,17 @@ public:
    void Draw(float x, float y, float width, float height, int numChannels);
    void SetLimit(float limit);
    void GetLevel(int channel, float& levelFast, float& levelSlow) const;
+   void SetNumSegments(int num);
+
+   enum class LevelMeterFillDirection
+   {
+      LeftToRight = 0,
+      RightToLeft = 1,
+      UpToDown = 2,
+      DownToUp = 3,
+   };
+   void SetLevelFillDirection(LevelMeterFillDirection direction){ mLevelMeterFillDirection = direction;}
+
 
 private:
    struct LevelMeter
@@ -45,6 +56,9 @@ private:
       PeakTracker mPeakTracker;
       PeakTracker mPeakTrackerSlow;
    };
-
+   int mNumSegments {20};
+   int mRedSegmentStart { 3 };
+   int mYellowSegmentStart { 6 };
    std::array<LevelMeter, ChannelBuffer::kMaxNumChannels> mLevelMeters;
+   LevelMeterFillDirection mLevelMeterFillDirection = LevelMeterFillDirection::LeftToRight;
 };

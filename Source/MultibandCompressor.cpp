@@ -170,7 +170,7 @@ void MultibandCompressor::FloatSliderUpdated(FloatSlider* slider, float oldVal, 
    if (slider == mRingTimeSlider)
    {
       for (int i = 0; i < COMPRESSOR_MAX_BANDS; ++i)
-         mPeaks[i].SetDecayTime(mRingTime);
+         mPeaks[i].SetDecaySpeed(mRingTime);
    }
    if (slider == mMaxBandSlider)
    {

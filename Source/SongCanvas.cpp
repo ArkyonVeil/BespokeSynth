@@ -748,12 +748,14 @@ void SongCanvas::DrawModule()
 
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
-   /*
+
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
-   dText += "mWidth: " + ofToString(mWidth) + "\n";
-   dText += "mHeight: " + ofToString(mHeight) + "\n";
-   DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);*/
+  // dText += "mWidth: " + ofToString(mWidth) + "\n";
+   //dText += "mHeight: " + ofToString(mHeight) + "\n";
+   dText += "GlobalTime: " + ofToString(ofGetGlobalTime()) + "\n";
+   dText += "gTime: " + ofToString(gTime) + "\n";
+   DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {

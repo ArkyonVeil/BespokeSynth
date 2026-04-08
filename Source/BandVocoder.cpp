@@ -42,8 +42,8 @@ BandVocoder::BandVocoder()
 
    for (int i = 0; i < VOCODER_MAX_BANDS; ++i)
    {
-      mPeaks[i].SetDecayTime(mRingTime);
-      mOutputPeaks[i].SetDecayTime(mRingTime);
+      mPeaks[i].SetDecaySpeed(mRingTime);
+      mOutputPeaks[i].SetDecaySpeed(mRingTime);
       mPeaks[i].SetLimit(mMaxBand);
       mOutputPeaks[i].SetLimit(mMaxBand);
    }
@@ -275,8 +275,8 @@ void BandVocoder::FloatSliderUpdated(FloatSlider* slider, float oldVal, double t
    {
       for (int i = 0; i < VOCODER_MAX_BANDS; ++i)
       {
-         mPeaks[i].SetDecayTime(mRingTime);
-         mOutputPeaks[i].SetDecayTime(mRingTime);
+         mPeaks[i].SetDecaySpeed(mRingTime);
+         mOutputPeaks[i].SetDecaySpeed(mRingTime);
       }
    }
    if (slider == mMaxBandSlider)

@@ -39,7 +39,7 @@ DistortionEffect::DistortionEffect()
       mDCRemover[i].SetFilterType(kFilterType_Highpass);
       mDCRemover[i].UpdateFilterCoeff();
 
-      mPeakTracker[i].SetDecayTime(.1f);
+      mPeakTracker[i].SetDecaySpeed(.1f);
    }
 }
 

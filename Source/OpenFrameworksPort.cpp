@@ -462,16 +462,20 @@ float ofGetHeight()
    return TheSynth->GetMainComponent()->getHeight();
 }
 
+//How many frames in the last second?
 float ofGetFrameRate()
 {
    return TheSynth->GetFrameRate();
 }
 
+//How much time elapsed since the last frame? Equal to 1.0f/currentFrameRate.
+//Use to ensure animations remain smooth even if the Draw thread starts chugging.
 float ofGetDeltaTime()
 {
    return TheSynth->GetDeltaTime();
 }
 
+//Returns the global time in seconds.
 double ofGetGlobalTime()
 {
    return TheSynth->GetGlobalTime();

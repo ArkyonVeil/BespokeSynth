@@ -30,7 +30,8 @@ class PeakTracker
 public:
    void Process(float* buffer, int bufferSize);
    float GetPeak() const { return mPeak; }
-   void SetDecayTime(float time) { mDecayTime = time; }
+   void SetDecaySpeed(float speed) { mDecaySpeed = speed; }//Lower -> faster
+   void SetDecayTime(float time) { mPeakDecayTime = time; }//How long to keep a peak before decaying.
    void SetLimit(float limit) { mLimit = limit; }
    float GetLimit() const { return mLimit; }
    void Reset() { mPeak = 0; }
@@ -38,7 +39,9 @@ public:
 
 private:
    float mPeak{ 0 };
-   float mDecayTime{ .01 };
+   float mDecaySpeed{ .01 };
+   float mPeakDecayTime{ 0 };
+   double mLastPeakTime{ 0 };
    float mLimit{ -1 };
    double mHitLimitTime{ -9999 };
 };
