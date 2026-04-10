@@ -11,22 +11,35 @@ SongCanvasMixer::SongCanvasMixer(SongCanvas* owner, int index)
    mVizBuffer = new RollingBuffer(VIZ_BUFFER_SECONDS * gSampleRate);
    mAudioBuffer = new ChannelBuffer(gBufferSize);
 }
+
+
 SongCanvasMixer::~SongCanvasMixer()
 {
-   if (mCableOut != nullptr)
-      mOwner->RemovePatchCableSource(mCableOut);
-
    delete mVizBuffer;
    delete mAudioBuffer;
 }
+void SongCanvasMixer::PreDispose()
+{
+   mOwner->SetMixerOrphanTarget(mTarget,mCableOut->GetManualPosition());
+   mOwner->RemovePatchCableSource(mCableOut);
+   mOwner->RemoveUIControl(mVolumeSlider);
+   mOwner->RemoveUIControl(mPanSlider);
+}
+
+void SongCanvasMixer::AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord)
+{
+   mCableOut->SetManualPosition(sourceCoord.x,sourceCoord.y);
+   mCableOut->SetTarget(dynamic_cast<IClickable*>(oldTarget));
+}
+
 void SongCanvasMixer::CreateUIControls()
 {
    mCableOut = new PatchCableSource(mOwner, kConnectionType_Audio);
    mCableOut->SetOverrideVizBuffer(mVizBuffer);
    mCableOut->SetOverrideCableDir(ofVec2f(0, 1), PatchCableSource::Side::kBottom);
    mOwner->AddPatchCableSource(mCableOut);
-   mVolumeSlider = new FloatSlider(mOwner,("volume"+ofToString(mMixerIndex)).c_str(),0,0,108,13,&mVolume,0,1);
-   mPanSlider = new FloatSlider(mOwner,("pan"+ofToString(mMixerIndex)).c_str(),0,0,108,13,&mPan,-1,1);
+   mVolumeSlider = new FloatSlider(mOwner, ("volume" + ofToString(mMixerIndex)).c_str(), 0, 0, 108, 13, &mVolume, 0, 1);
+   mPanSlider = new FloatSlider(mOwner, ("pan" + ofToString(mMixerIndex)).c_str(), 0, 0, 108, 13, &mPan, -1, 1);
 
    mVolumeSlider->SetOverrideDisplayName("volume");
    mPanSlider->SetOverrideDisplayName("pan");
@@ -35,6 +48,11 @@ void SongCanvasMixer::CreateUIControls()
    mRightChannelLevel.SetLimit(1);
    mLeftChannelLevel.SetNumSegments(8);
    mRightChannelLevel.SetNumSegments(8);
+
+   float extraWidth = 0;
+   if (mMixerIndex > 9)
+      extraWidth += 1;
+   mNameBounds = ofRectangle(mRectBounds.x + 1, mRectBounds.y - 9, 2.5f + GetStringWidth(ofToString(mMixerIndex), 8) + extraWidth, 9);
 
    SetMixerControlsVisibility(false);
 }
@@ -56,13 +74,14 @@ void SongCanvasMixer::Process()
    float pan;
    for (int ch = 0; ch < mNumChannels; ++ch)
    {
-      if (ch==0)
+      if (ch == 0)
       { //left pan (-1 to 0)
-         pan = 1-MAX(0,mPan);
+         pan = 1 - MAX(0, mPan);
       }
       else
-      { //right pan (0 to 1)
-         pan = 1-MAX(0,-mPan);
+      {
+         //right pan (0 to 1)
+         pan = 1 - MAX(0, -mPan);
       }
       auto bAddress = GetBuffer()->GetChannel(ch);
       for (int i = 0; i < bufferSize; ++i)
@@ -74,18 +93,25 @@ void SongCanvasMixer::Process()
    //Send the Data
    if (mTarget)
    {
-      ChannelBuffer* out = mTarget->GetBuffer();
-      for (int ch = 0; ch < mNumChannels; ++ch)
+      if (mEnabled)
       {
-         Add(out->GetChannel(ch), GetBuffer()->GetChannel(ch), GetBuffer()->BufferSize());
+         ChannelBuffer* out = mTarget->GetBuffer();
+         for (int ch = 0; ch < mNumChannels; ++ch)
+         {
+            Add(out->GetChannel(ch), GetBuffer()->GetChannel(ch), GetBuffer()->BufferSize());
+         }
       }
    }
 
    //A n i m a t e
-   for (int ch = 0; ch < GetBuffer()->NumActiveChannels(); ++ch)
+   if (mEnabled)
    {
-      mVizBuffer->WriteChunk(GetBuffer()->GetChannel(ch), GetBuffer()->BufferSize(), ch);
+      for (int ch = 0; ch < GetBuffer()->NumActiveChannels(); ++ch)
+      {
+         mVizBuffer->WriteChunk(GetBuffer()->GetChannel(ch), GetBuffer()->BufferSize(), ch);
+      }
    }
+
    mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
    mRightChannelLevel.Process(0, GetBuffer()->GetChannel(1), gBufferSize);
 
@@ -97,26 +123,40 @@ void SongCanvasMixer::Draw(float x, float y)
 {
    mCableOut->SetManualPosition(x, y);
    ofPushStyle();
-   ofSetColor(ofColor::cyan);
-   DrawTextNormal(ofToString(mMixerIndex), x-24, y-mRectBounds.height-2, 10); //Channel name
+   float mixStartX = x + mRectBounds.x;
+
+   //Draw the title
+   if (mEnabled)
+      ofSetColor(ofColor::cyan);
+   else
+      ofSetColor(ofColor::grey);
+   DrawTextNormal(ofToString(mMixerIndex), mixStartX + 2, y - mRectBounds.height - 1.0f, 10); //Channel name
+   //Hover title overlay
+   if (mHoverName)
+   {
+      ofSetColor(ofColor::white, 100);
+      ofFill();
+      ofRect(x + mNameBounds.x, y + mNameBounds.y, mNameBounds.width, mNameBounds.height, 2);
+   }
 
    //Indent Selection
-   ofSetColor(ofColor(0,0,0,50));
+   float backA = mEnabled ? 50 : 100;
+   ofSetColor(ofColor(0, 0, 0, backA));
    ofFill();
-   ofRect(x+mRectBounds.x,y+mRectBounds.y,mRectBounds.width,mRectBounds.height+5);
+   ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
 
    //Background
    float offsetX;
-   float offsetY = y-12;
+   float offsetY = y - 12;
    float barSize = 42;
 
-   offsetX = x - barSize/2;
+   offsetX = x - barSize / 2;
 
    float mMixerBarVPanHeight = 5;
 
    ofFill();
    ofSetColor(mMixerBarBackgroundCol);
-   ofRect(offsetX,offsetY, barSize, mMixerBarVPanHeight,0);
+   ofRect(offsetX, offsetY, barSize, mMixerBarVPanHeight, 0);
 
 
    //Foreground
@@ -126,49 +166,50 @@ void SongCanvasMixer::Draw(float x, float y)
    //Volume 0, Pan 0, offset 50%, fill 0%;
    //Volume 1, Pan -1, offset 0%, fill 50%;
    //Volume 1, Pan 1, offset 50%, fill 50%;
-   float chL = (1-MAX(0,mPan))*mVolume;
-   float chR = (1-MAX(0,-mPan))*mVolume;
+   float chL = (1 - MAX(0, mPan)) * mVolume;
+   float chR = (1 - MAX(0, -mPan)) * mVolume;
 
-   float fillWidth = (chL*barSize*0.5f)+(chR*barSize*0.5f);
-   float fillOffset = (barSize/2)-(barSize*chL*0.5);
+   float fillWidth = (chL * barSize * 0.5f) + (chR * barSize * 0.5f);
+   float fillOffset = (barSize / 2) - (barSize * chL * 0.5);
 
-   if (fillWidth>1)//Only bother rendering if there's enough pixels.
+   if (fillWidth > 1) //Only bother rendering if there's enough pixels.
    {
-      ofSetColor(ofColor(235,235,235));
+      float fillA = mEnabled ? 255 : 100;
+      ofSetColor(ofColor(235, 235, 235, fillA));
       ofRect(offsetX + fillOffset, offsetY, fillWidth, mMixerBarVPanHeight, 0);
    }
 
 
    //Lefthand Marker
    ofSetColor(mMixerBarGuideCol);
-   ofRect(offsetX-2,offsetY,2,mMixerBarVPanHeight,0);
+   ofRect(offsetX - 2, offsetY, 2, mMixerBarVPanHeight, 0);
 
    //Middle Marker
-   ofRect(offsetX+barSize/2-1,offsetY,2,mMixerBarVPanHeight,0);
+   ofRect(offsetX + barSize / 2 - 1, offsetY, 2, mMixerBarVPanHeight, 0);
 
    //Righthand Marker
-   ofRect(offsetX+barSize,offsetY,2,mMixerBarVPanHeight,0);
+   ofRect(offsetX + barSize, offsetY, 2, mMixerBarVPanHeight, 0);
 
    offsetY += 8;
 
    //Levels
    float levelPadding = 3;
-   mLeftChannelLevel.Draw(offsetX-3,offsetY,barSize/2-levelPadding,4,1);
-   mRightChannelLevel.Draw(offsetX+barSize/2+levelPadding+2,offsetY,barSize/2-levelPadding,4,1);
+   mLeftChannelLevel.Draw(offsetX - 3, offsetY, barSize / 2 - levelPadding, 4, 1);
+   mRightChannelLevel.Draw(offsetX + barSize / 2 + levelPadding + 2, offsetY, barSize / 2 - levelPadding, 4, 1);
 
    if (mHovered)
    {
       ofNoFill();
       ofSetColor(ofColor::cyan);
-      ofRect(x+mRectBounds.x,y+mRectBounds.y,mRectBounds.width,mRectBounds.height+5);
+      ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
    }
    if (!IsSelected())
    {
       float miniPosX, miniPosY;
-      miniPosX = x-20;
-      miniPosY = y-2;
-      mPanSlider->SetPosition(miniPosX,miniPosY);
-      mVolumeSlider->SetPosition(miniPosX,miniPosY);
+      miniPosX = x - 20;
+      miniPosY = y - 2;
+      mPanSlider->SetPosition(miniPosX, miniPosY);
+      mVolumeSlider->SetPosition(miniPosX, miniPosY);
    }
 
    ofPopStyle();
@@ -176,12 +217,12 @@ void SongCanvasMixer::Draw(float x, float y)
 
 void SongCanvasMixer::DrawMixerControls(float x, float y)
 {
-   ofSetColor(ofColor(220,220,220));
-   float offsetX = x+6;
-   float offsetY = y+6;
-   mPanSlider->SetPosition(offsetX,offsetY);
+   ofSetColor(ofColor(220, 220, 220));
+   float offsetX = x + 6;
+   float offsetY = y + 6;
+   mPanSlider->SetPosition(offsetX, offsetY);
    offsetY += 18;
-   mVolumeSlider->SetPosition(offsetX,offsetY);
+   mVolumeSlider->SetPosition(offsetX, offsetY);
 
    mPanSlider->Draw();
    mVolumeSlider->Draw();
@@ -221,19 +262,22 @@ void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
    }
 }
 //Its Relative-> 0,0 on cable location.
+//Received on any movement.
 void SongCanvasMixer::MouseMove(float x, float y)
 {
-   mHovered = mRectBounds.contains(x,y);
+   mHovered = mRectBounds.contains(x, y);
+
+   mHoverName = mNameBounds.contains(x, y);
 }
 
 //Its Relative-> 0,0 on cable location.
+//Received on any SongCanvas click
 void SongCanvasMixer::MouseClick(float x, float y, bool right)
 {
    if (right)
       return;
-   bool inBoundClick = mRectBounds.contains(x, y);
 
-   if (inBoundClick)
+   if (mRectBounds.contains(x, y))
    {
       if (IsSelected())
       {
@@ -243,7 +287,7 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
       else
       {
          //If another one is active
-         if (mOwner->GetSelectedMixer()!=nullptr)
+         if (mOwner->GetSelectedMixer() != nullptr)
          {
             auto oM = mOwner->GetSelectedMixer();
             oM->SetMixerControlsVisibility(false);
@@ -252,6 +296,15 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
          SetMixerControlsVisibility(true);
          mOwner->SetMixerControlsState(true, mMixerIndex);
       }
+   }
+   if (mNameBounds.contains(x, y))
+   {
+      mEnabled = !mEnabled;
+      if (!mEnabled && mTarget)
+      {
+         mVizBuffer->ClearBuffer();
+      }
+
    }
 }
 
@@ -262,17 +315,17 @@ void SongCanvasMixer::SetMixerControlsVisibility(bool state)
 
    if (state)
    {
-      mVolumeSlider->SetDimensions(108,13);
-      mPanSlider->SetDimensions(108,13);
+      mVolumeSlider->SetDimensions(108, 13);
+      mPanSlider->SetDimensions(108, 13);
       mVolumeSlider->ClearOverridePatchCableInputDirection();
       mPanSlider->ClearOverridePatchCableInputDirection();
    }
    else
    {
-      mVolumeSlider->SetOverridePatchCableInputDirection(ofVec2f(0,1));
-      mPanSlider->SetOverridePatchCableInputDirection(ofVec2f(0,1));
-      mVolumeSlider->SetDimensions(1,1);
-      mPanSlider->SetDimensions(1,1);
+      mVolumeSlider->SetOverridePatchCableInputDirection(ofVec2f(0, 1));
+      mPanSlider->SetOverridePatchCableInputDirection(ofVec2f(0, 1));
+      mVolumeSlider->SetDimensions(1, 1);
+      mPanSlider->SetDimensions(1, 1);
    }
 }
 
@@ -282,5 +335,4 @@ bool SongCanvasMixer::IsSelected()
 }
 void SongCanvasMixer::FloatSliderUpdated(FloatSlider* slider, float oldVal, double time)
 {
-
 }

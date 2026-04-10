@@ -324,6 +324,7 @@ void SongCanvasAudioRackElement::OnPostResize()
 void SongCanvasAudioRackElement::SwapMixers(int newIndex)
 {
    mMixerIndex = -1;
+   mMixer = nullptr;
    SetMixer(mSongCanvas->GetMixer(newIndex));
 }
 

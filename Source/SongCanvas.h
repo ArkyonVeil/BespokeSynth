@@ -174,6 +174,8 @@ public:
 
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
+
+   void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord){mMixerOrphanAudioTarget = target; mMixerOrphanSourceCoord = cableSourceCoord;}
    void SetMixerControlsState(bool active, int mixerIndex);
    SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
    bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
@@ -362,6 +364,8 @@ private:
    EnumSongCanvasStyle mGlobalModeColor{ ESRed };
    EnumSongCanvasStyle mLocalModeColor{ ESPink };
 
+
+   IAudioReceiver* mMixerOrphanAudioTarget { nullptr };
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
@@ -372,19 +376,21 @@ private:
    float GetMixerXPadding() { return 54;};
    SongCanvasMixer* mMixerControlsSelected {nullptr};
    void UpdateSongCanvasMixerSpacing();
+   void ScheduleMixerDisposal(SongCanvasMixer* mixer);
    float mMixerControlsHeight = 44;
    float mMixerControlsWidth = 120;
    float mMixerControlsYOffset = 5;
    float mMixerControlsDrawHeight = 0;
    float mMixerControlsDrawHeightTarget = 0;
    float mMixerControlsEdgeMin = 8;
-
+   ofVec2f mMixerOrphanSourceCoord {0,0};
 
    //Temp mixer cords, not updated if no mixer is selected.
    float mSelectedMixerX;
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
+   std::vector<SongCanvasMixer*> mScheduledMixerDisposals{};
 
    //Expert variables
    bool expertPanelEnabled = false;

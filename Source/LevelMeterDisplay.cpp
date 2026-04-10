@@ -70,6 +70,7 @@ void LevelMeterDisplay::SetNumSegments(int num)
    {
       mYellowSegmentStart = mRedSegmentStart+1;
    }
+   mXBarPadding = (float)num /20.0f;
 }
 
 void LevelMeterDisplay::Draw(float x, float y, float width, float height, int numChannels)
@@ -78,7 +79,6 @@ void LevelMeterDisplay::Draw(float x, float y, float width, float height, int nu
    {
       float limit = mLevelMeters[i].mPeakTrackerSlow.GetLimit();
 
-      const int kPaddingBetween = 1;
       const int kPaddingVertical = 2;
       float barHeight = (height - (kPaddingVertical * (numChannels - 1))) / numChannels;
       float segmentWidth = width / mNumSegments;
@@ -106,10 +106,10 @@ void LevelMeterDisplay::Draw(float x, float y, float width, float height, int nu
          switch (mLevelMeterFillDirection)
          {
             case LevelMeterFillDirection::LeftToRight:
-               ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - mXBarPadding, barHeight, 0);
                break;
             case LevelMeterFillDirection::RightToLeft:
-               ofRect(x + width - segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);
+               ofRect(x + width - segmentWidth * j, y + i * (barHeight + 2), segmentWidth - mXBarPadding, barHeight, 0);
                break;
             case LevelMeterFillDirection::UpToDown:
                //ofRect(x + segmentWidth * j, y + i * (barHeight + 2), segmentWidth - kPaddingBetween, barHeight, 0);

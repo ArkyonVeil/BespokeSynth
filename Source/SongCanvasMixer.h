@@ -11,6 +11,8 @@ class SongCanvasMixer : IFloatSliderListener
 public:
    SongCanvasMixer(SongCanvas* owner, int index);
    ~SongCanvasMixer();
+   void PreDispose();
+   void AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord);
 
    void CreateUIControls();
    ChannelBuffer* GetBuffer() { return mAudioBuffer; }; //Gets this mixer's audio buffer. Useful for patching in internal sampler data.
@@ -48,7 +50,9 @@ private:
    float mVolume{ 1 };
    bool mEnabled{ true };
    bool mHovered{ false };
+   bool mHoverName{ false };
    ofRectangle mRectBounds {-25,-16,50,16};
+   ofRectangle mNameBounds;
 
    ofColor mMixerBarBackgroundCol {15,15,15};
    ofColor mMixerBarGuideCol {70,80,80};

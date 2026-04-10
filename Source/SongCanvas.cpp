@@ -699,7 +699,6 @@ void SongCanvas::DrawModule()
    ofPopStyle();
 
 
-
    float prog = RescaleAnimationSpeedDelta();
    mDeltaAnimSpeedMultiplier = 1;
    if (mMixerControlsDrawHeight != mMixerControlsDrawHeightTarget)
@@ -718,28 +717,28 @@ void SongCanvas::DrawModule()
       ofSetColor(0, 0, 0, 75);
       ofFill();
 
-      float controlXOffset = mSelectedMixerX-mMixerControlsWidth/2;
-      controlXOffset = CLAMP(controlXOffset,mMixerControlsEdgeMin,mWidth-mMixerControlsEdgeMin-mMixerControlsWidth);
+      float controlXOffset = mSelectedMixerX - mMixerControlsWidth / 2;
+      controlXOffset = CLAMP(controlXOffset, mMixerControlsEdgeMin, mWidth - mMixerControlsEdgeMin - mMixerControlsWidth);
 
-      float controlYOffset = mHeight-mBottomOffsetSize+12;
-      ofRect(controlXOffset,controlYOffset,mMixerControlsWidth,mMixerControlsDrawHeight);
+      float controlYOffset = mHeight - mBottomOffsetSize + 12;
+      ofRect(controlXOffset, controlYOffset, mMixerControlsWidth, mMixerControlsDrawHeight);
 
-      ofSetColor(255,255,255,80);
+      ofSetColor(255, 255, 255, 80);
       ofNoFill();
-      ofRect(controlXOffset,controlYOffset,mMixerControlsWidth,mMixerControlsDrawHeight);
+      ofRect(controlXOffset, controlYOffset, mMixerControlsWidth, mMixerControlsDrawHeight);
 
       float triBaseX = mSelectedMixerX;
-      float triBaseY = controlYOffset+mMixerControlsDrawHeight+1;
+      float triBaseY = controlYOffset + mMixerControlsDrawHeight + 1;
       ofFill();
-      ofSetColor(255,255,255,200);
-      ofTriangle(triBaseX-4,triBaseY,triBaseX+4,triBaseY,triBaseX,triBaseY+8);
+      ofSetColor(255, 255, 255, 200);
+      ofTriangle(triBaseX - 4, triBaseY, triBaseX + 4, triBaseY, triBaseX, triBaseY + 8);
 
       if (MixerControlsEnabled())
       {
          if (mMixerControlsDrawHeightTarget == mMixerControlsDrawHeight)
          {
             //Sent the top left coord of the
-            GetSelectedMixer()->DrawMixerControls(controlXOffset,controlYOffset);
+            GetSelectedMixer()->DrawMixerControls(controlXOffset, controlYOffset);
          }
       }
 
@@ -751,10 +750,10 @@ void SongCanvas::DrawModule()
 
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
-  // dText += "mWidth: " + ofToString(mWidth) + "\n";
+   // dText += "mWidth: " + ofToString(mWidth) + "\n";
    //dText += "mHeight: " + ofToString(mHeight) + "\n";
-   dText += "GlobalTime: " + ofToString(ofGetGlobalTime()) + "\n";
-   dText += "gTime: " + ofToString(gTime) + "\n";
+   //dText += "GlobalTime: " + ofToString(ofGetGlobalTime()) + "\n";
+   //dText += "gTime: " + ofToString(gTime) + "\n";
    DrawTextNormal(dText, canvasRect.x + 4, canvasRect.y + 10);
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
@@ -1940,6 +1939,13 @@ void SongCanvas::Process(double time)
 
    if (!mEnabled)
       return;
+   //Check if there's mixers in need of dumping.
+   while (!mScheduledMixerDisposals.empty())
+   {
+      const auto d = mScheduledMixerDisposals[mScheduledMixerDisposals.size() - 1];
+      delete d;
+      mScheduledMixerDisposals.pop_back();
+   }
 
    //Process the audio making racks
    for (int i = 0; i < mAudioRacks.size(); ++i)
@@ -1959,19 +1965,28 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
    assert(index >= 0); //No negative mixers please.
    assert(index <= 99); //Keep it sane please.
 
+   SongCanvasMixer* rMixer = nullptr;
    for (auto mixer : mMixers)
    {
       if (mixer->mMixerIndex == index)
       {
-         return mixer;
+         rMixer = mixer;
       }
    }
-   auto mixer = new SongCanvasMixer(this, index);
-   mixer->CreateUIControls();
-   mMixers.push_back(mixer);
+   if (!rMixer)
+   {
+      rMixer = new SongCanvasMixer(this, index);
+      rMixer->CreateUIControls();
+      mMixers.push_back(rMixer);
+   }
 
    SortMixers(index);
-   return mixer;
+   if (mMixerOrphanAudioTarget)
+   {
+      rMixer->AddOrphanTarget(mMixerOrphanAudioTarget, mMixerOrphanSourceCoord);
+      mMixerOrphanAudioTarget = nullptr;
+   }
+   return rMixer;
 }
 
 void SongCanvas::SortMixers(int reserveIndex)
@@ -1999,6 +2014,8 @@ void SongCanvas::SortMixers(int reserveIndex)
    //Get all the users in audio racks
    for (auto mixerUsers : mAudioRacks)
    {
+      if (!mixerUsers->GetMixer())
+         continue;
       auto idx = mixerUsers->GetMixer()->mMixerIndex;
       for (int i = 0; i < mMixers.size(); ++i)
       {
@@ -2015,8 +2032,7 @@ void SongCanvas::SortMixers(int reserveIndex)
       if (mixUsers[i] == 0)
       {
          auto gg = mMixers[i];
-         mMixers.erase(mMixers.begin() + i);
-         delete gg;
+         ScheduleMixerDisposal(gg);
          mixUsers.erase(mixUsers.begin() + i);
          i--;
       }
@@ -2059,7 +2075,7 @@ void SongCanvas::UpdateSongCanvasMixerSpacing()
    float target;
    if (!mMixers.empty())
    {
-      target = 30;
+      target = 32;
    }
    else
    {
@@ -2079,4 +2095,10 @@ void SongCanvas::UpdateSongCanvasMixerSpacing()
    mBottomOffsetTarget = target;
    if (mBottomOffsetSize != mBottomOffsetTarget)
       mFlagResizeAnimationNeeded = true;
+}
+void SongCanvas::ScheduleMixerDisposal(SongCanvasMixer* mixer)
+{
+   mixer->PreDispose();
+   RemoveFromVector(mixer, mMixers);
+   mScheduledMixerDisposals.push_back(mixer);
 }

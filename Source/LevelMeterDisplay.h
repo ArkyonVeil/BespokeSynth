@@ -48,7 +48,7 @@ public:
       DownToUp = 3,
    };
    void SetLevelFillDirection(LevelMeterFillDirection direction){ mLevelMeterFillDirection = direction;}
-
+   void SetXSegmentPadding(float padding){ mXBarPadding = padding;}//Each bar is shortened by this value. Producing visual 'gaps'.
 
 private:
    struct LevelMeter
@@ -59,6 +59,7 @@ private:
    int mNumSegments {20};
    int mRedSegmentStart { 3 };
    int mYellowSegmentStart { 6 };
+   float mXBarPadding{ 1 };
    std::array<LevelMeter, ChannelBuffer::kMaxNumChannels> mLevelMeters;
    LevelMeterFillDirection mLevelMeterFillDirection = LevelMeterFillDirection::LeftToRight;
 };
