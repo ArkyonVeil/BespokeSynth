@@ -161,6 +161,17 @@ enum class StepVelocityType
    NumVelocityLevels = 4
 };
 
+struct DrawAudioBufferSettings
+{
+   float start {-1};
+   float end {-1};
+   float pos {-1};
+   float volume { 1 };
+   ofColor color { ofColor::black };
+   int wrapAroundFrom {-1};
+   int wraparoundTo{0};
+   int maxChannels{ 2 };
+};
 
 constexpr float kVelocityOff = 0.0f;
 constexpr float kVelocityGhost = 0.4f;
@@ -202,6 +213,8 @@ void LoadGlobalResources();
 void SetGlobalSampleRateAndBufferSize(int rate, int size);
 std::string GetBuildInfoString();
 void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, float start, float end, float pos, float vol = 1, ofColor color = ofColor::black, int wraparoundFrom = -1, int wraparoundTo = 0);
+void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, DrawAudioBufferSettings settings);
+void DrawAudioBuffer(float width, float height, const float* buffer, int bufferSize, DrawAudioBufferSettings settings);
 void DrawAudioBuffer(float width, float height, const float* buffer, float start, float end, float pos, float vol = 1, ofColor color = ofColor::black, int wraparoundFrom = -1, int wraparoundTo = 0, int bufferSize = -1);
 void Add(float* buff1, const float* buff2, int bufferSize);
 void Subtract(float* buff1, const float* buff2, int bufferSize);

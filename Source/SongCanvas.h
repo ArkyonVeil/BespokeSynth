@@ -166,7 +166,6 @@ public:
    };
    ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
 
-
    static std::array<ofColor, 2> ESCarbonColours;
    static std::array<ofColor, 3> ESRGBColours;
    static std::array<ofColor, 6> ESPrideColours;
@@ -175,10 +174,22 @@ public:
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
 
+
    void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord){mMixerOrphanAudioTarget = target; mMixerOrphanSourceCoord = cableSourceCoord;}
    void SetMixerControlsState(bool active, int mixerIndex);
    SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
    bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
+
+
+   enum class EnumSamplerAudioPreviewMode
+   {
+      TwoSecondsOrLess = 0,
+      Always = 1,
+      Never = 2,
+   };
+
+   EnumSamplerAudioPreviewMode mSamplerAudioPreviewMode = EnumSamplerAudioPreviewMode::TwoSecondsOrLess;
+
 private:
    struct SongCanvasLayer
    {
@@ -355,6 +366,7 @@ private:
       enumOEMLoop = 1,
       enumOEMStop = 2,
    };
+
 
 
    int mOnEndMeasure{ 0 };

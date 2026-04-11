@@ -71,6 +71,8 @@ public:
    void ButtonClicked(ClickButton* button, double time) override{};
    float GetCenteredElementY(IUIControl* element) const { return (mHeight - element->GetRect(true).height) / 2; }
 
+   virtual void SongCanvasOptionsUpdated() {};
+
    int mInternalRackID;
    bool mRackEnabled;
 
@@ -252,9 +254,11 @@ public:
    void LoadFileSample();
    float GetPreferredWidth() const;
    void ButtonClicked(ClickButton* button, double time);
+   bool MouseMoved(float x, float y) override;
    void SetSample(Sample* sample);
    void PlaySample();
    void OnPostResize() override;
+   void OnClicked(float x, float y, bool right) override;
 
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
@@ -264,20 +268,41 @@ public:
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
    void Process(double time) override;
-   void DrawRackGraphics();
+   void DrawRackGraphics() override;
 
+struct RackSampleButton
+{
+   RackSampleButton(SongCanvasRackSampler* owner);
+   void OnMouseMove(float x, float y);
+   void OnClick(float x, float y, bool right);
+   void Draw();
+   void SetRect(float x, float y, float width, float height);
+
+   bool mHoveredTotal { false };
+   bool mHoveredPlay { false };
+   bool mHoveredStop { false };
+   bool mHoveredName { false };
+   Sample* mSample {nullptr};
+   ofRectangle mRect;
+   ofRectangle mPlayButtonRect;
+   ofRectangle mStopButtonRect;
+   SongCanvasRackSampler* mOwner;
+   DrawAudioBufferSettings mDrawAudioBufferSettings;
+};
+RackSampleButton mSampleButton;
 private:
    Sample* mSample{ nullptr };
-   ClickButton* mSampleLoaderButton{ nullptr };
    PatchCableSource* mSamplerCable{ nullptr };
 
    ChannelBuffer mWriteBuffer;
    int mSamplesPlaying{ 0 };
    PolyphonyMgr mPolyMgr;
    SampleVoiceParams mVoiceParams{};
-
+   float mSampleDisplayNameWidth { 0 };
+   const float mSampleDisplayNameWidthDefault { 55 };
    double mLastProcessTime;
 };
+
 
 /////////
 ///LFO///

@@ -153,6 +153,28 @@ void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, float sta
    ofPopMatrix();
 }
 
+void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, DrawAudioBufferSettings settings)
+{
+   ofPushMatrix();
+   if (buffer != nullptr)
+   {
+      int numChannels = MIN(settings.maxChannels,buffer->NumActiveChannels());
+      for (int i = 0; i < numChannels; ++i)
+      {
+         DrawAudioBuffer(width, height / numChannels, buffer->GetChannel(i), settings.start, MIN(settings.end, buffer->BufferSize()), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, buffer->BufferSize());
+         ofTranslate(0, height / numChannels);
+      }
+   }
+   ofPopMatrix();
+}
+
+void DrawAudioBuffer(float width, float height, const float* buffer, int bufferSize, DrawAudioBufferSettings settings)
+{
+   ofPushMatrix();
+   DrawAudioBuffer(width, height, buffer, settings.start, MIN(settings.end, bufferSize), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, bufferSize);
+   ofPopMatrix();
+}
+
 void DrawAudioBuffer(float width, float height, const float* buffer, float start, float end, float pos, float vol /*=1*/, ofColor color /*=ofColor::black*/, int wraparoundFrom /*= -1*/, int wraparoundTo /*= 0*/, int bufferSize /*=-1*/)
 {
    static std::array<float, 10000> sAudioBufferMinValues;

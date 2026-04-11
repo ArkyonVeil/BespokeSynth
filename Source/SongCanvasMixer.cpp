@@ -112,8 +112,16 @@ void SongCanvasMixer::Process()
       }
    }
 
-   mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
-   mRightChannelLevel.Process(0, GetBuffer()->GetChannel(1), gBufferSize);
+   if (mNumChannels>1)
+   {
+      mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
+      mRightChannelLevel.Process(0, GetBuffer()->GetChannel(1), gBufferSize);
+   }
+   else
+   {
+      mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
+      mRightChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
+   }
 
    //Flush our stuff
    GetBuffer()->Reset();

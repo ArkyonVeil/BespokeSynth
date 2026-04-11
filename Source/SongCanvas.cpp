@@ -1546,6 +1546,11 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mModuleSaveData.LoadBool("show_real_time", moduleInfo, false);
    mModuleSaveData.LoadBool("auto_scale_measure_count", moduleInfo, true);
    mModuleSaveData.LoadBool("start_end_measure_mode", moduleInfo, false);
+   EnumMap samplerPreviewAudio;
+   samplerPreviewAudio["two_seconds_or_less"] = 0;
+   samplerPreviewAudio["always"] = 1;
+   samplerPreviewAudio["never"] = 2;
+   mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click",moduleInfo,0,nullptr,&samplerPreviewAudio);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap mapCols;
    mapCols["red"] = 0;
@@ -1578,7 +1583,12 @@ void SongCanvas::SetUpFromSaveData()
    mGlobalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("global_colour_style");
    mLocalModeColor = mModuleSaveData.GetEnum<EnumSongCanvasStyle>("local_colour_style");
 
+   mSamplerAudioPreviewMode = mModuleSaveData.GetEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click");
 
+   for (auto rack : mRackGrid->GetAllElements())
+   {
+      dynamic_cast<SongCanvasRackElement*>(rack)->SongCanvasOptionsUpdated();
+   }
    Resize(mWidth, mHeight);
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)

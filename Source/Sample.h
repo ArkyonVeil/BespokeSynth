@@ -61,6 +61,7 @@ public:
    std::string Name() const { return mName; }
    void SetName(std::string name) { mName = name; }
    int LengthInSamples() const { return mNumSamples; }
+   float LengthInSeconds() const {return static_cast<float>(mNumSamples) / mOriginalSampleRate;}
    int NumChannels() const { return mData.NumActiveChannels(); }
    ChannelBuffer* Data() { return &mData; }
    double GetPlayPosition() const { return mOffset; }
