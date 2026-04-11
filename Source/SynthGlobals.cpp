@@ -215,7 +215,7 @@ void DrawAudioBuffer(float width, float height, const float* buffer, float start
          ofSetColor(color);
 
          float highestMagnitude = 0;
-         for (float i = 0; abs(i) < abs(width-step); i += step)
+         for (float i = 0; abs(i) < abs(width); i += step)
          {
             float max = -999;
             float min = 999;
@@ -226,7 +226,7 @@ void DrawAudioBuffer(float width, float height, const float* buffer, float start
             int inc = 1 + samplesPerStep / 100;
             for (j = 0; j < samplesPerStep; j += inc)
             {
-               int sampleIdx = position + j;
+               int sampleIdx = MIN(position + j, start+bufferSize);
                if (wraparoundFrom != -1 && sampleIdx > wraparoundFrom)
                   sampleIdx = sampleIdx - wraparoundFrom + wraparoundTo;
                if (bufferSize > 0)

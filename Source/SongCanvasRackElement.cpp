@@ -159,6 +159,8 @@ void SongCanvasRackElement::OnClicked(float x, float y, bool right)
 
       if (TheSynth->GetGlobalTime() < mLastClickTime + 0.5)
       {
+         if (x > GetGeneralReservedWidth())
+            return; //Only register rename attempts in the first half of the part. IE, where part names are.
          mBufferQuickRename = true;
          mLastClickTime = 0;
       }
@@ -711,6 +713,13 @@ SongCanvasRackSampler::~SongCanvasRackSampler()
    delete mSample;
 }
 
+void SongCanvasRackSampler::KillAudio()
+{
+   if (mSample)
+   {
+      mPolyMgr.KillAll();
+   }
+}
 
 void SongCanvasRackSampler::OnEnter()
 {
@@ -749,7 +758,7 @@ void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
 bool SongCanvasRackSampler::MouseMoved(float x, float y)
 {
    bool r = SongCanvasAudioRackElement::MouseMoved(x, y);
-   mSampleButton.OnMouseMove(x,y);
+   mSampleButton.OnMouseMove(x, y);
    return r;
 }
 void SongCanvasRackSampler::SetSample(Sample* sample)
@@ -761,11 +770,50 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
    mSampleDisplayNameWidth = mSampleDisplayNameWidthDefault;
    if (mSample)
    {
+      //Calculate name length for display/truncating purposes.
       TextTruncationSettings tts;
       tts.maxTextWidth = 160;
       tts.fontSize = 9;
       float sN = GetStringWidth(TruncateString(mSample->Name(), tts), 8);
-      mSampleDisplayNameWidth = MAX(mSampleDisplayNameWidthDefault, sN+10);
+      mSampleDisplayNameWidth = MAX(mSampleDisplayNameWidthDefault, sN + 10);
+
+      //Calculate 'long' sample logic.
+      if (mSample->LengthInSeconds() < 2)
+      {
+         mLongSample = false;
+      }
+      else
+      {
+         int bSize = mSample->Data()->BufferSize();
+         float vols = 0;
+         int startOffset = mSample->GetOriginalSampleRate() * 2;
+
+         int numChannels = mSample->NumChannels();
+         const int kSearchSize = 500;
+         int endSearchIdx = MIN(bSize, startOffset + kSearchSize);
+         /*
+         float peak = 0;
+         float* dch = mSample->Data()->GetChannel(0);
+         for (int i = 0; i < bSize; ++i)
+         {
+            peak = MAX(peak,abs(dch[i]));
+         }*/
+
+         for (int chI = 0; chI < numChannels; ++chI)
+         {
+            auto* ch = mSample->Data()->GetChannel(chI);
+            for (int i = startOffset; i < endSearchIdx; ++i)
+            {
+               vols += abs(ch[i]);
+            }
+         }
+         vols = (vols / (float)numChannels) / (float)kSearchSize;
+
+         if (vols > 0.05f)
+            mLongSample = true;
+         else
+            mLongSample = false;
+      }
    }
    mSampleButton.mSample = sample;
 
@@ -818,7 +866,7 @@ float SongCanvasRackSampler::GetPreferredWidth() const
 {
    float val = SongCanvasAudioRackElement::GetPreferredWidth();
 
-   val += mSampleDisplayNameWidth-10;
+   val += mSampleDisplayNameWidth - 10;
 
    return val;
 }
@@ -826,7 +874,7 @@ float SongCanvasRackSampler::GetPreferredWidth() const
 void SongCanvasRackSampler::OnPostResize()
 {
    SongCanvasAudioRackElement::OnPostResize();
-   mSampleButton.SetRect(GetGeneralReservedWidth(),1,mSampleDisplayNameWidth+4,mHeight-2);
+   mSampleButton.SetRect(GetGeneralReservedWidth(), 1, mSampleDisplayNameWidth + 4, mHeight - 2);
 }
 void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
 {
@@ -839,12 +887,25 @@ void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
    {
       int previewMode = static_cast<int>(mSongCanvas->mSamplerAudioPreviewMode);
 
-      if (previewMode == 2) //Always
+      if (!mSampleButton.CheckIntercept(x, y))
       {
-         PlaySample();
+         if (previewMode == 0 && !mLongSample)
+         {
+            PlaySample();
+         }
+         if (previewMode == 2) //Always
+         {
+            PlaySample();
+         }
       }
    }
-   mSampleButton.OnClick(x,y,right);
+   mSampleButton.OnClick(x, y, right);
+}
+void SongCanvasRackSampler::SongCanvasOptionsUpdated()
+{
+   SongCanvasAudioRackElement::SongCanvasOptionsUpdated();
+
+   mSampleButton.UpdateRect();
 }
 void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
@@ -871,11 +932,32 @@ SongCanvasRackSampler::RackSampleButton::RackSampleButton(SongCanvasRackSampler*
 void SongCanvasRackSampler::RackSampleButton::OnMouseMove(float x, float y)
 {
    mHoveredTotal = mRect.contains(x, y);
-   mHoveredName = mHoveredTotal && y < 12;
 
-   mHoveredPlay = mPlayButtonRect.contains(x, y);
+   x -= mRect.x;
+   y -= mRect.y;
+   mHoveredName = mHoveredTotal && y < 12;
+   if (mDrawControlOptions)
+      mHoveredPlay = mPlayButtonRect.contains(x, y);
+   else
+      mHoveredPlay = false;
    mHoveredStop = mStopButtonRect.contains(x, y);
 }
+bool SongCanvasRackSampler::RackSampleButton::CheckIntercept(float x, float y)
+{
+   if (!mSample)
+   {
+      return mHoveredTotal;
+   }
+   else
+   {
+      int r = mHoveredPlay + mHoveredStop + mHoveredName;
+      if (r > 0)
+         return true;
+      else
+         return false;
+   }
+}
+
 void SongCanvasRackSampler::RackSampleButton::OnClick(float x, float y, bool right)
 {
    if (!mRect.contains(x, y))
@@ -893,6 +975,14 @@ void SongCanvasRackSampler::RackSampleButton::OnClick(float x, float y, bool rig
       {
          mOwner->LoadFileSample();
       }
+      if (mHoveredPlay)
+      {
+         mOwner->PlaySample();
+      }
+      if (mHoveredStop)
+      {
+         mOwner->KillAudio();
+      }
    }
 }
 void SongCanvasRackSampler::RackSampleButton::Draw()
@@ -901,19 +991,32 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
    ofPushMatrix();
    ofTranslate(mRect.x, mRect.y);
 
-   ofSetColor(ofColor(84, 106, 79,200));
+   ofSetColor(ofColor(84, 106, 79, 200));
    ofFill();
    ofRect(0, 0, mRect.width, mRect.height);
    ofNoFill();
    if (mSample)
    {
       ofPushMatrix();
-      ofTranslate(2, 1);
+      ofTranslate(2, 2);
       DrawAudioBuffer(mRect.width - 4, mRect.height - 2, mSample->Data(), mDrawAudioBufferSettings);
       ofPopMatrix();
 
       ofSetColor(ofColor(230, 230, 230));
       DrawTextNormal(mSample->Name(), 2, 9, 9);
+
+      ofPushStyle();
+      ofSetColor(ofColor(230, 230, 230));
+      ofFill();
+      if (mDrawControlOptions)
+      {
+         ofTriangle(
+         mPlayButtonRect.x + 3, mStopButtonRect.y + 3,
+         mPlayButtonRect.x + 3, mPlayButtonRect.y + mPlayButtonRect.height - 3,
+         mPlayButtonRect.x + mPlayButtonRect.width - 3, mPlayButtonRect.y + mPlayButtonRect.height / 2);
+      }
+      ofRect(mStopButtonRect.x + 3, mStopButtonRect.y + 3, mStopButtonRect.width - 6, mStopButtonRect.height - 6, 0);
+      ofPopStyle();
 
       ofSetColor(ofColor::cyan);
       if (mHoveredName)
@@ -937,14 +1040,28 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
    ofPopMatrix();
    ofPopStyle();
 }
+void SongCanvasRackSampler::RackSampleButton::UpdateRect()
+{
+   SetRect(mRect.x,mRect.y,mRect.width,mRect.height);
+}
+
 void SongCanvasRackSampler::RackSampleButton::SetRect(float x, float y, float width, float height)
 {
    mRect = ofRectangle(x, y, width, height);
 
-   float miniButtonY = mRect.y + mRect.height - 14;
-   float miniXOffset = mRect.x + 2;
-   mPlayButtonRect = ofRectangle(miniXOffset, miniButtonY, 12, 12);
-   miniXOffset += 14;
+   float miniButtonY = mRect.height - 11;
+   float miniXOffset = 2;
+
+   mDrawControlOptions = false;
+   auto previewMode = (int)mOwner->mSongCanvas->mSamplerAudioPreviewMode;
+   if ((previewMode == 0 && mOwner->mLongSample) || previewMode == 1)
+      mDrawControlOptions = true;
+
+   if (mDrawControlOptions)
+   {
+      mPlayButtonRect = ofRectangle(miniXOffset, miniButtonY, 12, 12);
+      miniXOffset += 12;
+   }
    mStopButtonRect = ofRectangle(miniXOffset, miniButtonY, 12, 12);
 }
 

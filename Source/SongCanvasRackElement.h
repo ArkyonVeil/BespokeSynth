@@ -247,6 +247,7 @@ class SongCanvasRackSampler : public SongCanvasAudioRackElement
 public:
    SongCanvasRackSampler(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackSampler();
+   void KillAudio();
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
    void OnEnter() override;
@@ -259,6 +260,7 @@ public:
    void PlaySample();
    void OnPostResize() override;
    void OnClicked(float x, float y, bool right) override;
+   void SongCanvasOptionsUpdated() override;
 
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
@@ -274,14 +276,17 @@ struct RackSampleButton
 {
    RackSampleButton(SongCanvasRackSampler* owner);
    void OnMouseMove(float x, float y);
+   bool CheckIntercept(float x, float y);
    void OnClick(float x, float y, bool right);
    void Draw();
+   void UpdateRect();
    void SetRect(float x, float y, float width, float height);
 
    bool mHoveredTotal { false };
    bool mHoveredPlay { false };
    bool mHoveredStop { false };
    bool mHoveredName { false };
+   bool mDrawControlOptions { false };
    Sample* mSample {nullptr};
    ofRectangle mRect;
    ofRectangle mPlayButtonRect;
@@ -292,6 +297,7 @@ struct RackSampleButton
 RackSampleButton mSampleButton;
 private:
    Sample* mSample{ nullptr };
+   bool mLongSample { false };
    PatchCableSource* mSamplerCable{ nullptr };
 
    ChannelBuffer mWriteBuffer;

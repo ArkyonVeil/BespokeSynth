@@ -1548,8 +1548,8 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mModuleSaveData.LoadBool("start_end_measure_mode", moduleInfo, false);
    EnumMap samplerPreviewAudio;
    samplerPreviewAudio["two_seconds_or_less"] = 0;
-   samplerPreviewAudio["always"] = 1;
-   samplerPreviewAudio["never"] = 2;
+   samplerPreviewAudio["never"] = 1;
+   samplerPreviewAudio["always"] = 2;
    mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click",moduleInfo,0,nullptr,&samplerPreviewAudio);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap mapCols;
