@@ -720,6 +720,10 @@ void SongCanvasRackSampler::KillAudio()
       mPolyMgr.KillAll();
    }
 }
+void SongCanvasRackSampler::CreateUIControls()
+{
+   SongCanvasAudioRackElement::CreateUIControls();
+}
 
 void SongCanvasRackSampler::OnEnter()
 {
@@ -754,6 +758,7 @@ void SongCanvasRackSampler::LoadFileSample()
 
 void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
 {
+
 }
 bool SongCanvasRackSampler::MouseMoved(float x, float y)
 {
@@ -878,8 +883,6 @@ void SongCanvasRackSampler::OnPostResize()
 }
 void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
 {
-   SongCanvasAudioRackElement::OnClicked(x, y, right);
-
    //Clicking the Sampler workspace typically attempts to play the sample  for quick feedback.
    //ofLog() << "Hotcake";
 
@@ -899,13 +902,25 @@ void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
          }
       }
    }
+
    mSampleButton.OnClick(x, y, right);
+
+   SongCanvasAudioRackElement::OnClicked(x, y, right);
 }
 void SongCanvasRackSampler::SongCanvasOptionsUpdated()
 {
    SongCanvasAudioRackElement::SongCanvasOptionsUpdated();
 
    mSampleButton.UpdateRect();
+}
+bool SongCanvasRackSampler::TestClick(float x, float y, bool right, bool testOnly)
+{
+   bool r = SongCanvasAudioRackElement::TestClick(x, y, right, testOnly);
+
+   if (mSampleButton.CheckIntercept(x,y))
+      r = true;
+
+   return r;
 }
 void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
@@ -941,6 +956,7 @@ void SongCanvasRackSampler::RackSampleButton::OnMouseMove(float x, float y)
    else
       mHoveredPlay = false;
    mHoveredStop = mStopButtonRect.contains(x, y);
+   mHoveredDrag = mDragButtonRect.contains(x,y);
 }
 bool SongCanvasRackSampler::RackSampleButton::CheckIntercept(float x, float y)
 {
@@ -950,7 +966,7 @@ bool SongCanvasRackSampler::RackSampleButton::CheckIntercept(float x, float y)
    }
    else
    {
-      int r = mHoveredPlay + mHoveredStop + mHoveredName;
+      int r = mHoveredPlay + mHoveredStop + mHoveredName + mHoveredDrag;
       if (r > 0)
          return true;
       else
@@ -982,6 +998,10 @@ void SongCanvasRackSampler::RackSampleButton::OnClick(float x, float y, bool rig
       if (mHoveredStop)
       {
          mOwner->KillAudio();
+      }
+      if (mHoveredDrag)
+      {
+         TheSynth->GrabSample(mSample->Data(), mSample->Name());
       }
    }
 }
@@ -1016,6 +1036,17 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
          mPlayButtonRect.x + mPlayButtonRect.width - 3, mPlayButtonRect.y + mPlayButtonRect.height / 2);
       }
       ofRect(mStopButtonRect.x + 3, mStopButtonRect.y + 3, mStopButtonRect.width - 6, mStopButtonRect.height - 6, 0);
+
+      //Draw the dragButton
+      float iX = mDragButtonRect.x-2;
+      float iY = mDragButtonRect.y-1;
+      for (int i = 0; i < 5; ++i)
+      {
+         float height = (i % 2 == 0) ? 3 : 6;
+         float x = iX + 4 + i * 3;
+         ofLine(x, iY + 7 - height / 2, x, iY + 7 + height / 2);
+      }
+
       ofPopStyle();
 
       ofSetColor(ofColor::cyan);
@@ -1025,6 +1056,8 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
          ofRect(mPlayButtonRect);
       if (mHoveredStop)
          ofRect(mStopButtonRect);
+      if (mHoveredDrag)
+         ofRect(mDragButtonRect);
    }
    else
    {
@@ -1063,6 +1096,8 @@ void SongCanvasRackSampler::RackSampleButton::SetRect(float x, float y, float wi
       miniXOffset += 12;
    }
    mStopButtonRect = ofRectangle(miniXOffset, miniButtonY, 12, 12);
+
+   mDragButtonRect = ofRectangle(width-18, miniButtonY, 16, 12);
 }
 
 

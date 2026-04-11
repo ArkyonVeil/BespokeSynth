@@ -249,18 +249,20 @@ public:
    ~SongCanvasRackSampler();
    void KillAudio();
    std::string GetFlowGridElementType() const override { return "partsampler"; };
+   void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
    void OnEnter() override;
    void OnExit() override;
    void LoadFileSample();
-   float GetPreferredWidth() const;
-   void ButtonClicked(ClickButton* button, double time);
+   float GetPreferredWidth() const override;
+   void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
    void SetSample(Sample* sample);
    void PlaySample();
    void OnPostResize() override;
    void OnClicked(float x, float y, bool right) override;
    void SongCanvasOptionsUpdated() override;
+   bool TestClick(float x, float y, bool right, bool testOnly) override;
 
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
@@ -286,11 +288,13 @@ struct RackSampleButton
    bool mHoveredPlay { false };
    bool mHoveredStop { false };
    bool mHoveredName { false };
+   bool mHoveredDrag { false };
    bool mDrawControlOptions { false };
    Sample* mSample {nullptr};
    ofRectangle mRect;
    ofRectangle mPlayButtonRect;
    ofRectangle mStopButtonRect;
+   ofRectangle mDragButtonRect;
    SongCanvasRackSampler* mOwner;
    DrawAudioBufferSettings mDrawAudioBufferSettings;
 };

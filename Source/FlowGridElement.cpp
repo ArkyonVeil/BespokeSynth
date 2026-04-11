@@ -107,8 +107,8 @@ bool FlowGridElement::MouseMoved(float x, float y)
    IDrawableModule::MouseMoved(x, y);
    //x=x-mFlowGridParent->GetPosition(true).x;
    //y=y-mFlowGridParent->GetPosition(true).y;
-   mDebugNumX = x;
-   mDebugNumY = y;
+   //mDebugNumX = x;
+   //mDebugNumY = y;
 
    if (GetRectLocal().contains(x, y))
    {
