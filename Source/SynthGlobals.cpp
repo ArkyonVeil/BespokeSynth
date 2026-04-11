@@ -215,12 +215,13 @@ void DrawAudioBuffer(float width, float height, const float* buffer, float start
          ofSetColor(color);
 
          float highestMagnitude = 0;
-         for (float i = 0; abs(i) < abs(width); i += step)
+         for (float i = 0; abs(i) < abs(width-step); i += step)
          {
             float max = -999;
             float min = 999;
             int position = i / width * length + start;
 
+            //Collect multiple samples to average out a rendered line.
             int j;
             int inc = 1 + samplesPerStep / 100;
             for (j = 0; j < samplesPerStep; j += inc)
