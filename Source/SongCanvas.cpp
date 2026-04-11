@@ -36,7 +36,6 @@
 #include "SongCanvas.h"
 #include "ModularSynth.h"
 #include "Profiler.h"
-#include "Sample.h"
 #include "SongCanvasMixer.h"
 
 #include <cstring>
@@ -744,7 +743,25 @@ void SongCanvas::DrawModule()
 
       ofPopStyle();
    }
+   //If dragging, we'll draw some graphics to help guide the user.
+   if (TheSynth->GetHeldSample())
+   {
+      ofPushStyle();
+      ofFill();
+      float hintH = 22;
+      ofSetColor(0,0,0,30);
+      float hintX, hintY;
+      hintX =  mRackGrid->GetPosition().x + mRackGrid->GetWidth();
+      hintY =  mRackGrid->GetPosition().y + mRackGrid->GetHeight() - hintH;
+      std::string hintMessage = "drop a sample here...";
+      float msgSize = GetStringWidth(hintMessage,10)+10;
+      ofRect(hintX-msgSize,hintY,msgSize,hintH);
 
+      ofSetColor(230,230,230);
+      DrawTextRightJustify(hintMessage,hintX-2,hintY+15,10);
+
+      ofPopStyle();
+   }
 
    //DEBUG TEXT, UNCOMMENT FOR ENLIGHTENMENT
 
@@ -2078,6 +2095,26 @@ void SongCanvas::SetMixerControlsState(bool active, int mixerIndex)
       }
    }
    UpdateSongCanvasMixerSpacing();
+}
+
+void SongCanvas::SampleDropped(int x, int y, Sample* sample)
+{
+   std::string newPartName = "Part " + std::to_string(mPartNameCount);
+   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName,this);
+   AddNewRackPart(newSampler);
+   newSampler->SampleDropped(x,y,sample);
+   IncrementInternalRackId();
+   mPartNameCount++;
+}
+
+void SongCanvas::FilesDropped(std::vector<std::string> files, int x, int y)
+{
+   std::string newPartName = "Part " + std::to_string(mPartNameCount);
+   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName,this);
+   AddNewRackPart(newSampler);
+   newSampler->FilesDropped(files,x,y);
+   IncrementInternalRackId();
+   mPartNameCount++;
 }
 
 void SongCanvas::UpdateSongCanvasMixerSpacing()

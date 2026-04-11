@@ -917,11 +917,29 @@ bool SongCanvasRackSampler::TestClick(float x, float y, bool right, bool testOnl
 {
    bool r = SongCanvasAudioRackElement::TestClick(x, y, right, testOnly);
 
-   if (mSampleButton.CheckIntercept(x,y))
+   if (mSampleButton.CheckIntercept(x, y))
       r = true;
 
    return r;
 }
+void SongCanvasRackSampler::FilesDropped(std::vector<std::string> files, int x, int y)
+{
+   Sample* s = new Sample();
+   s->LockDataMutex(true);
+   s->Read(files[0].c_str());
+   s->LockDataMutex(false);
+   SetSample(s);
+}
+void SongCanvasRackSampler::SampleDropped(int x, int y, Sample* sample)
+{
+   Sample* s = new Sample();
+   s->LockDataMutex(true);
+   s->CopyFrom(sample);
+   s->LockDataMutex(false);
+   SetSample(s);
+}
+
+
 void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
    element->mCurrentColor = mCanvasSamplerColor;
@@ -1070,7 +1088,18 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
       ofSetColor(ofColor(210, 210, 210));
       DrawTextNormal("Sample", 2, mRect.height / 2 + 5);
    }
+
+   //Drop in a sample notice.
+   bool sampleDropNotice = TheSynth->GetHeldSample() && TheSynth->GetHeldSample() != mSample;
+
+   if (sampleDropNotice)
+   {
+      ofSetColor(255,255,255,45+sinf(ofGetGlobalTime()*7)*40);
+      ofFill();
+      ofRect(0, 0, mRect.width, mRect.height);
+   }
    ofPopMatrix();
+
    ofPopStyle();
 }
 void SongCanvasRackSampler::RackSampleButton::UpdateRect()

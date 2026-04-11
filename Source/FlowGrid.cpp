@@ -376,7 +376,6 @@ bool FlowGrid::IsRowOverfilled(int row)
    return false;
 }
 
-
 //Please check with TryGetSlot to see if it's possible to add first, or it WILL crash.
 void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
 {

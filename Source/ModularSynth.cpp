@@ -2294,7 +2294,7 @@ void ModularSynth::MouseReleased(int intX, int intY, int button, const juce::Mou
 
    if (mHeldSample)
    {
-      IDrawableModule* module = GetModuleAtCursor();
+      IDrawableModule* module = GetModuleAtCursor(0,0,true);
       if (module)
       {
          float moduleX, moduleY;

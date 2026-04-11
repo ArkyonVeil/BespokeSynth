@@ -263,7 +263,9 @@ public:
    void OnClicked(float x, float y, bool right) override;
    void SongCanvasOptionsUpdated() override;
    bool TestClick(float x, float y, bool right, bool testOnly) override;
-
+   void FilesDropped(std::vector<std::string> files, int x, int y) override;
+   void SampleDropped(int x, int y, Sample* sample) override;
+   bool CanDropSample() const override { return true; }
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
 

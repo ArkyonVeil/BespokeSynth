@@ -19,7 +19,7 @@
 //  SongCanvas.h
 //  Bespoke
 //
-//  Module assembled by ArkyonVeil on April/24. Reheated in March/26
+//  Module assembled by ArkyonVeil on April/24. Reheated in March/26-
 //
 //         ██
 //         ▓▓
@@ -179,7 +179,9 @@ public:
    void SetMixerControlsState(bool active, int mixerIndex);
    SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
    bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
-
+   void SampleDropped(int x, int y, Sample* sample) override;
+   void FilesDropped(std::vector<std::string> files, int x, int y) override;
+   bool CanDropSample() const override { return true; }
 
    enum class EnumSamplerAudioPreviewMode
    {
