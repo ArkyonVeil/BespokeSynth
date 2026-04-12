@@ -706,6 +706,8 @@ SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCa
    mVoiceParams.mSample = mSample;
    mVoiceParams.mSamplePitch = 48;
 
+   mDrawAudioBufferSettings.maxChannels = 1;
+
    mPolyMgr.Init(kVoiceType_Sampler, &mVoiceParams);
 }
 SongCanvasRackSampler::~SongCanvasRackSampler()
@@ -822,6 +824,22 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
    }
    mSampleButton.mSample = sample;
 
+   //Go through all our canvas parts and set their sizes.
+   if (mSample)
+   {
+      auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
+
+      //Position of a canvas element. 0 -> measure 0. 1 -> measure max.
+      float sampleLength = mSample->LengthInSeconds()/(TheTransport->MsPerBar() / 1000)/mSongCanvas->GetMeasureCount();
+      for (auto e : r)
+      {
+         float start = e->GetStart();
+         e->SetEnd(start+sampleLength);
+      }
+   }
+
+
+   //Finally update our row, so we can resize to the proper size.
    UpdateRow();
 }
 
@@ -944,6 +962,21 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
    element->mCurrentColor = mCanvasSamplerColor;
    element->mCurrentColorGrad = mCanvasSamplerColor2;
+   float sampleLength = mSample->LengthInSeconds()/(TheTransport->MsPerBar() / 1000)/mSongCanvas->GetMeasureCount();
+   element->SetEnd(element->GetStart()+sampleLength);
+   element->SetAllowResize(false);
+}
+void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+{
+   SongCanvasAudioRackElement::DrawCanvasPartGraphics(element, rect);
+
+   if (mSample)
+   {
+      ofPushMatrix();
+      ofTranslate(rect.x,rect.y+9);
+      DrawAudioBuffer(rect.width,rect.height-9,mSample->Data(),mDrawAudioBufferSettings);
+      ofPopMatrix();
+   }
 }
 
 void SongCanvasRackSampler::SaveState(FileStreamOut& out)

@@ -267,14 +267,18 @@ public:
    void SampleDropped(int x, int y, Sample* sample) override;
    bool CanDropSample() const override { return true; }
 
+
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
+   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
    void Process(double time) override;
    void DrawRackGraphics() override;
+
+   DrawAudioBufferSettings mDrawAudioBufferSettings;
 
 struct RackSampleButton
 {

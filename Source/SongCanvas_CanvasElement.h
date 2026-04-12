@@ -17,6 +17,8 @@ public:
    SongCanvasRackElement* GetRackElement() { return mRackPart; }
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
+   bool IsResizable() const override {return mAllowResizing;};
+   void SetAllowResize(bool allow){mAllowResizing = allow;}
 
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }
@@ -39,4 +41,5 @@ private:
    SongCanvas* mSongCanvas;
    SongCanvasRackElement* mRackPart;
    int mRackParentID;
+   bool mAllowResizing { true };
 };

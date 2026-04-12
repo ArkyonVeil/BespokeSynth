@@ -116,6 +116,7 @@ public:
    SongCanvasRackElement* GetSelectedRackPart() const;
    int GetNumTargets() override { return 0; }
    float GetModuleMinHeight(){ return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
+   int GetMeasureCount() const { return mMeasureCount;}
 
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    void Process(double time) override;
