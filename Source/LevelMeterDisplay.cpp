@@ -62,15 +62,15 @@ void LevelMeterDisplay::GetLevel(int channel, float& level, float& watermarkLeve
 void LevelMeterDisplay::SetNumSegments(int num)
 {
    mNumSegments = num;
-   mRedSegmentStart = round(mNumSegments*0.15f);
+   mRedSegmentStart = round(mNumSegments * 0.15f);
    if (mRedSegmentStart <= 1)
       mRedSegmentStart = 2;
-   mYellowSegmentStart = round(mNumSegments*0.3f);
+   mYellowSegmentStart = round(mNumSegments * 0.3f);
    if (mYellowSegmentStart <= mRedSegmentStart)
    {
-      mYellowSegmentStart = mRedSegmentStart+1;
+      mYellowSegmentStart = mRedSegmentStart + 1;
    }
-   mXBarPadding = (float)num /20.0f;
+   mXBarPadding = (float)num / 20.0f;
 }
 
 void LevelMeterDisplay::Draw(float x, float y, float width, float height, int numChannels)

@@ -27,7 +27,8 @@ public:
 };
 
 struct RackCanvasPartData
-{ };
+{
+};
 struct RackCanvasPartDataPulser : RackCanvasPartData
 {
    //Unused for now.
@@ -60,7 +61,7 @@ public:
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
-   virtual void OnLoadFinish() {};//Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
+   virtual void OnLoadFinish(){}; //Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
 
    //Save/load unique canvas part data.
    virtual void SaveCanvasPart(SongCanvas_CanvasElement* obj, FileStreamOut& out){};
@@ -80,12 +81,12 @@ public:
    void ButtonClicked(ClickButton* button, double time) override{};
    float GetCenteredElementY(IUIControl* element) const { return (mHeight - element->GetRect(true).height) / 2; }
 
-   virtual void SongCanvasOptionsUpdated() {};
+   virtual void SongCanvasOptionsUpdated(){};
 
    int mInternalRackID;
    bool mRackEnabled;
 
-   std::unordered_map<int,RackCanvasPartData*> mCanvasPartData;
+   std::unordered_map<int, RackCanvasPartData*> mCanvasPartData;
 
 protected:
    virtual void DrawExtendedBaseGraphics(){};
@@ -157,7 +158,7 @@ private:
    SongCanvasMixer* mMixer;
    ChannelBuffer* mMixerBuffer;
    TextEntry* mChannelPicker;
-   bool mLoading { false };
+   bool mLoading{ false };
 };
 
 /////////////
@@ -295,50 +296,51 @@ public:
 
    DrawAudioBufferSettings mDrawAudioBufferSettings;
 
-struct RackSampleButton
-{
-   RackSampleButton(SongCanvasRackSampler* owner);
-   void OnMouseMove(float x, float y);
-   bool CheckIntercept(float x, float y);
-   void OnClick(float x, float y, bool right);
-   void Draw();
-   void UpdateRect();
-   void SetRect(float x, float y, float width, float height);
+   struct RackSampleButton
+   {
+      RackSampleButton(SongCanvasRackSampler* owner);
+      void OnMouseMove(float x, float y);
+      bool CheckIntercept(float x, float y);
+      void OnClick(float x, float y, bool right);
+      void Draw();
+      void UpdateRect();
+      void SetRect(float x, float y, float width, float height);
 
-   bool mHoveredTotal { false };
-   bool mHoveredPlay { false };
-   bool mHoveredStop { false };
-   bool mHoveredName { false };
-   bool mHoveredDrag { false };
-   bool mDrawControlOptions { false };
-   Sample* mSample {nullptr};
-   ofRectangle mRect;
-   ofRectangle mPlayButtonRect;
-   ofRectangle mStopButtonRect;
-   ofRectangle mDragButtonRect;
-   SongCanvasRackSampler* mOwner;
-   DrawAudioBufferSettings mDrawAudioBufferSettings;
-   TextTruncationSettings mSampleRenderNameSettings;
-   std::string mDisplayName;
-   std::string mFullSampleName;
+      bool mHoveredTotal{ false };
+      bool mHoveredPlay{ false };
+      bool mHoveredStop{ false };
+      bool mHoveredName{ false };
+      bool mHoveredDrag{ false };
+      bool mDrawControlOptions{ false };
+      Sample* mSample{ nullptr };
+      ofRectangle mRect;
+      ofRectangle mPlayButtonRect;
+      ofRectangle mStopButtonRect;
+      ofRectangle mDragButtonRect;
+      SongCanvasRackSampler* mOwner;
+      DrawAudioBufferSettings mDrawAudioBufferSettings;
+      TextTruncationSettings mSampleRenderNameSettings;
+      std::string mDisplayName;
+      std::string mFullSampleName;
 
-   const float kMinWidthDrawButtons = 45;
-   float mNameDisplayAnimOffset;
-   float mFullNameWidth;
-};
-RackSampleButton mSampleButton;
+      const float kMinWidthDrawButtons = 45;
+      float mNameDisplayAnimOffset;
+      float mFullNameWidth;
+   };
+   RackSampleButton mSampleButton;
+
 private:
    Sample* mSample{ nullptr };
-   bool mLongSample { false };
+   bool mLongSample{ false };
    PatchCableSource* mSamplerCable{ nullptr };
-   bool mSCLoadingDone { true };
+   bool mSCLoadingDone{ true };
 
    ChannelBuffer mWriteBuffer;
    int mSamplesPlaying{ 0 };
    PolyphonyMgr mPolyMgr;
    SampleVoiceParams mVoiceParams{};
-   float mSampleDisplayNameWidth { 0 };
-   const float mSampleDisplayNameWidthDefault { 55 };
+   float mSampleDisplayNameWidth{ 0 };
+   const float mSampleDisplayNameWidthDefault{ 55 };
    double mLastProcessTime;
 };
 

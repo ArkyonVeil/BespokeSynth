@@ -236,9 +236,9 @@ public:
       }
    }
    void UpdateFrameRate(float fps) { mFrameRate = fps; }
-   void WriteDeltaTime(float delta) {mDeltaTime = delta;}
-   float GetDeltaTime() const { return mDeltaTime;}
-   void IncrementGlobalTime(double lastFrameTime)//In seconds
+   void WriteDeltaTime(float delta) { mDeltaTime = delta; }
+   float GetDeltaTime() const { return mDeltaTime; }
+   void IncrementGlobalTime(double lastFrameTime) //In seconds
    {
       mApplicationTime += lastFrameTime;
       if (mApplicationTime > 2592000)
@@ -454,7 +454,7 @@ private:
    std::recursive_mutex mRenderLock;
    float mFrameRate{ 0 };
    double mApplicationTime{ 0 };
-   float mDeltaTime{0};
+   float mDeltaTime{ 0 };
    long mFrameCount{ 0 };
 
    ModuleContainer mModuleContainer;

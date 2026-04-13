@@ -17,10 +17,10 @@ public:
    SongCanvasRackElement* GetRackElement() { return mRackPart; }
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
-   bool IsResizable() const override {return mAllowResizing;};
-   void SetAllowResize(bool allow){mAllowResizing = allow;}
-   uint32_t GetIndex() const { return mIndex;}
-   Canvas* GetCanvas() const { return mCanvas;}
+   bool IsResizable() const override { return mAllowResizing; };
+   void SetAllowResize(bool allow) { mAllowResizing = allow; }
+   uint32_t GetIndex() const { return mIndex; }
+   Canvas* GetCanvas() const { return mCanvas; }
 
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }
@@ -42,7 +42,7 @@ private:
    float mCachedNameSize;
    SongCanvas* mSongCanvas;
    SongCanvasRackElement* mRackPart;
-   uint32_t mIndex { 0 };
+   uint32_t mIndex{ 0 };
    int mRackParentID;
-   bool mAllowResizing { true };
+   bool mAllowResizing{ true };
 };

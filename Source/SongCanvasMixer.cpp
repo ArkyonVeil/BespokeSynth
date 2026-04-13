@@ -20,7 +20,7 @@ SongCanvasMixer::~SongCanvasMixer()
 }
 void SongCanvasMixer::PreDispose()
 {
-   mOwner->SetMixerOrphanTarget(mTarget,mCableOut->GetManualPosition());
+   mOwner->SetMixerOrphanTarget(mTarget, mCableOut->GetManualPosition());
    mOwner->RemovePatchCableSource(mCableOut);
    mOwner->RemoveUIControl(mVolumeSlider);
    mOwner->RemoveUIControl(mPanSlider);
@@ -28,7 +28,7 @@ void SongCanvasMixer::PreDispose()
 
 void SongCanvasMixer::AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord)
 {
-   mCableOut->SetManualPosition(sourceCoord.x,sourceCoord.y);
+   mCableOut->SetManualPosition(sourceCoord.x, sourceCoord.y);
    mCableOut->SetTarget(dynamic_cast<IClickable*>(oldTarget));
 }
 
@@ -112,7 +112,7 @@ void SongCanvasMixer::Process()
       }
    }
 
-   if (mNumChannels>1)
+   if (mNumChannels > 1)
    {
       mLeftChannelLevel.Process(0, GetBuffer()->GetChannel(0), gBufferSize);
       mRightChannelLevel.Process(0, GetBuffer()->GetChannel(1), gBufferSize);
@@ -313,7 +313,6 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
       {
          mVizBuffer->ClearBuffer();
       }
-
    }
 }
 

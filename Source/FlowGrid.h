@@ -52,7 +52,7 @@ public:
    void SetMaxRows(int rowNum) { mMaxRows = rowNum; }
    void SetMinRows(int rowNum) { mMinRows = rowNum; }
 
-   float GetRowHeight() {return mRowYSize;}
+   float GetRowHeight() { return mRowYSize; }
    void AddFlowElement(FlowGridElement* newElement, bool preSetup = false);
    void AddToRow(FlowGridElement* element, int row);
    void RowNotifyPostResize(int row) const;

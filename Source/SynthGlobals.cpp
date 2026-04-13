@@ -158,7 +158,7 @@ void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, DrawAudio
    ofPushMatrix();
    if (buffer != nullptr)
    {
-      int numChannels = MIN(settings.maxChannels,buffer->NumActiveChannels());
+      int numChannels = MIN(settings.maxChannels, buffer->NumActiveChannels());
       for (int i = 0; i < numChannels; ++i)
       {
          DrawAudioBuffer(width, height / numChannels, buffer->GetChannel(i), settings.start, MIN(settings.end, buffer->BufferSize()), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, buffer->BufferSize());
@@ -226,7 +226,7 @@ void DrawAudioBuffer(float width, float height, const float* buffer, float start
             int inc = 1 + samplesPerStep / 100;
             for (j = 0; j < samplesPerStep; j += inc)
             {
-               int sampleIdx = MIN(position + j, start+bufferSize);
+               int sampleIdx = MIN(position + j, start + bufferSize);
                if (wraparoundFrom != -1 && sampleIdx > wraparoundFrom)
                   sampleIdx = sampleIdx - wraparoundFrom + wraparoundTo;
                if (bufferSize > 0)
@@ -494,11 +494,11 @@ float GetStringWidth(std::string text, float size)
 }
 std::string StripNameExtension(std::string text)
 {
-   for (int i = text.size()-1; i >= 0; --i)
+   for (int i = text.size() - 1; i >= 0; --i)
    {
-      if (text[i]=='.')
+      if (text[i] == '.')
       {
-         return text.substr(0,i);
+         return text.substr(0, i);
       }
    }
    return text;

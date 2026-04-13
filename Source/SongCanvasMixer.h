@@ -39,8 +39,8 @@ private:
    PatchCableSource* mCableOut;
    IAudioReceiver* mTarget{ nullptr };
 
-   FloatSlider* mPanSlider { nullptr };
-   FloatSlider* mVolumeSlider { nullptr };
+   FloatSlider* mPanSlider{ nullptr };
+   FloatSlider* mVolumeSlider{ nullptr };
    LevelMeterDisplay mLeftChannelLevel;
    LevelMeterDisplay mRightChannelLevel;
 
@@ -51,10 +51,10 @@ private:
    bool mEnabled{ true };
    bool mHovered{ false };
    bool mHoverName{ false };
-   ofRectangle mRectBounds {-25,-16,50,16};
+   ofRectangle mRectBounds{ -25, -16, 50, 16 };
    ofRectangle mNameBounds;
 
-   ofColor mMixerBarBackgroundCol {15,15,15};
-   ofColor mMixerBarGuideCol {70,80,80};
-   ofColor mMixerBarForegroundCol {225,225,225};
+   ofColor mMixerBarBackgroundCol{ 15, 15, 15 };
+   ofColor mMixerBarGuideCol{ 70, 80, 80 };
+   ofColor mMixerBarForegroundCol{ 225, 225, 225 };
 };

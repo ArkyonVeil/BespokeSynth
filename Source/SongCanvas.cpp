@@ -650,7 +650,7 @@ void SongCanvas::DrawModule()
    if (mMeasureSliderHovered)
    {
       ofPushStyle();
-      ofSetColor(255,255,255,5);
+      ofSetColor(255, 255, 255, 5);
       ofFill();
       ofRect(mMeasureSlider->GetRect(true));
       ofPopStyle();
@@ -1297,7 +1297,7 @@ bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
 
-   mMeasureSliderHovered = mMeasureSlider->GetRect(true).contains(x,y);
+   mMeasureSliderHovered = mMeasureSlider->GetRect(true).contains(x, y);
 
    mRackGrid->MouseMoved(x, y);
 

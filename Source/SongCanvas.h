@@ -106,30 +106,34 @@ public:
 
    //Canvas
    void CanvasUpdated(Canvas* canvas) override;
-   uint32_t GetNewCanvasElementId() {mCanvasElementIndex++; return mCanvasElementIndex; }
+   uint32_t GetNewCanvasElementId()
+   {
+      mCanvasElementIndex++;
+      return mCanvasElementIndex;
+   }
    void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
-   int GetMeasureCount() const { return mMeasureCount;}
+   int GetMeasureCount() const { return mMeasureCount; }
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
 
    //Racks
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
-   void AddNewRackPart(SongCanvasRackElement* element, bool autoSetup = true);//If autoSetup is false, skips some automated actions. Useful for loading.
+   void AddNewRackPart(SongCanvasRackElement* element, bool autoSetup = true); //If autoSetup is false, skips some automated actions. Useful for loading.
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element);
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
-   float GetModuleMinHeight(){ return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
+   float GetModuleMinHeight() { return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
    bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.
    void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY) override;
    void onFlowGridNewSelection(FlowGridElement* element) override;
    int GetInternalRackId() const { return mInternalRackIDCounter; }
-   void IncrementInternalRackId() { mInternalRackIDCounter++; }//TODO merge with GetInternalRackId()
+   void IncrementInternalRackId() { mInternalRackIDCounter++; } //TODO merge with GetInternalRackId()
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
    SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
@@ -144,12 +148,16 @@ public:
    void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
 
    //Animation
-   float RescaleAnimationSpeedDelta() { return ofGetDeltaTime()* 96 * mDeltaAnimSpeedMultiplier;}
+   float RescaleAnimationSpeedDelta() { return ofGetDeltaTime() * 96 * mDeltaAnimSpeedMultiplier; }
    void SetAnimationSpeedMultiplier(float mul) { mDeltaAnimSpeedMultiplier = mul; }
-   void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord){mMixerOrphanAudioTarget = target; mMixerOrphanSourceCoord = cableSourceCoord;}
+   void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord)
+   {
+      mMixerOrphanAudioTarget = target;
+      mMixerOrphanSourceCoord = cableSourceCoord;
+   }
    void SetMixerControlsState(bool active, int mixerIndex);
-   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
-   bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
+   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected; }
+   bool MixerControlsEnabled() { return mMixerControlsSelected != nullptr; };
    void SampleDropped(int x, int y, Sample* sample) override;
    void FilesDropped(std::vector<std::string> files, int x, int y) override;
    bool CanDropSample() const override { return true; }
@@ -292,7 +300,7 @@ private:
    bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
    NoteInterval mCanvasInterval{ NoteInterval::kInterval_4n };
    int mCanvasIntervalInt{ NoteInterval::kInterval_4n };
-   uint32_t mCanvasElementIndex { 0 };
+   uint32_t mCanvasElementIndex{ 0 };
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
@@ -389,17 +397,17 @@ private:
    EnumSongCanvasStyle mGlobalModeColor{ ESRed };
    EnumSongCanvasStyle mLocalModeColor{ ESPink };
 
-   bool mMeasureSliderHovered { false };
-   IAudioReceiver* mMixerOrphanAudioTarget { nullptr };
+   bool mMeasureSliderHovered{ false };
+   IAudioReceiver* mMixerOrphanAudioTarget{ nullptr };
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
-   float mDeltaAnimSpeedMultiplier { 1 };
+   float mDeltaAnimSpeedMultiplier{ 1 };
 
    //Audio Handling
    float mMixerStartingXOffset = 26;
-   float GetMixerXPadding() { return 54;};
-   SongCanvasMixer* mMixerControlsSelected {nullptr};
+   float GetMixerXPadding() { return 54; };
+   SongCanvasMixer* mMixerControlsSelected{ nullptr };
    void UpdateSongCanvasMixerSpacing();
    void ScheduleMixerDisposal(SongCanvasMixer* mixer);
    float mMixerControlsHeight = 44;
@@ -408,7 +416,7 @@ private:
    float mMixerControlsDrawHeight = 0;
    float mMixerControlsDrawHeightTarget = 0;
    float mMixerControlsEdgeMin = 8;
-   ofVec2f mMixerOrphanSourceCoord {0,0};
+   ofVec2f mMixerOrphanSourceCoord{ 0, 0 };
    float mSelectedMixerX; //Temp mixer cords, not updated if no mixer is selected.
 
    std::vector<SongCanvasMixer*> mMixers{};

@@ -163,13 +163,13 @@ enum class StepVelocityType
 
 struct DrawAudioBufferSettings
 {
-   float start {-1};
-   float end {-1};
-   float pos {-1};
-   float volume { 1 };
-   ofColor color { ofColor::black };
-   int wrapAroundFrom {-1};
-   int wraparoundTo{0};
+   float start{ -1 };
+   float end{ -1 };
+   float pos{ -1 };
+   float volume{ 1 };
+   ofColor color{ ofColor::black };
+   int wrapAroundFrom{ -1 };
+   int wraparoundTo{ 0 };
    int maxChannels{ 2 };
 };
 

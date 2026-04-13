@@ -85,10 +85,14 @@ public:
    TextTruncationSettings GetTextTruncationSettings();
 
    //Input Cable Overrides
-   void SetOverridePatchCableInputDirection(ofVec2f direction) {mOverridePatchCableDir = direction; mHasOverridePatchCableDir = true;};
-   void ClearOverridePatchCableInputDirection() {mOverridePatchCableDir = ofVec2f(0,0), mHasOverridePatchCableDir = false;};
-   ofVec2f GetOverridePatchCableInputDirection() const { return mOverridePatchCableDir;}
-   bool HasOverridePatchCableInputDirection() const { return mHasOverridePatchCableDir;}
+   void SetOverridePatchCableInputDirection(ofVec2f direction)
+   {
+      mOverridePatchCableDir = direction;
+      mHasOverridePatchCableDir = true;
+   };
+   void ClearOverridePatchCableInputDirection() { mOverridePatchCableDir = ofVec2f(0, 0), mHasOverridePatchCableDir = false; };
+   ofVec2f GetOverridePatchCableInputDirection() const { return mOverridePatchCableDir; }
+   bool HasOverridePatchCableInputDirection() const { return mHasOverridePatchCableDir; }
 
    //Naming and Overrides
    void SetOverrideDisplayName(std::string name)
@@ -135,7 +139,7 @@ private:
    double mBeaconTime{ -999 };
    bool mHasOverrideDisplayName{ false };
    ofVec2f mOverridePatchCableDir;
-   bool mHasOverridePatchCableDir {false};
+   bool mHasOverridePatchCableDir{ false };
    TextTruncationSettings mTruncationSettings{};
    std::string mOverrideDisplayName{ "" };
    std::string mCachedName{ "" };

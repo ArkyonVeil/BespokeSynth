@@ -652,7 +652,7 @@ PatchCablePos PatchCable::GetPatchCablePos()
       target->GetDimensions(wThat, hThat);
       target->GetPosition(xThat, yThat);
       end = mTargetRadioButton->GetOptionPosition(mUIControlConnection->mValue);
-      endDirection = ofVec2f(0,5);
+      endDirection = ofVec2f(0, 5);
    }
    if (target)
    {
