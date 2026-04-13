@@ -238,22 +238,23 @@ void SongCanvasMixer::DrawMixerControls(float x, float y)
 
 void SongCanvasMixer::Save(FileStreamOut& out)
 {
-   out << mMixerVersion;
+   out << kMixerVersion;
 
-   out << mMixerIndex;
+
    out << mEnabled;
    out << mVolume;
    out << mPan;
+   mCableOut->SaveState(out);
 }
 void SongCanvasMixer::Load(FileStreamIn& in)
 {
    int rev;
    in >> rev;
 
-   in >> mMixerIndex;
    in >> mEnabled;
    in >> mVolume;
    in >> mPan;
+   mCableOut->LoadState(in);
 }
 void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
 {

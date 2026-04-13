@@ -55,6 +55,8 @@ public:
    void SetEnd(float end);
    std::vector<IUIControl*>& GetUIControls() { return mUIControls; }
    void MoveElementByDrag(ofVec2f dragOffset);
+   void GetDragDestinationData(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
+   void GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;
@@ -76,7 +78,6 @@ protected:
    virtual void DrawContents(bool clamp, bool wrapped, ofVec2f offset) = 0;
    void DrawElement(bool clamp, bool wrapped, ofVec2f offset);
    void AddElementUIControl(IUIControl* control);
-   void GetDragDestinationData(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
    ofRectangle GetRectAtDestination(bool clamp, bool wrapped, ofVec2f dragOffset) const;
    float GetStart(int col, float offset) const;
    float GetEnd(int col, float offset, float length) const;

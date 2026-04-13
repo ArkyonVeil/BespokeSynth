@@ -874,8 +874,8 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       el->Init();
       el->SetName(el->mElementTypeName.c_str());
       el->SetTypeName(el->mElementTypeName, kModuleCategory_Other);
-      el->LoadState(in, el->GetModuleSaveStateRev());
       AddFlowElement(el, true);
+      el->LoadState(in, el->GetModuleSaveStateRev());
    }
    delete factory;
 }

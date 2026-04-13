@@ -68,83 +68,107 @@ class SongCanvas : public IAudioSource,
 public:
    SongCanvas();
    ~SongCanvas();
-   static IDrawableModule* Create() { return new SongCanvas(); }
-   static bool AcceptsAudio() { return false; }
-   static bool AcceptsNotes() { return false; }
-   static bool AcceptsPulses() { return false; }
-   bool ShouldSuppressAutomaticOutputCable() override { return true; }
 
+   //Init
    void CreateUIControls() override;
-
-   void SetEnabled(bool enabled) override { mEnabled = enabled; }
-   bool IsResizable() const override { return true; }
-   void Resize(float w, float h) override;
    void Init() override;
 
+   void SetEnabled(bool enabled) override { mEnabled = enabled; }
+   bool IsEnabled() const override { return mEnabled; }
+   void Resize(float w, float h) override;
+
+   //Serialization
    void LoadLayout(const ofxJSONElement& moduleInfo) override;
    void SetUpFromSaveData() override;
    void SaveLayout(ofxJSONElement& moduleInfo) override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
+   int GetModuleSaveStateRev() const override { return 6; }
 
-   bool IsEnabled() const override { return mEnabled; }
-   void CanvasUpdated(Canvas* canvas) override;
-   ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
-   void TextEntryComplete(TextEntry* entry) override;
-   void ReloadMeasures(bool overrideAutoFit);
-   void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
-   void ProcessRackElementRightClickDropdown(DropdownList* list);
-   void ButtonClicked(ClickButton* button, double time) override;
-   void CheckboxUpdated(Checkbox* checkbox, double time) override;
+   //Input
    bool MouseMoved(float x, float y) override;
    void OnClicked(float x, float y, bool right) override;
    void MouseReleased() override;
-   void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
-   void AddNewRackPart(SongCanvasRackElement* element, bool addToGrid = true);
-   void OnElementLoaded(FlowGridElement* element) override;
+
+   //Listeners
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override;
+   void CheckboxUpdated(Checkbox* checkbox, double time) override;
+   void ButtonClicked(ClickButton* button, double time) override;
+   void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
+   void TextEntryComplete(TextEntry* entry) override;
+   void OnElementLoaded(FlowGridElement* element) override;
+   void FeatureResize(int extraW, int extraH);
+
+   ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
+   void ReloadMeasures(bool overrideAutoFit);
+   void ProcessRackElementRightClickDropdown(DropdownList* list);
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
+
+   //Canvas
+   void CanvasUpdated(Canvas* canvas) override;
+   uint32_t GetNewCanvasElementId() {mCanvasElementIndex++; return mCanvasElementIndex; }
    void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
+   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
+   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
+   void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
+   int GetMeasureCount() const { return mMeasureCount;}
+   bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
+
+   //Racks
+   void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
+   void AddNewRackPart(SongCanvasRackElement* element, bool autoSetup = true);//If autoSetup is false, skips some automated actions. Useful for loading.
    TextEntry* GetRackRenameTextbox() const { return mRackRenameTextBox; }
    void DeleteRackElement(SongCanvasRackElement* element);
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
-   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
-   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
-   int GetNumTargets() override { return 0; }
    float GetModuleMinHeight(){ return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
-   int GetMeasureCount() const { return mMeasureCount;}
-
-   void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
-   void Process(double time) override;
-   SongCanvasMixer* GetMixer(int index);
-   void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
-
-   bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
    bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.
-
-   void IncrementInternalRackId() { mInternalRackIDCounter++; }
-   int GetInternalRackId() const { return mInternalRackIDCounter; }
-   void OnTransportAdvanced(float amount) override;
-
    void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY) override;
    void onFlowGridNewSelection(FlowGridElement* element) override;
-
-   void DisposeElement(IClickable* element);
-
+   int GetInternalRackId() const { return mInternalRackIDCounter; }
+   void IncrementInternalRackId() { mInternalRackIDCounter++; }//TODO merge with GetInternalRackId()
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
+   SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
+   //Transport
+   void OnTransportAdvanced(float amount) override;
    void OnTimeEvent(double time) override;
-   void FeatureResize(int extraW, int extraH);
-   int GetModuleSaveStateRev() const override { return 5; }
+
+   //Audio
+   void Process(double time) override;
+   SongCanvasMixer* GetMixer(int index);
+   SongCanvasMixer* GetMixerRef(int index) const;
+   void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
+
+   //Animation
    float RescaleAnimationSpeedDelta() { return ofGetDeltaTime()* 96 * mDeltaAnimSpeedMultiplier;}
    void SetAnimationSpeedMultiplier(float mul) { mDeltaAnimSpeedMultiplier = mul; }
+   void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord){mMixerOrphanAudioTarget = target; mMixerOrphanSourceCoord = cableSourceCoord;}
+   void SetMixerControlsState(bool active, int mixerIndex);
+   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
+   bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
+   void SampleDropped(int x, int y, Sample* sample) override;
+   void FilesDropped(std::vector<std::string> files, int x, int y) override;
+   bool CanDropSample() const override { return true; }
 
+   //Garbage Disposal
+   void DisposeElement(IClickable* element);
+
+   //IDrawable Misc
+   int GetNumTargets() override { return 0; }
    void PostRepatch(PatchCableSource* cableSource, bool fromUserClick) override;
+   static bool AcceptsAudio() { return false; }
+   static bool AcceptsNotes() { return false; }
+   static bool AcceptsPulses() { return false; }
+   bool ShouldSuppressAutomaticOutputCable() override { return true; }
+   bool IsResizable() const override { return true; }
+   static IDrawableModule* Create() { return new SongCanvas(); }
 
+
+   //Decoration
    enum EnumSongCanvasStyle
    {
       ESRed = 0,
@@ -166,31 +190,19 @@ public:
       ESTrans = 16
    };
    ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
-
    static std::array<ofColor, 2> ESCarbonColours;
    static std::array<ofColor, 3> ESRGBColours;
    static std::array<ofColor, 6> ESPrideColours;
    static std::array<ofColor, 4> ESTransColours;
 
-   SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
 
-
-
-   void SetMixerOrphanTarget(IAudioReceiver* target, ofVec2f cableSourceCoord){mMixerOrphanAudioTarget = target; mMixerOrphanSourceCoord = cableSourceCoord;}
-   void SetMixerControlsState(bool active, int mixerIndex);
-   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected;}
-   bool MixerControlsEnabled() {return mMixerControlsSelected != nullptr;};
-   void SampleDropped(int x, int y, Sample* sample) override;
-   void FilesDropped(std::vector<std::string> files, int x, int y) override;
-   bool CanDropSample() const override { return true; }
-
+   //Part Public Configs
    enum class EnumSamplerAudioPreviewMode
    {
       TwoSecondsOrLess = 0,
       Never = 1,
       Always = 2,
    };
-
    EnumSamplerAudioPreviewMode mSamplerAudioPreviewMode = EnumSamplerAudioPreviewMode::TwoSecondsOrLess;
 
 private:
@@ -252,7 +264,7 @@ private:
    static const int mStandardMeasureSize = 48;
    static const int mDefaultMeasureSpawnAmount = 12;
 
-   static const int mOffsetFromTopSpacing = 50; //old val 38, 44
+   static const int mOffsetFromTopSpacing = 54; //old val 38, 44, 50
    static const int LayersListWidthSize = 150;
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
@@ -275,12 +287,12 @@ private:
    bool mLocalStopped{ false };
    bool mAlteredIntervalFlag{ false };
 
-
    bool mShowRealTime{ false };
 
    bool mPreviewRackSounds{ true }; //Sends a sound signal every time a rack part is interacted with.
    NoteInterval mCanvasInterval{ NoteInterval::kInterval_4n };
    int mCanvasIntervalInt{ NoteInterval::kInterval_4n };
+   uint32_t mCanvasElementIndex { 0 };
 
    ofVec2f mHeaderSplitter1;
    ofVec2f mHeaderSplitter2;
@@ -370,8 +382,6 @@ private:
       enumOEMStop = 2,
    };
 
-
-
    int mOnEndMeasure{ 0 };
    int mPreviousGlobalEndMeasure{ -1 };
    int mPreviousLocalEndMeasure{ -1 };
@@ -379,7 +389,7 @@ private:
    EnumSongCanvasStyle mGlobalModeColor{ ESRed };
    EnumSongCanvasStyle mLocalModeColor{ ESPink };
 
-
+   bool mMeasureSliderHovered { false };
    IAudioReceiver* mMixerOrphanAudioTarget { nullptr };
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
@@ -399,14 +409,12 @@ private:
    float mMixerControlsDrawHeightTarget = 0;
    float mMixerControlsEdgeMin = 8;
    ofVec2f mMixerOrphanSourceCoord {0,0};
-
-   //Temp mixer cords, not updated if no mixer is selected.
-   float mSelectedMixerX;
+   float mSelectedMixerX; //Temp mixer cords, not updated if no mixer is selected.
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
    std::vector<SongCanvasMixer*> mScheduledMixerDisposals{};
 
-   //Expert variables
+   //Expert variables (Unused)
    bool expertPanelEnabled = false;
 };

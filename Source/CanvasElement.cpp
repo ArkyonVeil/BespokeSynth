@@ -250,6 +250,23 @@ void CanvasElement::GetDragDestinationData(ofVec2f dragOffset, int& newRow, int&
       newOffset = mOffset + colDrag - (newCol - mCol);
 }
 
+void CanvasElement::GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const
+{
+   dragOffset.x *= mCanvas->mViewEnd - mCanvas->mViewStart;
+
+   float colDrag = (dragOffset.x / mCanvas->GetWidth()) * mCanvas->GetNumCols() / mCanvas->GetLength();
+   float rowDrag = (dragOffset.y / mCanvas->GetHeight()) * mCanvas->GetNumVisibleRows();
+
+   newCol = mCol;
+   if (mCanvas->GetDragMode() & Canvas::kDragHorizontal)
+      newCol = ofClamp(int(mCol + colDrag + .5f), 0, mCanvas->GetNumCols() - 1);
+   newRow = mRow;
+   if (mCanvas->GetDragMode() & Canvas::kDragVertical)
+      newRow = ofClamp(int(mRow + rowDrag + .5f), 0, mCanvas->GetNumRows() - 1);
+   newOffset = mOffset;
+   newOffset = mOffset + colDrag - (newCol - mCol);
+}
+
 void CanvasElement::MoveElementByDrag(ofVec2f dragOffset)
 {
    int newRow;

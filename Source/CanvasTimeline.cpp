@@ -40,7 +40,7 @@ void CanvasTimeline::Render()
 {
    ofRectangle canvasRect = mCanvas->GetRect(true);
    SetPosition(canvasRect.x, canvasRect.y + mCanvasYOffset);
-   SetDimensions(canvasRect.width, 10);
+   SetDimensions(canvasRect.width, mClipHeight);
    bool maxed = mCanvas->mLoopStart == 0 && mCanvas->mLoopEnd == mCanvas->GetLength();
    bool shiftPreview = false;
    if (GetKeyModifiers() & kModifier_Shift)
@@ -77,7 +77,7 @@ void CanvasTimeline::Render()
       float quantizedStartX = ofMap(quantizedStart, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
       float quantizedEnd = GetQuantizedForX(endX, HoverMode::kMiddle);
       float quantizedEndX = ofMap(quantizedEnd, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
-      ofRect(quantizedStartX, 0, quantizedEndX - quantizedStartX, mHeight / 2, 0);
+      ofRect(quantizedStartX, 0, quantizedEndX - quantizedStartX, mDrawHeight / 2, 0);
    }
    if (mHoverMode == HoverMode::kMiddle)
    {
@@ -95,10 +95,10 @@ void CanvasTimeline::Render()
    }
    ofFill();
    if (mClick)
-      ofRect(startX, 0, endX - startX, mHeight / 2, 0);
+      ofRect(startX, 0, endX - startX, mDrawHeight / 2, 0);
    else
    {
-      ofRect(MAX(startX, 0), 0, MIN(mWidth, endX - startX), mHeight / 2, 0);
+      ofRect(MAX(startX, 0), 0, MIN(mWidth, endX - startX), mDrawHeight / 2, 0);
    }
    if (!shiftPreview)
    {
@@ -120,7 +120,7 @@ void CanvasTimeline::Render()
       else
       {
          ofSetLineWidth(2);
-         ofLine(0, 0, 0, mHeight);
+         ofLine(0, 0, 0, mDrawHeight);
       }
 
 
@@ -142,7 +142,7 @@ void CanvasTimeline::Render()
       else
       {
          ofSetLineWidth(2);
-         ofLine(mWidth, 0, mWidth, mHeight);
+         ofLine(mWidth, 0, mWidth, mDrawHeight);
       }
    }
    //Hover shift behaviors
@@ -169,7 +169,7 @@ void CanvasTimeline::Render()
          DrawTriangle(MAX(quantizedXClick + 12, quantizedXNow + 12), -1);
          ofFill();
          ofSetColor(mHighlightColour);
-         ofRect(MIN(quantizedXClick, quantizedXNow), 0, MAX(quantizedXClick, quantizedXNow) - MIN(quantizedXClick, quantizedXNow), mHeight / 2, 0);
+         ofRect(MIN(quantizedXClick, quantizedXNow), 0, MAX(quantizedXClick, quantizedXNow) - MIN(quantizedXClick, quantizedXNow), mDrawHeight / 2, 0);
       }
    }
    ofPopStyle();
@@ -181,8 +181,8 @@ void CanvasTimeline::DrawTriangle(float posX, int direction)
 {
    ofBeginShape();
    ofVertex(posX, 0);
-   ofVertex(posX, mHeight);
-   ofVertex(posX + mHeight * direction, 0);
+   ofVertex(posX, mDrawHeight);
+   ofVertex(posX + mDrawHeight * direction, 0);
    ofVertex(posX, 0);
    ofEndShape();
 }

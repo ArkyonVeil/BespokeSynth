@@ -236,6 +236,7 @@ void DrawTextMonoRightJustify(std::string text, int x, int y, float size = 13);
 std::string TruncateString(std::string text, float maxWidth, TextFont font = TextFont::Normal, const std::string& cutoffStyle = "...", float fontSize = 13, float extraPaddingPerChar = 0);
 inline std::string TruncateString(const std::string& text, const TextTruncationSettings& settings) { return TruncateString(text, settings.maxTextWidth, settings.font, settings.cutOffStyle, settings.fontSize, settings.perCharPadding); }
 float GetStringWidth(std::string text, float size = 13);
+std::string StripNameExtension(std::string text);
 void AssertIfDenormal(float input);
 float GetInterpolatedSample(double offset, const float* buffer, int bufferSize);
 float GetInterpolatedSample(double offset, ChannelBuffer* buffer, int bufferSize, float channelBlend);

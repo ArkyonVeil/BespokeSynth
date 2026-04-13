@@ -492,6 +492,18 @@ float GetStringWidth(std::string text, float size)
 {
    return gFont.GetStringWidth(text, size);
 }
+std::string StripNameExtension(std::string text)
+{
+   for (int i = text.size()-1; i >= 0; --i)
+   {
+      if (text[i]=='.')
+      {
+         return text.substr(0,i);
+      }
+   }
+   return text;
+}
+
 std::string TruncateString(std::string text, const float maxWidth, const TextFont font, const std::string& cutoffStyle, const float fontSize, const float extraPaddingPerChar)
 {
    //Not a particularly stellar implementation, cache this if possible. -Ark

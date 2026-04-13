@@ -30,7 +30,7 @@ public:
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
 
    int mMixerIndex; //Please do not write to this.
-   int mMixerVersion{ 0 };
+   int const kMixerVersion{ 0 };
 
 private:
    SongCanvas* mOwner;

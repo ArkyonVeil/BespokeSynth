@@ -26,6 +26,13 @@ public:
    FlowGridElement* Create(std::string typeName) override;
 };
 
+struct RackCanvasPartData
+{ };
+struct RackCanvasPartDataPulser : RackCanvasPartData
+{
+   //Unused for now.
+};
+
 //Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
@@ -53,6 +60,7 @@ public:
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
+   virtual void OnLoadFinish() {};//Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
 
    //Save/load unique canvas part data.
    virtual void SaveCanvasPart(SongCanvas_CanvasElement* obj, FileStreamOut& out){};
@@ -61,6 +69,7 @@ public:
    //Canvas stuff
    virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
+   virtual void DeletedCanvasPart(SongCanvas_CanvasElement* element){};
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -75,6 +84,8 @@ public:
 
    int mInternalRackID;
    bool mRackEnabled;
+
+   std::unordered_map<int,RackCanvasPartData*> mCanvasPartData;
 
 protected:
    virtual void DrawExtendedBaseGraphics(){};
@@ -132,8 +143,10 @@ public:
 
    int GetNumTargets() override { return 0; };
    bool ShouldSuppressAutomaticOutputCable() override { return true; };
-   float GetAudioReservedWidth() const;
    void OnPostResize() override;
+
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in, int rev) override;
 
 protected:
    void SwapMixers(int newIndex);
@@ -144,6 +157,7 @@ private:
    SongCanvasMixer* mMixer;
    ChannelBuffer* mMixerBuffer;
    TextEntry* mChannelPicker;
+   bool mLoading { false };
 };
 
 /////////////
@@ -275,6 +289,7 @@ public:
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
+   void OnLoadFinish() override;
    void Process(double time) override;
    void DrawRackGraphics() override;
 
@@ -303,12 +318,20 @@ struct RackSampleButton
    ofRectangle mDragButtonRect;
    SongCanvasRackSampler* mOwner;
    DrawAudioBufferSettings mDrawAudioBufferSettings;
+   TextTruncationSettings mSampleRenderNameSettings;
+   std::string mDisplayName;
+   std::string mFullSampleName;
+
+   const float kMinWidthDrawButtons = 45;
+   float mNameDisplayAnimOffset;
+   float mFullNameWidth;
 };
 RackSampleButton mSampleButton;
 private:
    Sample* mSample{ nullptr };
    bool mLongSample { false };
    PatchCableSource* mSamplerCable{ nullptr };
+   bool mSCLoadingDone { true };
 
    ChannelBuffer mWriteBuffer;
    int mSamplesPlaying{ 0 };

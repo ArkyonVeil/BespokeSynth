@@ -48,6 +48,8 @@ public:
       mWidth = width;
       mHeight = height;
    }
+   void SetClipHeight(float height){mClipHeight = height;}
+   void SetDrawHeight(float height){mDrawHeight = height;}
 
    void SetCanvasYOffset(float newOffset) { mCanvasYOffset = newOffset; }
    void SetHighlightColour(ofColor newColour) { mHighlightColour = newColour; };
@@ -98,6 +100,8 @@ private:
 
    float mWidth{ 200 };
    float mHeight{ 20 };
+   float mClipHeight { 10 };
+   float mDrawHeight { 10 };
    float mCanvasYOffset{ -10 };
 
    bool mDisableControlSnapping{ false };

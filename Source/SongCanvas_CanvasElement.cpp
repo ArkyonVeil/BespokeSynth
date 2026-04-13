@@ -23,6 +23,7 @@ void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
    mRackPart = templateElement;
    mRackParentID = mRackPart->mInternalRackID;
    mRackPart->SetupCanvasPart(this);
+   mIndex = mSongCanvas->GetNewCanvasElementId();
 }
 
 CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const

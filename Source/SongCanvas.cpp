@@ -117,7 +117,8 @@ void SongCanvas::CreateUIControls()
    mCanvas->mLoopEnd = mMeasureCount;
 
    mCanvasTimeline = new CanvasTimeline(mCanvas, "loop region");
-   mCanvasTimeline->SetCanvasYOffset(-22);
+   mCanvasTimeline->SetCanvasYOffset(-25);
+   mCanvasTimeline->SetClipHeight(8);
    mCanvasTimeline->SetBaseColour(ofColor(25, 25, 25));
    mCanvasTimeline->SetListener(this);
    //mCanvasTimeline->SetHighlightColour(ofColor(200, 0, 0));
@@ -159,9 +160,7 @@ void SongCanvas::CreateUIControls()
    mRackAddNewDropdown = new DropdownList(this, "", mgp.x + mRackGrid->GetWidth(), mgp.y, (int*)&mRackAddNewElementIndex);
    mRackAddNewDropdown->AddLabel("Enabler", enumEnabler);
    mRackAddNewDropdown->AddLabel("Pulser", enumPulser);
-#if DEBUG
    mRackAddNewDropdown->AddLabel("Sampler", enumSample);
-#endif
    mRackAddNewDropdown->SetCableTargetable(false);
 
    mRackElementRightClickDropdown = new DropdownList(this, "", -100, -100, (int*)&mRackElementRightClickIndex);
@@ -647,6 +646,16 @@ void SongCanvas::DrawModule()
       drawPointOffset += measureOffset * viewCullMultiplier;
       iter++;
    }
+   //Draw a subtle overlay over the slider if its hovered. For better feedback.
+   if (mMeasureSliderHovered)
+   {
+      ofPushStyle();
+      ofSetColor(255,255,255,5);
+      ofFill();
+      ofRect(mMeasureSlider->GetRect(true));
+      ofPopStyle();
+   }
+
    //Now the timeline position line
    if (!mLocalMode)
       ofSetColor(GetFancyStyleColour(mGlobalModeColor, mTime));
@@ -749,16 +758,16 @@ void SongCanvas::DrawModule()
       ofPushStyle();
       ofFill();
       float hintH = 22;
-      ofSetColor(0,0,0,30);
+      ofSetColor(0, 0, 0, 30);
       float hintX, hintY;
-      hintX =  mRackGrid->GetPosition().x + mRackGrid->GetWidth();
-      hintY =  mRackGrid->GetPosition().y + mRackGrid->GetHeight() - hintH;
+      hintX = mRackGrid->GetPosition().x + mRackGrid->GetWidth();
+      hintY = mRackGrid->GetPosition().y + mRackGrid->GetHeight() - hintH;
       std::string hintMessage = "drop a sample here...";
-      float msgSize = GetStringWidth(hintMessage,10)+10;
-      ofRect(hintX-msgSize,hintY,msgSize,hintH);
+      float msgSize = GetStringWidth(hintMessage, 10) + 10;
+      ofRect(hintX - msgSize, hintY, msgSize, hintH);
 
-      ofSetColor(230,230,230);
-      DrawTextRightJustify(hintMessage,hintX-2,hintY+15,10);
+      ofSetColor(230, 230, 230);
+      DrawTextRightJustify(hintMessage, hintX - 2, hintY + 15, 10);
 
       ofPopStyle();
    }
@@ -767,6 +776,11 @@ void SongCanvas::DrawModule()
 
    auto canvasRect = mCanvas->GetRect(true);
    std::string dText;
+   //dText += "int size: " + ofToString(sizeof(int)*8) + "\n"; 32 bits
+   //dText += "float size: " + ofToString(sizeof(float)*8) + "\n"; 32 bits
+   //dText += "double size: " + ofToString(sizeof(double)*8) + "\n"; 64 bits
+   //dText += "long size: " + ofToString(sizeof(long)*8) + "\n"; 32 bits... <>P
+   //dText += "long long size: " + ofToString(sizeof(long long)*8) + "\n"; 64 bits
    // dText += "mWidth: " + ofToString(mWidth) + "\n";
    //dText += "mHeight: " + ofToString(mHeight) + "\n";
    //dText += "GlobalTime: " + ofToString(ofGetGlobalTime()) + "\n";
@@ -1282,6 +1296,9 @@ void SongCanvas::OnClicked(float x, float y, bool right)
 bool SongCanvas::MouseMoved(float x, float y)
 {
    IDrawableModule::MouseMoved(x, y);
+
+   mMeasureSliderHovered = mMeasureSlider->GetRect(true).contains(x,y);
+
    mRackGrid->MouseMoved(x, y);
 
    //If there's mixers we may have to count on moving events over them.
@@ -1567,7 +1584,7 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    samplerPreviewAudio["two_seconds_or_less"] = 0;
    samplerPreviewAudio["never"] = 1;
    samplerPreviewAudio["always"] = 2;
-   mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click",moduleInfo,0,nullptr,&samplerPreviewAudio);
+   mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click", moduleInfo, 0, nullptr, &samplerPreviewAudio);
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap mapCols;
    mapCols["red"] = 0;
@@ -1623,6 +1640,17 @@ void SongCanvas::SaveState(FileStreamOut& out)
       out << seqLayers[i].enabled;
       out << seqLayers[i].layerName;
    }
+
+   int mixerCount = mMixers.size();
+   out << mixerCount;
+   for (int i = 0; i < mixerCount; ++i)
+   {
+      auto mixer = mMixers[i];
+      out << mixer->mMixerIndex;
+      mixer->Save(out);
+   }
+
+
    //now the racks.
    out << mInternalRackIDCounter; //We have to save this increment, so we don't get bugs where racks get assigned duplicate ids.
    mRackGrid->SaveElements(out);
@@ -1672,6 +1700,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
 
    //Rev5
    out << mCanvasIntervalInt;
+   out << mCanvasElementIndex;
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
@@ -1695,8 +1724,23 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       AddNewLayer(i, SongCanvasLayer{ 0, lD1, lD2 });
    }
 
-   auto re = GetAllRackElements();
+   //If we have any mixers to load, do so now. So they'll be there if the racks need them
+   if (rev >= 6)
+   {
+      int mixerCount;
+      in >> mixerCount;
+      for (int i = 0; i < mixerCount; ++i)
+      {
+         int mixerIdx;
+         in >> mixerIdx;
+         auto mixer = new SongCanvasMixer(this, mixerIdx);
+         mixer->CreateUIControls();
+         mixer->Load(in);
+         mMixers.push_back(mixer);
+      }
+   }
 
+   auto re = GetAllRackElements();
    //clean up our starter rack.
    for (int i = 0; i < re.size(); ++i)
    {
@@ -1801,11 +1845,23 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       in >> mCanvasIntervalInt;
       mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
    }
+   if (rev >= 6)
+   {
+      in >> mCanvasElementIndex;
+   }
    UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
+   SortMixers();
+
 
    mReloadMeasureLoadFlag = true;
    SetEnabled(enableState);
    Resize(mWidth, mHeight);
+
+   for (auto elm : mRackGrid->GetAllElements())
+   {
+      auto rack = dynamic_cast<SongCanvasRackElement*>(elm);
+      rack->OnLoadFinish();
+   }
 }
 /////////////////////
 ///RACK MANAGEMENT///
@@ -1854,19 +1910,22 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
    mRightClickDropdownElementContext = element;
 }
 
-void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool addToGrid)
+void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool autoSetup)
 {
-   if (addToGrid)
+   if (autoSetup)
       mRackGrid->AddFlowElement(element);
 
    if (auto audioR = dynamic_cast<SongCanvasAudioRackElement*>(element))
    {
-      if (audioR->GetMixerIndex() == -1)
+      if (autoSetup)
       {
-         //No mixer defined yet, setting as 0
+         if (audioR->GetMixerIndex() == -1)
+         {
+            //No mixer defined yet, setting as 0
 
-         //Ensure we have a mixer available.
-         audioR->SetMixer(GetMixer(0));
+            //Ensure we have a mixer available.
+            audioR->SetMixer(GetMixer(0));
+         }
       }
       mAudioRacks.push_back(audioR);
    }
@@ -1881,6 +1940,14 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
    {
       mCanvas->RemoveElement(re);
    }
+   //If an audio element, we'll have to do some extra disposal.
+   SongCanvasAudioRackElement* aEle = dynamic_cast<SongCanvasAudioRackElement*>(element);
+   if (aEle)
+   {
+      RemoveFromVector(aEle, mAudioRacks);
+      SortMixers();
+   }
+
    mRackGrid->RemoveFlowElement(element);
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
@@ -2015,6 +2082,16 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
    }
    return rMixer;
 }
+//Returns the mixer with that index. Will not automatically create one.
+SongCanvasMixer* SongCanvas::GetMixerRef(int index) const
+{
+   for (auto mixer : mMixers)
+   {
+      if (mixer->mMixerIndex == index)
+         return mixer;
+   }
+   return nullptr;
+}
 
 void SongCanvas::SortMixers(int reserveIndex)
 {
@@ -2050,6 +2127,7 @@ void SongCanvas::SortMixers(int reserveIndex)
          if (mixer->mMixerIndex == idx)
          {
             mixUsers[i]++;
+            break;
          }
       }
    }
@@ -2100,9 +2178,9 @@ void SongCanvas::SetMixerControlsState(bool active, int mixerIndex)
 void SongCanvas::SampleDropped(int x, int y, Sample* sample)
 {
    std::string newPartName = "Part " + std::to_string(mPartNameCount);
-   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName,this);
+   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName, this);
    AddNewRackPart(newSampler);
-   newSampler->SampleDropped(x,y,sample);
+   newSampler->SampleDropped(x, y, sample);
    IncrementInternalRackId();
    mPartNameCount++;
 }
@@ -2110,9 +2188,9 @@ void SongCanvas::SampleDropped(int x, int y, Sample* sample)
 void SongCanvas::FilesDropped(std::vector<std::string> files, int x, int y)
 {
    std::string newPartName = "Part " + std::to_string(mPartNameCount);
-   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName,this);
+   SongCanvasRackSampler* newSampler = new SongCanvasRackSampler(newPartName, this);
    AddNewRackPart(newSampler);
-   newSampler->FilesDropped(files,x,y);
+   newSampler->FilesDropped(files, x, y);
    IncrementInternalRackId();
    mPartNameCount++;
 }
