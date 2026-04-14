@@ -335,7 +335,7 @@ void IUIControl::SetNewManualHoverViaArrow(ofVec2f direction)
 void IUIControl::DestroyCablesTargetingControls(std::vector<IUIControl*> controls)
 {
    std::vector<IDrawableModule*> modules;
-   TheSynth->GetAllModules(modules);
+   TheSynth->GetAllModulesAndChildren(modules);
    std::vector<PatchCable*> cablesToDestroy;
    for (const auto module_iter : modules)
    {

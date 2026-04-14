@@ -131,6 +131,7 @@ public:
    void MoveToFront(IDrawableModule* module);
    bool InMidiMapMode();
    void GetAllModules(std::vector<IDrawableModule*>& out) { mModuleContainer.GetAllModules(out); }
+   void GetAllModulesAndChildren(std::vector<IDrawableModule*>& out) { mModuleContainer.GetAllModulesAndChildren(out); }
 
    void PushModalFocusItem(IDrawableModule* item);
    void PopModalFocusItem();

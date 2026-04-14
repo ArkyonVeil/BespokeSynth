@@ -72,6 +72,7 @@ public:
    IUIControl* FindUIControl(std::string path);
    bool IsHigherThan(IDrawableModule* checkFor, IDrawableModule* checkAgainst) const;
    void GetAllModules(std::vector<IDrawableModule*>& out);
+   void GetAllModulesAndChildren(std::vector<IDrawableModule*>& out);
 
    template <class T>
    std::vector<std::string> GetModuleNames()

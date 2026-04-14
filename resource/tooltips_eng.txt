@@ -2221,7 +2221,7 @@ partpulser~send pulses on cue. right-click to make it send one pulse only.\n\nsh
 
 partkeyer~todo
 
-partsampler~play samples on cue. sends audio to the songcanvas's mixer row.\n\nshift-click on the canvas with this rack selected to place parts.
+partsampler~play samples on cue. sends audio to the songcanvas's mixer row.\nright-click for additional options.\n\nshift-click on the canvas with this rack selected to place parts.
 ~sample~click to add a new sample, or drag one over to this part.\n\ntip: You can drag a sample to an empty space to automatically create a sampler part.
 ~mixer~adjust which mixer channel the audio should come out of.
 

@@ -94,9 +94,6 @@ void PulseRouter::Poll()
 
 void PulseRouter::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
 {
-   //Hopefully this isn't important.
-   //INoteSource::PostRepatch(cableSource, fromUserClick);
-
    for (int i = 0; i < (int)mDestinationCables.size(); ++i)
    {
       if (cableSource == mDestinationCables[i])

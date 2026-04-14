@@ -185,6 +185,15 @@ bool IDrawableModule::IsVisible()
 {
    return IsWithinRect(TheSynth->GetDrawRect());
 }
+void IDrawableModule::GetChildrenNested(std::vector<IDrawableModule*>& out)
+{
+   out.insert(out.begin(), mChildren.begin(), mChildren.end());
+   for (auto child : mChildren)
+   {
+      child->GetChildrenNested(out);
+   }
+}
+
 
 void IDrawableModule::DrawFrame(float w, float h, bool drawModule, float& titleBarHeight, float& highlight)
 {

@@ -135,6 +135,7 @@ public:
    bool IsWithinRect(const ofRectangle& rect);
    bool IsVisible();
    std::vector<IDrawableModule*> GetChildren() const { return mChildren; }
+   void GetChildrenNested(std::vector<IDrawableModule*>& out);
    virtual bool IsResizable() const { return false; }
    virtual void Resize(float width, float height)
    {

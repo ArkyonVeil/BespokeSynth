@@ -49,11 +49,30 @@ ofVec2f ModuleContainer::GetOwnerPosition() const
 
 void ModuleContainer::GetAllModules(std::vector<IDrawableModule*>& out)
 {
+   //Goes through a workspace, and adds all modules.
    out.insert(out.begin(), mModules.begin(), mModules.end());
    for (int i = 0; i < mModules.size(); ++i)
    {
+      //Checks for nested workspaces and adds those too.
       if (mModules[i]->GetContainer())
          mModules[i]->GetContainer()->GetAllModules(out);
+   }
+}
+
+void ModuleContainer::GetAllModulesAndChildren(std::vector<IDrawableModule*>& out)
+{
+   out.insert(out.begin(), mModules.begin(), mModules.end());
+   for (int i = 0; i < mModules.size(); ++i)
+   {
+      std::vector<IDrawableModule*> children;
+      mModules[i]->GetChildrenNested(children);
+      if (!children.empty())
+      {
+         out.insert(out.begin(),children.begin(),children.end());
+      }
+
+      if (mModules[i]->GetContainer())
+         mModules[i]->GetContainer()->GetAllModulesAndChildren(out);
    }
 }
 
@@ -391,21 +410,8 @@ void ModuleContainer::DeleteModule(IDrawableModule* module, bool fail /*= true*/
    if (module->GetParent())
       module->GetParent()->GetModuleParent()->RemoveChild(module);
 
+   //Remove from the module registry
    RemoveFromVector(module, mModules, fail);
-   for (const auto iter : mModules)
-   {
-      if (iter->GetPatchCableSource())
-      {
-         std::vector<PatchCable*> cablesToDestroy;
-         for (auto cable : iter->GetPatchCableSource()->GetPatchCables())
-         {
-            if (cable->GetTarget() == module)
-               cablesToDestroy.push_back(cable);
-         }
-         for (const auto cable : cablesToDestroy)
-            cable->Destroy(false);
-      }
-   }
 
    // Remove all cables that targeted controls on this module
    IUIControl::DestroyCablesTargetingControls(module->GetUIControls());
@@ -423,6 +429,7 @@ void ModuleContainer::DeleteModule(IDrawableModule* module, bool fail /*= true*/
    module->Exit();
    TheSynth->OnModuleDeleted(module);
 }
+
 
 void ModuleContainer::DeleteCablesForControl(const IUIControl* control)
 {
