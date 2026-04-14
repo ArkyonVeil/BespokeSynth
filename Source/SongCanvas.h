@@ -83,7 +83,7 @@ public:
    void SaveLayout(ofxJSONElement& moduleInfo) override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
-   int GetModuleSaveStateRev() const override { return 6; }
+   int GetModuleSaveStateRev() const override { return 7; }
 
    //Input
    bool MouseMoved(float x, float y) override;

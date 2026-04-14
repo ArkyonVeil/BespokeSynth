@@ -867,8 +867,5 @@ std::string ModuleFactory::FixUpTypeName(std::string name)
    if (name == "arpsequencer")
       return "rhythmsequencer";
 
-   if (name == "songcanvas-beta")
-      return "songcanvas";
-
    return name;
 }

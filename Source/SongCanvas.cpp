@@ -1680,17 +1680,13 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mPartNameCount;
    out << IsEnabled();
 
-   //Reserved variables SEC-1
    out << mLocalMode;
    out << mMeasureStart;
    out << mMeasureCount;
    out << mAutoScaleMeasureCount;
-   //out << mLoopOnEnd;
    out << mCanvas->mLoopStart;
    out << mCanvas->mLoopEnd;
-   //End reserved variables SEC-1
 
-   //REV 4
    out << mPreviousGlobalEndMeasure;
    out << mPreviousLocalEndMeasure;
    out << mLocalStopped;
@@ -1698,9 +1694,11 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mOnEndMeasure;
    out << mTime;
 
-   //Rev5
+
    out << mCanvasIntervalInt;
    out << mCanvasElementIndex;
+
+   out << mBottomOffsetTarget;
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
@@ -1764,16 +1762,10 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    mCanvas->SetLength(f1);
    in >> f1;
    in >> f2;
-   if (rev == 1)
-   { //Buggy dimensions in this version.
-      mWidth = f1 + 144;
-      mHeight = f2 + 128;
-   }
-   else
-   {
-      mWidth = f1;
-      mHeight = f2;
-   }
+
+   mWidth = f1;
+   mHeight = f2;
+
 
    in >> mFlowGridRows;
 
@@ -1804,50 +1796,44 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mPartNameCount;
    bool enableState;
    in >> enableState;
-   if (rev > 1)
+
+
+   in >> mLocalMode;
+   in >> mMeasureStart;
+   in >> mMeasureCount;
+   in >> mAutoScaleMeasureCount;
+
+   in >> mCanvas->mLoopStart;
+   in >> mCanvas->mLoopEnd;
+
+
+   in >> mPreviousGlobalEndMeasure;
+   in >> mPreviousLocalEndMeasure;
+   in >> mLocalStopped;
+   in >> mLocalSynced;
+   in >> mOnEndMeasure;
+   float t;
+   in >> t;
+   if (mLocalMode)
    {
-      bool dump;
-      in >> mLocalMode;
-      in >> mMeasureStart;
-      in >> mMeasureCount;
-      in >> mAutoScaleMeasureCount;
-      if (rev < 4)
-         in >> dump; //This variable is no longer used.
-      in >> mCanvas->mLoopStart;
-      in >> mCanvas->mLoopEnd;
+      mSyncButton->SetEnabled(!mLocalSynced);
+      mTime = t;
    }
-   if (rev < 3)
-   {
-      mCanvas->mLoopStart = 0;
-      mCanvas->mLoopEnd = mMeasureCount;
-   }
-   if (rev == 1)
-   {
-      mMeasureCount = ceil((mWidth - mStartCanvasXOffset) / (mCanvas->GetNumCols()));
-   }
-   if (rev >= 4)
-   {
-      in >> mPreviousGlobalEndMeasure;
-      in >> mPreviousLocalEndMeasure;
-      in >> mLocalStopped;
-      in >> mLocalSynced;
-      in >> mOnEndMeasure;
-      float t;
-      in >> t;
-      if (mLocalMode)
-      {
-         mSyncButton->SetEnabled(!mLocalSynced);
-         mTime = t;
-      }
-   }
-   if (rev >= 5)
-   {
-      in >> mCanvasIntervalInt;
-      mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
-   }
+
+
+   in >> mCanvasIntervalInt;
+   mCanvasInterval = (NoteInterval)mCanvasIntervalInt;
+
    if (rev >= 6)
    {
       in >> mCanvasElementIndex;
+   }
+
+   if (rev >= 7)
+   {
+      //Prevents a potentially distracting animation from playing on load.
+      in >> mBottomOffsetTarget;
+      mBottomOffsetSize = mBottomOffsetTarget;
    }
    UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    SortMixers();
