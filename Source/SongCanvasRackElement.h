@@ -47,12 +47,13 @@ public:
       if (mExcitePower < excitePower)
          mExcitePower = excitePower;
    } //Make it dance
-   void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; } //Make it do a base level of dancing, handy for long events.
+   void SetExciteWiggle(float excitePower) { mExciteWiggle = excitePower; } //Make it do a base level of dancing, handy for long events.
+   void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; }
 
    void CreateUIControls() override;
-   virtual void OnEnter() = 0;
+   virtual void OnEnter(SongCanvas_CanvasElement* element) = 0;
    virtual void OnProcessTransport(){};
-   virtual void OnExit() = 0;
+   virtual void OnExit(SongCanvas_CanvasElement* element) = 0;
    float GetPreferredWidth() const override;
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
@@ -89,6 +90,7 @@ public:
    std::unordered_map<int, RackCanvasPartData*> mCanvasPartData;
 
 protected:
+   void DrawModule() override;//Reserved for base graphics.
    virtual void DrawExtendedBaseGraphics(){};
    float GetLeftWidthPadding(); //Padding from left of rack to text
    float GetPartNameWidth() const; //Raw size of part text
@@ -108,11 +110,11 @@ protected:
    const ofColor mCanvasOnePulseColor = ofColor(80, 80, 0);
 
 private:
-   void DrawModule() override;
    bool mRenameActive = false;
    float mExcitePower{ 0 };
-   float mExciteConstant{ 0 };
+   float mExciteWiggle{ 0 };
    float mExciteDrag{ 0 };
+   float mExciteConstant{ 0 };
    double mLastClickTime{ 0 };
    int mMaxNameSize = 32; //If the text is longer than this we truncate it
 
@@ -174,8 +176,8 @@ public:
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackEnabler("Part", nullptr); };
    bool mEnablerInverted{ false };
-   void OnEnter() override;
-   void OnExit() override;
+   void OnEnter(SongCanvas_CanvasElement* element) override;
+   void OnExit(SongCanvas_CanvasElement* element) override;
    void DrawRackGraphics() override;
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
@@ -201,8 +203,8 @@ public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackPulser();
    std::string GetFlowGridElementType() const override { return "partpulser"; };
-   void OnEnter();
-   void OnExit();
+   void OnEnter(SongCanvas_CanvasElement* element);
+   void OnExit(SongCanvas_CanvasElement* element);
    void OnTimeEvent(double time);
    void DrawRackGraphics() override;
    void CreateUIControls() override;
@@ -246,8 +248,8 @@ public:
 
 private:
    PatchCableSource* mKeyerCable{ nullptr };
-   void OnEnter() override{};
-   void OnExit() override{};
+   void OnEnter(SongCanvas_CanvasElement* element) override{};
+   void OnExit(SongCanvas_CanvasElement* element) override{};
    void DrawRackGraphics() override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
@@ -266,8 +268,8 @@ public:
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
-   void OnEnter() override;
-   void OnExit() override;
+   void OnEnter(SongCanvas_CanvasElement* element) override;
+   void OnExit(SongCanvas_CanvasElement* element) override;
    void LoadFileSample();
    float GetPreferredWidth() const override;
    void ButtonClicked(ClickButton* button, double time) override;
@@ -355,8 +357,8 @@ public:
    std::string GetFlowGridElementType() const override { return "partlfo"; };
    static IDrawableModule* Create() { return new SongCanvasRackLFO("Part", nullptr); }
    SongCanvasRackLFO(const std::string& partName, SongCanvas* songCanvas);
-   void OnEnter() override{};
-   void OnExit() override{};
+   void OnEnter(SongCanvas_CanvasElement* element) override{};
+   void OnExit(SongCanvas_CanvasElement* element) override{};
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
 

@@ -30,7 +30,6 @@ void FlowGridElement::Render()
 
    DrawModule();
 
-   ofFill();
 
    ofPopMatrix();
    ofPopStyle();

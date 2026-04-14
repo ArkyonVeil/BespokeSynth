@@ -1339,7 +1339,7 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
    {
       if (mActiveElements[i] == sElement)
       {
-         sElement->GetRackElement()->OnExit();
+         sElement->GetRackElement()->OnExit(sElement);
          mActiveElements.erase(mActiveElements.begin() + i);
       }
    }
@@ -1504,13 +1504,13 @@ void SongCanvas::OnTransportAdvanced(float amount)
                if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled)
                {
                   mActiveElements.push_back(cL[i]);
-                  cL[i]->GetRackElement()->OnEnter();
+                  cL[i]->GetRackElement()->OnEnter(cL[i]);
                }
                if (seqLayers[cL[i]->mRow].enabled)
                   cL[i]->GetRackElement()->OnProcessTransport();
                else
                {
-                  cL[i]->GetRackElement()->OnExit();
+                  cL[i]->GetRackElement()->OnExit(cL[i]);
                   for (int mAE = 0; mAE < mActiveElements.size(); ++mAE)
                   {
                      if (mActiveElements[mAE] == cL[i])
@@ -1527,7 +1527,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
          {
             if (mActiveElements[i]->GetStart() > mCanvasRelativeTime || mActiveElements[i]->GetEnd() < mCanvasRelativeTime)
             {
-               mActiveElements[i]->GetRackElement()->OnExit();
+               mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
                mActiveElements.erase(mActiveElements.begin() + i);
                i--;
             }
@@ -1539,7 +1539,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
       //If we're disabled, clean up.
       for (int i = 0; i < mActiveElements.size(); ++i)
       {
-         mActiveElements[i]->GetRackElement()->OnExit();
+         mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
          mActiveElements.erase(mActiveElements.begin() + i);
          i--;
       }

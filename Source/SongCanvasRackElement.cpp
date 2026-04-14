@@ -11,11 +11,11 @@
 /// They all derive from the same class, but have their behavior customized by calling custom setups/drawing of their rack counterparts.
 /// This means that you only really need to mostly work on the Rack Elements for new behavior! <>]
 
-#pragma once
 #include "INoteReceiver.h"
 #include "ModularSynth.h"
 #include "SongCanvas.h"
 #include "Sample.h"
+#include "UserPrefs.h"
 
 #include "juce_audio_formats/juce_audio_formats.h"
 using namespace juce;
@@ -210,15 +210,15 @@ void SongCanvasRackElement::DrawModule()
    ofPushStyle();
 
    ofSetColor(ofColor::white);
-   if (mExciteConstant > 0) //Make the outline bounce for extra visual satisfaction.
+   if (mExciteWiggle > 0) //Make the outline bounce for extra visual satisfaction.
    {
-      float excConst = mExciteConstant + sin(ofGetGlobalTime() * 12) * 0.2F;
+      float excConst = mExciteWiggle + sin(ofGetGlobalTime() * 12) * 0.2F;
       if (mExcitePower < excConst)
          mExcitePower = excConst;
    }
    mExcitePower = MAX(0, mExcitePower - ofGetLastFrameTime() * 2);
    mExciteDrag = ofLerp(mExciteDrag, mExcitePower, ofGetLastFrameTime() * 12);
-   mOutlineThickness = 0.8F + mExciteDrag * 1.2;
+   mOutlineThickness = 0.8F + mExciteDrag * 1.2 + mExciteConstant;
    DrawExtendedBaseGraphics();
 
    //Unique rack graphics are drawn here...
@@ -290,8 +290,45 @@ SongCanvasAudioRackElement::~SongCanvasAudioRackElement()
 }
 void SongCanvasAudioRackElement::DrawExtendedBaseGraphics()
 {
+   float highlight = 0;
+   IAudioSource* audioSource = dynamic_cast<IAudioSource*>(this);
+   if (audioSource)
+   {
+      RollingBuffer* vizBuff = audioSource->GetVizBuffer();
+      int numSamples = std::min(500, vizBuff->Size());
+      float sample;
+      float mag = 0;
+      for (int ch = 0; ch < vizBuff->NumChannels(); ++ch)
+      {
+         for (int i = 0; i < numSamples; ++i)
+         {
+            sample = vizBuff->GetSample(i, ch);
+            mag += sample * sample;
+         }
+      }
+      mag /= numSamples * vizBuff->NumChannels();
+      mag = sqrtf(mag);
+      mag = sqrtf(mag);
+      mag *= 3;
+      mag = ofClamp(mag, 0, 1);
+
+      if (UserPrefs.draw_module_highlights.Get())
+         highlight = mag * .15f;
+   }
+
+   /* TODO Make it blend white for extra highlight power.
+   ofColor color = ofColor::green;
+   float backgroundAlpha = IsEnabled() ? 180 : 120;
+   if (IsEnabled())
+      color = ofColor(color.r * (.25f + highlight), color.g * (.25f + highlight), color.b * (.25f + highlight), backgroundAlpha);
+   else
+      color = ofColor(color.r * .2f, color.g * .2f, color.b * .2f, backgroundAlpha);
+*/
+
+   SetExciteConstant(highlight*10);
    mChannelPicker->Draw();
 }
+
 void SongCanvasAudioRackElement::CreateUIControls()
 {
    SongCanvasRackElement::CreateUIControls();
@@ -315,6 +352,7 @@ float SongCanvasAudioRackElement::GetPreferredWidth() const
 {
    return SongCanvasRackElement::GetPreferredWidth() + 17;
 }
+
 void SongCanvasAudioRackElement::OnPostResize()
 {
    SongCanvasRackElement::OnPostResize();
@@ -365,14 +403,14 @@ void SongCanvasRackEnabler::CreateUIControls()
 }
 
 
-void SongCanvasRackEnabler::OnEnter()
+void SongCanvasRackEnabler::OnEnter(SongCanvas_CanvasElement* element)
 {
    double time = NextBufferTime(mSongCanvas);
 
    mEnablerCable->AddHistoryEvent(time, true, 0);
 
    Excite(1);
-   SetExciteConstant(0.6);
+   SetExciteWiggle(0.6);
    for (auto* cable : mEnablerCable->GetPatchCables())
    {
       IUIControl* uicontrol = dynamic_cast<IUIControl*>(cable->GetTarget());
@@ -382,12 +420,12 @@ void SongCanvasRackEnabler::OnEnter()
       }
    }
 }
-void SongCanvasRackEnabler::OnExit()
+void SongCanvasRackEnabler::OnExit(SongCanvas_CanvasElement* element)
 {
    double time = NextBufferTime(mSongCanvas);
    mEnablerCable->AddHistoryEvent(time, false, 0);
 
-   SetExciteConstant(0);
+   SetExciteWiggle(0);
 
    for (auto* cable : mEnablerCable->GetPatchCables())
    {
@@ -523,7 +561,7 @@ void SongCanvasRackPulser::OnPostResize()
    }
 }
 
-void SongCanvasRackPulser::OnEnter()
+void SongCanvasRackPulser::OnEnter(SongCanvas_CanvasElement* element)
 {
    if (mOnePulseMode)
    {
@@ -536,7 +574,7 @@ void SongCanvasRackPulser::OnEnter()
          receiver->OnPulse(time, 1, 0);
    }
 }
-void SongCanvasRackPulser::OnExit()
+void SongCanvasRackPulser::OnExit(SongCanvas_CanvasElement* element)
 {
 }
 
@@ -774,7 +812,7 @@ void SongCanvasRackSampler::CreateUIControls()
    SongCanvasAudioRackElement::CreateUIControls();
 }
 
-void SongCanvasRackSampler::OnEnter()
+void SongCanvasRackSampler::OnEnter(SongCanvas_CanvasElement* element)
 {
    if (mSample)
    {
@@ -785,7 +823,7 @@ void SongCanvasRackSampler::OnEnter()
       }
    }
 }
-void SongCanvasRackSampler::OnExit()
+void SongCanvasRackSampler::OnExit(SongCanvas_CanvasElement* element)
 {
    //TODO
 }
@@ -927,9 +965,11 @@ void SongCanvasRackSampler::Process(double time)
    mPolyMgr.Process(time, &mWriteBuffer, bufferSize);
    mSample->LockDataMutex(false);
 
+
    //Send it over to the mixer.
    for (int ch = 0; ch < mWriteBuffer.NumActiveChannels(); ++ch)
    {
+      GetVizBuffer()->WriteChunk(mWriteBuffer.GetChannel(ch), mWriteBuffer.BufferSize(), ch);//This allows the element to bounce.
       Add(GetMixerBuffer()->GetChannel(ch), mWriteBuffer.GetChannel(ch), gBufferSize);
    }
 }
