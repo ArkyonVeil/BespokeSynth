@@ -52,6 +52,7 @@ FlowGridElement* SongCanvasRackFactory::Create(const std::string typeName)
 SongCanvasRackElement::SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas)
 : FlowGridElement(mFlowGridParent, internalName)
 {
+
    SetOwningContainer(songCanvas->GetOwningContainer());
    mElementName = new std::string(partName);
    mSongCanvas = songCanvas;
@@ -134,6 +135,7 @@ void SongCanvasRackElement::LoadState(FileStreamIn& in, int rev)
       }
       readIn->LoadState(in);
    }
+   UpdatePartNameData();
 }
 void SongCanvasRackElement::OnClicked(float x, float y, bool right)
 {

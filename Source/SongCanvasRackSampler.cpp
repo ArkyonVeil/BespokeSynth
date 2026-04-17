@@ -455,7 +455,6 @@ void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
       }
    }
 
-
    mSampleButton.OnClick(x, y, right);
 
    SongCanvasAudioRackElement::OnClicked(x, y, right);
@@ -468,19 +467,13 @@ void SongCanvasRackSampler::SongCanvasOptionsUpdated()
 
    mSampleButton.UpdateRect();
 }
-bool SongCanvasRackSampler::TestClick(float x, float y, bool right, bool testOnly)
+bool SongCanvasRackSampler::TestIntercepts(float x, float y, bool right)
 {
-   if (SongCanvasAudioRackElement::TestClick(x, y, right, testOnly))
-      return true;
-
    if (mSampleButton.CheckIntercept(x, y))
       return true;
-
-   //if (mADSRDisplay->TestClick(x,y,right,testOnly))
-   //   return true;
-
-   return false;
+   return SongCanvasAudioRackElement::TestIntercepts(x, y, right);
 }
+
 void SongCanvasRackSampler::FilesDropped(std::vector<std::string> files, int x, int y)
 {
    Sample* s = new Sample();

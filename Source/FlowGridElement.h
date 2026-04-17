@@ -91,7 +91,7 @@ public:
    int mPreferredRow = -1;
 
    virtual std::string GetFlowGridElementType() const = 0;
-   int GetModuleSaveStateRev() const override { return 0; };
+   int GetModuleSaveStateRev() const override { return 1; };//Major fuckup in rev0.
 
 protected:
    bool mShowing = true;

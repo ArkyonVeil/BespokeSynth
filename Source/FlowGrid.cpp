@@ -69,7 +69,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    if (mHovered && mHoveredElement != nullptr && gHoveredUIControl == nullptr)
    {
       float hX, hY;
-      mHoveredElement->GetPosition(hX,hY,true);
+      mHoveredElement->GetPosition(hX, hY, true);
       if (mHoveredElement->TestIntercepts(hX, hY, false)) //So we don't accidentally drag the module while dragging cables
          return;
       mSelectedElement = mHoveredElement;
@@ -399,7 +399,6 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
          newElement->Init();
       }
       //auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
-
    }
    //newElement->NameData = rec;
    newElement->SetParent(mOwner);
@@ -856,6 +855,12 @@ void FlowGrid::SaveElements(FileStreamOut& out)
    out << static_cast<int>(mElementList.size());
    for (auto el : mElementList)
    {
+      //Bespoke, in general, needs to have module Revs saved twice (1 in the save caller/the modules's SaveState() + another if IDrawable's Save() is called)
+      //This is because IDrawable's Load extracts one rev and when combined with LoadState() requiring another separate, equal rev. The result
+      //a double extract. If this promise is not kept, expect corruption/load exceptions being thrown.
+      //This is why most >0 modules save the rev at the start of the SaveState(). Even though calling IDrawable's SaveState() already saves the rev.
+      //TL DR: When saving, ALSO save the module's rev on your own.
+      out << el->GetModuleSaveStateRev();
       out << el->GetFlowGridElementType();
       el->SaveState(out);
    }
@@ -877,7 +882,12 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       el->CreateUIControls();
       el->Init();
       AddFlowElement(el, true);
-      el->LoadState(in, el->GetModuleSaveStateRev());
+      int revCheck;
+      in.Peek(&revCheck, sizeof(int));
+      if (revCheck == 0)//Rev 0 FGE's did not manually save, resulting in a double extraction desync.
+         el->LoadState(in, 0);
+      else
+         el->LoadState(in, el->LoadModuleSaveStateRev(in));
    }
    delete factory;
 }
