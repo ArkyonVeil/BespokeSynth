@@ -67,7 +67,7 @@ public:
    {
       if (mName != name)
          StringCopy(mName, name, MAX_TEXTENTRY_LENGTH);
-      mCachedName = TruncateString(mName, mTruncationSettings);
+      mCachedName = TruncateString(mName, mMaxTextDisplayWidth,mTruncationSettings);
    }
    const char* Name() const { return mName; }
    char* NameMutable() { return mName; }
@@ -99,12 +99,12 @@ public:
    {
       mHasOverrideDisplayName = true;
       mOverrideDisplayName = name;
-      mCachedName = TruncateString(mOverrideDisplayName, mTruncationSettings);
+      mCachedName = TruncateString(mOverrideDisplayName, mMaxTextDisplayWidth,mTruncationSettings);
       UpdateWidth();
    }
    void SetMaxDisplayNameWidth(float width)
    {
-      mTruncationSettings.maxTextWidth = width;
+      mMaxTextDisplayWidth = width;
       SetTextTruncationSettings(mTruncationSettings);
    }
    std::string GetDisplayName()
@@ -140,6 +140,7 @@ private:
    bool mHasOverrideDisplayName{ false };
    ofVec2f mOverridePatchCableDir;
    bool mHasOverridePatchCableDir{ false };
+   float mMaxTextDisplayWidth { 999 };
    TextTruncationSettings mTruncationSettings{};
    std::string mOverrideDisplayName{ "" };
    std::string mCachedName{ "" };

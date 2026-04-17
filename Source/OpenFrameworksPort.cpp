@@ -588,6 +588,49 @@ void ofTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
    ofEndShape();
 }
 
+void ofTriangleShaped(float x, float y, float sideSize, float dirDegree, float heightScale)
+{
+   // hScale controls the aspect ratio based on 'sideSize'.
+   // Defaulting to sqrt(3)/2 for a near-equilateral triangle.
+   const float hScale = std::sqrt(3.0f) / 2.0f;
+
+   float S = sideSize;
+   float H_total = S * hScale * heightScale; // Total height based on scaled side size
+
+   float yBaseOffset = -H_total / 3.0f;
+   float yTopOffset = 2.0f * H_total / 3.0f;
+
+   // Local coordinates before rotation: P[0] and P[1] are base points, P[2] is the top point.
+   struct Point { float x, y; };
+   Point localPoints[3];
+   localPoints[0] = {-S / 2.0f, yBaseOffset}; // Base Left
+   localPoints[1] = {S / 2.0f, yBaseOffset};  // Base Right
+   localPoints[2] = {0.0f, yTopOffset};       // Top
+
+   float dirRad = dirDegree * (M_PI / 180.0f);
+
+   float C = std::cos(dirRad);
+   float S_val = std::sin(dirRad);
+
+   ofBeginShape();
+   for (int i = 0; i < 3; ++i) {
+      // Apply rotation
+      float xRotated = localPoints[i].x * C + localPoints[i].y * S_val;
+      float yRotated = -localPoints[i].x * S_val + localPoints[i].y * C;
+
+      // Apply translation (center offset)
+      float worldX = xRotated + x;
+      float worldY = yRotated + y;
+
+      ofVertex(worldX, worldY);
+   }
+
+   ofVertex(localPoints[0].x * C + localPoints[0].y * S_val + x,
+             -localPoints[0].x * S_val + localPoints[0].y * C + y);
+
+   ofEndShape();
+}
+
 //static
 ofRectangle ofRectangle::include(const ofRectangle& a, const ofRectangle& b)
 {

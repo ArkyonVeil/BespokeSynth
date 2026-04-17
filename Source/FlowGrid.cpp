@@ -68,7 +68,9 @@ void FlowGrid::OnClicked(float x, float y, bool right)
    //Center the cords.
    if (mHovered && mHoveredElement != nullptr && gHoveredUIControl == nullptr)
    {
-      if (mHoveredElement->TestClick(x, y, false, true)) //So we don't accidentally drag the module while dragging cables
+      float hX, hY;
+      mHoveredElement->GetPosition(hX,hY,true);
+      if (mHoveredElement->TestIntercepts(hX, hY, false)) //So we don't accidentally drag the module while dragging cables
          return;
       mSelectedElement = mHoveredElement;
       if (mSelectedElement != mLastSelectedElement)
@@ -389,6 +391,8 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
    if (!preSetup)
    {
       //Add it to the pipeline
+      newElement->SetName(newElement->mElementTypeName.c_str());
+      newElement->SetTypeName(newElement->mElementTypeName, newElement->GetModuleCategory());
       newElement->CreateUIControls();
       if (mOwner->IsInitialized())
       {
@@ -396,8 +400,6 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
       }
       //auto rec =  GetInternalNameForFlowElement(newElement->mElementTypeName);
 
-      newElement->SetName(newElement->mElementTypeName.c_str());
-      newElement->SetTypeName(newElement->mElementTypeName, kModuleCategory_Other);
    }
    //newElement->NameData = rec;
    newElement->SetParent(mOwner);
@@ -541,10 +543,10 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
    float totalSpacing = mElementXSpacing * (elCount - 1); //Same priority as module's compact size. Minimum is 0.
 
    int selectedIndex = -1; //If one is selected, in the squeeze step if applicable, we set it to its largest possible size.
-   float selectedPreferredSize = 0;
+   float selectedPreferredWidth = 0;
 
    int hoveredIndex = -1;
-   float hoveredPreferredSize = 0;
+   float hoveredPreferredWidth = 0;
 
    float maxRowSize = mWidth - mRowXBorderOffset * 2;
    int yOffset = mRowYBorderOffset + mRowYSize * index + mElementYSpacing * index;
@@ -559,12 +561,12 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       {
          //We don't include the selected one in the math for the main compression calcs.
          selectedIndex = i;
-         selectedPreferredSize = el->GetPreferredWidth();
+         selectedPreferredWidth = el->GetPreferredWidth();
       }
       else if (mHoveredElement == el) //Neither hovered ones.
       {
          hoveredIndex = i;
-         hoveredPreferredSize = el->GetPreferredWidth();
+         hoveredPreferredWidth = el->GetPreferredWidth();
       }
       else
       {
@@ -575,7 +577,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
    }
 
    //0 -> Room available. (Mod size/Selected -> Preferred Size | Spacing -> default)
-   if (selectedPreferredSize + hoveredPreferredSize + totalPreferredWidth + totalSpacing < maxRowSize)
+   if (selectedPreferredWidth + hoveredPreferredWidth + totalPreferredWidth + totalSpacing < maxRowSize)
    {
       //Okay! There's still room.
       row->isFilled = false;
@@ -596,18 +598,18 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
 
    //Note Spacing is treated as a module with min 0, compact 4.
    //We'll start by setting aside the space we'll dedicate for the selected module. Usually preferredSize, but exceptions may apply.
-   float priorityModuleRatio = MIN(1, (maxRowSize - totalMinWidth) / (hoveredPreferredSize + selectedPreferredSize));
+   float priorityModuleRatio = MIN(1, (maxRowSize - totalMinWidth) / (hoveredPreferredWidth + selectedPreferredWidth));
    float ratio;
    float spaceSize;
    int formula = 1;
    //Now we need to know which formula we'll apply for compression.
 
    //1 -> Squeezed, non-overfilled. (Mod size -> Preferred Size ~ Compact Size | Selected -> Preferred Size | Spacing -> default)
-   if (selectedPreferredSize + hoveredPreferredSize + totalCompactWidth + totalSpacing <= maxRowSize)
+   if (selectedPreferredWidth + hoveredPreferredWidth + totalCompactWidth + totalSpacing <= maxRowSize)
    {
 
       float scaleRange = totalPreferredWidth - totalCompactWidth; //Aka difference
-      ratio = (maxRowSize - totalSpacing - selectedPreferredSize - hoveredPreferredSize - totalCompactWidth) / scaleRange;
+      ratio = (maxRowSize - totalSpacing - selectedPreferredWidth - hoveredPreferredWidth - totalCompactWidth) / scaleRange;
       spaceSize = mElementXSpacing;
 
       //Example, for posterity’s sake.
@@ -631,12 +633,12 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
       //Solution: Remove the stuff that doesn't matter from the calculations.
    }
    //2 -> Squeezed, overfilled. (Mod size -> Compact Size ~ Min Size | Selected -> Preferred Size | Spacing -> default ~ 0)
-   else if (hoveredPreferredSize + selectedPreferredSize + totalMinWidth <= maxRowSize)
+   else if (hoveredPreferredWidth + selectedPreferredWidth + totalMinWidth <= maxRowSize)
    {
       formula = 2;
 
       float scaleRange = totalSpacing + totalCompactWidth - totalMinWidth;
-      ratio = (maxRowSize - totalMinWidth - selectedPreferredSize - hoveredPreferredSize) / scaleRange;
+      ratio = (maxRowSize - totalMinWidth - selectedPreferredWidth - hoveredPreferredWidth) / scaleRange;
       spaceSize = mElementXSpacing * ratio;
    }
    //3 -> Squeezed, minimum. (Mod size -> Min Size | Selected -> Constrained Size | Spacing -> 0)
@@ -655,11 +657,11 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
 
       if (i == selectedIndex)
       {
-         elWidth = selectedPreferredSize * priorityModuleRatio;
+         elWidth = selectedPreferredWidth * priorityModuleRatio;
       }
       else if (i == hoveredIndex)
       {
-         elWidth = hoveredPreferredSize * priorityModuleRatio;
+         elWidth = hoveredPreferredWidth * priorityModuleRatio;
       }
       else
       {
@@ -870,10 +872,10 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       in >> type;
       auto el = factory->Create(type);
       mListener->OnElementLoaded(el);
+      el->SetName(el->mElementTypeName.c_str());
+      el->SetTypeName(el->mElementTypeName, el->GetModuleCategory());
       el->CreateUIControls();
       el->Init();
-      el->SetName(el->mElementTypeName.c_str());
-      el->SetTypeName(el->mElementTypeName, kModuleCategory_Other);
       AddFlowElement(el, true);
       el->LoadState(in, el->GetModuleSaveStateRev());
    }

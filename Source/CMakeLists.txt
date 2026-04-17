@@ -688,6 +688,8 @@ target_sources(BespokeSynth PRIVATE
     SongCanvas_CanvasElement.h
     SongCanvasRackElement.cpp
     SongCanvasRackElement.h
+    SongCanvasRackSampler.cpp
+    SongCanvasRackSampler.h
     SongCanvasMixer.cpp
     SongCanvasMixer.h
     SpaceMouseControl.cpp

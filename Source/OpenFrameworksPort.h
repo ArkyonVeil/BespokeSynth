@@ -259,11 +259,17 @@ enum class TextFont
 };
 struct TextTruncationSettings
 {
-   TextFont font = TextFont::Normal;
-   float fontSize = 13;
-   std::string cutOffStyle = "...";
-   float maxTextWidth = 9999;
-   float perCharPadding = 0;
+   TextFont font = TextFont::Normal;//Font to interpret string sizes from.
+   float fontSize = 13;//Font size
+   std::string cutOffStyle = "...";//What to draw between truncated segments.
+   float perCharPadding = 0;//Added to string text sizes, used in some buttons.
+   bool smart { true };//Use a special truncation algorithm to preserve as much readability as possible while shortening. If false, truncate right to left.
+   //How the smart Truncation works.
+   //Look for a number in the last 5 chars.
+   //If one is found, start the truncation point at the start of the number.
+   //Otherwise pick the last word. (Be it defined by space, or by underscore_) and cull before that.
+   //Part Sampler Megasupervox V3 A -> P...V3 A
+   //Once the truncation runs out, including the cutoffStyle, then start eating the priority segment from the left.
 };
 
 typedef ofVec2f ofPoint;
@@ -323,3 +329,4 @@ void ofToggleFullscreen();
 void ofStringReplace(std::string& str, std::string from, std::string to, bool firstOnly = false);
 std::string ofGetTimestampString(std::string in);
 void ofTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
+void ofTriangleShaped(float x, float y, float sideSize, float dirDegree, float heightScale = 1);//Draws a rotatable triangle centered on x,y. Rotation is clockwise, and 0 points right.

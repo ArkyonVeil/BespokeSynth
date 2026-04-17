@@ -285,6 +285,7 @@
 
 #include "PulseRouter.h"
 #include "SongCanvas.h"
+#include "SongCanvasRackSampler.h"
 
 #include <juce_core/juce_core.h>
 
@@ -544,10 +545,10 @@ ModuleFactory::ModuleFactory()
    REGISTER_HIDDEN(ClipLauncher, cliplauncher, kModuleCategory_Synth);
 
    REGISTER_HIDDEN(SongCanvasRackEnabler, partenabler, kModuleCategory_Other);
-   REGISTER_HIDDEN(SongCanvasRackPulser, partpulser, kModuleCategory_Other);
-   REGISTER_HIDDEN(SongCanvasRackSampler, partsampler, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackPulser, partpulser, kModuleCategory_Pulse);
+   REGISTER_HIDDEN(SongCanvasRackSampler, partsampler, kModuleCategory_Synth);
    REGISTER_HIDDEN(SongCanvasRackKeyer, partkeyer, kModuleCategory_Other);
-   REGISTER_HIDDEN(SongCanvasRackLFO, partmodulator, kModuleCategory_Other);
+   REGISTER_HIDDEN(SongCanvasRackModEnvelope, partmodulator, kModuleCategory_Modulator);
 
 #ifdef BESPOKE_MAC
    REGISTER_HIDDEN(KompleteKontrol, kompletekontrol, kModuleCategory_Note);

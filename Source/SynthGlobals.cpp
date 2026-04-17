@@ -504,7 +504,8 @@ std::string StripNameExtension(std::string text)
    return text;
 }
 
-std::string TruncateString(std::string text, const float maxWidth, const TextFont font, const std::string& cutoffStyle, const float fontSize, const float extraPaddingPerChar)
+
+std::string TruncateString(std::string text, const float maxWidth, const TextFont font, const std::string& cutoffStyle, const float fontSize, const float extraPaddingPerChar, bool smart)
 {
    //Not a particularly stellar implementation, cache this if possible. -Ark
 
@@ -521,6 +522,7 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
    {
       lFont = gFontFixedWidth;
    }
+
    //First check if the size is ok.
    if (lFont.GetStringWidth(text, fontSize) + text.size() * extraPaddingPerChar <= maxWidth)
    {
@@ -528,14 +530,91 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
    }
 
    //Size is not ok
-   int stringLength = text.size();
+   int stringLength;
+   if (smart)
+   {
+      int keyIndex = -1;
+      //First look for a number in last 5 chars.
+      //Then if number found, keep going until the number is complete.
+      int searchStop = MAX(0, text.size() - 5);
+      for (int i = text.size() - 1; i >= searchStop; --i)
+      {
+         if (text[i] >= '0' && text[i] < '9')
+         {
+            searchStop = 0;
+            keyIndex = i;
+            continue;
+         }
+         if (!(text[i] >= '0' && text[i] < '9'))
+         {
+            if (keyIndex != -1)
+            {
+               break; //End of count
+            }
+         }
+      }
+      //If no numbers are found. Then try to find the last word.
+      if (keyIndex == -1)
+      {
+         bool textFound = false;
+         for (int i = text.size() - 1; i >= 0; --i)
+         {
+            char c = text[i];
+            if (c == ' ' || c == '.' || c == '_' || c == '-')
+            {
+               if (textFound)
+               {
+                  break;
+               }
+            }
+            else
+            {
+               textFound = true;
+               keyIndex = i;
+            }
+         }
+      }
+      if (keyIndex != -1)
+      {
+         //Make our priority strings and main strings separate.
+         std::string prio = text.substr(keyIndex,text.size()-keyIndex);
+         std::string base = text.substr(0,keyIndex);
+
+         stringLength = base.size();
+         //Approach 1, grid down base until there's nothing left.
+         while (true)
+         {
+            stringLength--;
+            if (stringLength <= 0)
+               break;
+            std::string newStr = base.substr(0, stringLength).append(cutoffStyle).append(prio);
+            if (lFont.GetStringWidth(newStr, fontSize) + newStr.size() * extraPaddingPerChar <= maxWidth)
+               return newStr;
+         }
+         stringLength = prio.size();
+         //Approach 2, now the priority.
+         while (true)
+         {
+            stringLength--;
+            if (stringLength <= 0)
+               return "";
+
+            std::string newStr = prio.substr(1, stringLength);
+            if (lFont.GetStringWidth(newStr, fontSize) + newStr.size() * extraPaddingPerChar <= maxWidth)
+               return newStr;
+         }
+      }
+      //Somehow, no valid approach found, continue with the "dumb" approach.
+   }
+
+   stringLength = text.size();
    while (true) //Keep making it smaller until it fits
    {
       stringLength--;
       if (stringLength <= 0)
          return "";
 
-      std::string newStr = text.substr(0, stringLength - 1).append(cutoffStyle);
+      std::string newStr = text.substr(0, stringLength).append(cutoffStyle);
       if (lFont.GetStringWidth(newStr, fontSize) + newStr.size() * extraPaddingPerChar <= maxWidth)
          return newStr;
    }

@@ -37,6 +37,7 @@
 #include "ModularSynth.h"
 #include "Profiler.h"
 #include "SongCanvasMixer.h"
+#include "SongCanvasRackSampler.h"
 
 #include <cstring>
 
@@ -1899,7 +1900,9 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool autoSetup)
 {
    if (autoSetup)
+   {
       mRackGrid->AddFlowElement(element);
+   }
 
    if (auto audioR = dynamic_cast<SongCanvasAudioRackElement*>(element))
    {

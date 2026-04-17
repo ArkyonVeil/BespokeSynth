@@ -59,6 +59,24 @@ void FlowGridElement::SetRectRelativeToGrid(ofRectangle rect) //Sets rect and of
    mX = rect.x + mFlowGridParent->GetPosition().x;
    mY = rect.y + mFlowGridParent->GetPosition().y;
 }
+bool FlowGridElement::TestIntercepts(float x, float y, bool right)
+{
+   auto cables = GetPatchCableSources();
+   for (auto source : cables)
+   {
+      if (source->TestClick(x,y,right,true))
+         return true;
+   }
+
+   auto iUIs = GetUIControls();
+   for (auto source : iUIs)
+   {
+      if (source->TestClick(x,y,right,true))
+         return true;
+   }
+
+   return false;
+}
 
 void FlowGridElement::SetColor(ofColor color)
 {
@@ -99,6 +117,7 @@ ofVec2f FlowGridElement::GetRelativePosition()
 
 void FlowGridElement::OnClicked(float x, float y, bool right)
 {
+   IDrawableModule::OnClicked(x, y, right);
    mFlowGridParent->SetSelectedGridElement(this);
 }
 bool FlowGridElement::MouseMoved(float x, float y)

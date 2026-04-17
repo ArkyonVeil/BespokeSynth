@@ -68,6 +68,7 @@ public:
    ofRectangle GetRectLocal() const { return { 0, 0, mWidth, mHeight }; };
    void SetRect(ofRectangle rect);
    void SetRectRelativeToGrid(ofRectangle rect);
+   virtual bool TestIntercepts(float x, float y, bool right);
 
    void SetHighlight(bool highlight) { mSelected = highlight; }
    bool GetHighlighted() const { return mSelected; }

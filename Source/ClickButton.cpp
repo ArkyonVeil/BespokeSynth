@@ -84,9 +84,7 @@ void ClickButton::UpdateWidth()
       {
          mDynamicTooltip = "";
       }
-      auto tts = GetTextTruncationSettings();
-      tts.maxTextWidth = mWidth - nonStringSpace;
-      SetTextTruncationSettings(tts);
+      SetMaxDisplayNameWidth(mWidth - nonStringSpace);
    }
 }
 
