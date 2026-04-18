@@ -504,6 +504,8 @@ void SamplePlayer::UpdateSample(Sample* sample, bool ownsSample)
    sample->SetPlayPosition(0);
    sample->SetLooping(mLoop);
    sample->SetRate(mSpeed);
+
+   SyncOutputBuffer(sample->NumChannels());
    mSample = sample;
    mPlay = false;
    mOwnsSample = ownsSample;
