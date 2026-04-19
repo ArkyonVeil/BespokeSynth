@@ -1,14 +1,13 @@
 ﻿#pragma once
 #include "CanvasElement.h"
 
-
 class SongCanvas;
 class SongCanvasRackElement;
 class SongCanvas_CanvasElement : public CanvasElement
 {
 public:
    SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length);
-   SongCanvas_CanvasElement(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
+   explicit SongCanvas_CanvasElement(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
    void SetupBase(SongCanvasRackElement* templateElement);
    static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvas_CanvasElement(canvas, col, row, 0, 1); }
 
@@ -21,6 +20,8 @@ public:
    void SetAllowResize(bool allow) { mAllowResizing = allow; }
    uint32_t GetIndex() const { return mIndex; }
    Canvas* GetCanvas() const { return mCanvas; }
+   bool UseCustomPosQuantization() override;
+   float GetCustomPosQuantization(float input, int mode) override;
 
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }

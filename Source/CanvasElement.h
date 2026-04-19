@@ -57,9 +57,13 @@ public:
    void MoveElementByDrag(ofVec2f dragOffset);
    void GetDragDestinationData(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
    void GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
+   void SetLengthBounds (float minLength, float maxLength){ mCustomMinLength = minLength, mCustomMaxLength = maxLength; }
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;
+
+   virtual bool UseCustomPosQuantization() { return false;}
+   virtual float GetCustomPosQuantization(float input, int mode) {return 0;};
 
    virtual void CheckboxUpdated(std::string label, bool value, double time);
    virtual void FloatSliderUpdated(std::string label, float oldVal, float newVal, double time);
@@ -73,6 +77,9 @@ public:
    int mCol;
    float mOffset;
    float mLength;
+
+   float mCustomMinLength { -999999999.0f};
+   float mCustomMaxLength { 999999999.0f};
 
 protected:
    virtual void DrawContents(bool clamp, bool wrapped, ofVec2f offset) = 0;

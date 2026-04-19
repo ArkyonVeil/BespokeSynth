@@ -324,12 +324,24 @@ bool Canvas::MouseMoved(float x, float y)
             if (element->GetHighlighted())
             {
                float start = element->GetStart() + startDelta;
-               if (quantize)
-                  start = QuantizeToGrid(start);
+               if (!element->UseCustomPosQuantization())
+               {
+                  if (quantize)
+                     start = QuantizeToGrid(start);
+                  else
+                  {
+                     if (!freeRescale)
+                        start = QuantizeToGridMin(start);
+                  }
+               }
                else
                {
-                  if (!freeRescale)
-                     start = QuantizeToGridMin(start);
+                  int mode = 0;
+                  if (freeRescale)
+                     mode = 2;
+                  else if (quantize)
+                     mode = 1;
+                  start = element->GetCustomPosQuantization(start, mode);
                }
                element->SetStart(start, false);
             }
@@ -345,12 +357,24 @@ bool Canvas::MouseMoved(float x, float y)
             if (element->GetHighlighted())
             {
                float end = element->GetEnd() + endDelta;
-               if (quantize)
-                  end = QuantizeToGrid(end);
+               if (!element->UseCustomPosQuantization())
+               {
+                  if (quantize)
+                     end = QuantizeToGrid(end);
+                  else
+                  {
+                     if (!freeRescale)
+                        end = QuantizeToGridMin(end);
+                  }
+               }
                else
                {
-                  if (!freeRescale)
-                     end = QuantizeToGridMin(end);
+                  int mode = 0;
+                  if (freeRescale)
+                     mode = 2;
+                  else if (quantize)
+                     mode = 1;
+                  end = element->GetCustomPosQuantization(end, mode);
                }
                element->SetEnd(end);
             }

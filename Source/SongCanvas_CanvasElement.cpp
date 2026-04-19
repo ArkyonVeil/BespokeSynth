@@ -142,3 +142,5 @@ void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
    SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
    mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }
+bool SongCanvas_CanvasElement::UseCustomPosQuantization() {return mRackPart->UseCustomCanvasElementQuantization();}
+float SongCanvas_CanvasElement::GetCustomPosQuantization(float input, int mode) {return mRackPart->GetCustomCanvasElementQuantization(this,input,mode);}

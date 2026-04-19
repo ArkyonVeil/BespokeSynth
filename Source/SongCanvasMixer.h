@@ -1,7 +1,6 @@
 ﻿//
 // Created by ArkyonVeil on 29/03/2026.
 //
-
 #pragma once
 #include "LevelMeterDisplay.h"
 #include "SongCanvas.h"

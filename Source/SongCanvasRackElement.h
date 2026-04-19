@@ -5,7 +5,6 @@
 #include "FlowGrid.h"
 #include "PolyphonyMgr.h"
 #include "Sample.h"
-#include "SampleVoice.h"
 #include "SongCanvasMixer.h"
 
 
@@ -30,12 +29,6 @@ public:
 struct RackCanvasPartData
 {
 };
-struct RackCanvasPartDataPulser : RackCanvasPartData
-{
-   //Unused for now.
-};
-
-//Identifies a rack element. This class is unified and can potentially represent any rack variant, please use mVariantType to check and don't use stuff from the wrong variant <. >
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
@@ -74,6 +67,8 @@ public:
    virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
    virtual void DeletedCanvasPart(SongCanvas_CanvasElement* element){};
+   virtual bool UseCustomCanvasElementQuantization() { return false; }
+   virtual float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int mode) { return 0; }
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }

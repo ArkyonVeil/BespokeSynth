@@ -591,7 +591,7 @@ void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvas_CanvasElement* elem
    {
       ofPushStyle();
       float interval = TheTransport->CountInStandardMeasure(mPulserInterval);
-      float lengthSizePixels = element->GetCanvas()->GetLengthSizePixels();
+      float lengthSizePixels = element->GetCanvas()->GetLengthUnitWidth();
       float intervalSpacing = lengthSizePixels / interval;
 
       float offset;

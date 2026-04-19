@@ -46,6 +46,7 @@ public:
    void SetDimensions(float width, float mRowHeight = -1);
    float GetWidth() const { return mWidth; }
    float GetHeight() const { return mHeight; }
+   float GetMinWidth() const;
    void SetBackgroundColour(float r, float g, float b, float a) { mBackgroundColor.set(r, g, b, a); }
    void DrawModule();
 
@@ -132,6 +133,7 @@ private:
    std::vector<FlowGridElement*> mElementList;
    float mRowScalingSize[30];
 
+
    bool mAllowDragAndDrop = { true }; //If it allows elements to be dragged around the gridspace by the user.
    float mRowYSize = {};
 
@@ -154,6 +156,7 @@ private:
    int mDragElementRow;
    ofVec2f mStartDragElementPos;
    IDrawableModule* mOwner;
+   bool mSkipGridRecalculation { false };
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
    int mMaxRows = 201;
@@ -161,6 +164,7 @@ private:
    int mDebugIter = 0;
    int mRowCountOnDragStart = -1;
    bool mSuggestedRowActive = false;
+   float mMinOverfilledSize { 0 };
 
    float mWidth = 0;
    float mHeight = 0;

@@ -167,12 +167,16 @@ bool FlowGrid::MouseMoved(float x, float y)
       if (y > suggestionBorder && !mSuggestedRowActive && mRows.size() < mMaxRows)
       {
          mSuggestedRowActive = true;
+         mSkipGridRecalculation = true;
          AddRow();
+         mSkipGridRecalculation = false;
       }
       else if (mSuggestedRowActive && y <= suggestionBorder - 12) //Pop it if too far.
       {
          mSuggestedRowActive = false;
+         mSkipGridRecalculation = true;
          PopRow();
+         mSkipGridRecalculation = false;
       }
 
 
@@ -266,6 +270,15 @@ void FlowGrid::SetDimensions(float width, float yRowSize)
    RecalculateFlowGrid();
 }
 
+float FlowGrid::GetMinWidth() const
+{
+   //TODO to implement
+   for (auto r : mRows)
+   {
+
+   }
+   return 0;
+}
 void FlowGrid::DrawModule()
 {
    ofPushMatrix();
@@ -730,6 +743,8 @@ int FlowGrid::GetRowIndexOfElement(FlowGridElement* element) const
 
 void FlowGrid::RecalculateFlowGrid()
 {
+   if (mSkipGridRecalculation)
+      return;
    //Updates ALL rows
    for (int i = 0; i < mRows.size(); ++i)
    {

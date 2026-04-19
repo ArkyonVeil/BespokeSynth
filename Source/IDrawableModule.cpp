@@ -927,6 +927,12 @@ void IDrawableModule::KeyPressed(int key, bool isRepeat)
       source->KeyPressed(key, isRepeat);
    for (auto control : mUIControls)
       control->KeyPressed(key, isRepeat);
+
+   auto children = GetChildren();
+   for (auto child : children)
+   {
+      child->KeyPressed(key,isRepeat);
+   }
 }
 
 void IDrawableModule::KeyReleased(int key)

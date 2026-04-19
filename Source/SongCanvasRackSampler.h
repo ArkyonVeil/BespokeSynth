@@ -8,7 +8,13 @@
 /////////////
 #pragma once
 #include "ADSRDisplay.h"
+#include "SampleVoice.h"
 #include "SongCanvasRackElement.h"
+
+struct RackCanvasPartDataSampler : RackCanvasPartData
+{
+   int mPitch { 48 };
+};
 
 class SongCanvasRackSampler : public SongCanvasAudioRackElement, public IFloatSliderListener, public IIntSliderListener
 {
@@ -21,12 +27,17 @@ public:
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
    void OnEnter(SongCanvas_CanvasElement* element) override;
    void OnExit(SongCanvas_CanvasElement* element) override;
+   int GetPitchFromCanvasElement(SongCanvas_CanvasElement* element);
+   int GetPitchFromCanvasElementSize(float size);
+   float GetCanvasElementSizeFromPitch(int notePitch);
    void LoadFileSample();
+   void UpdateSampleLength(SongCanvas_CanvasElement* element);
    float GetPreferredWidth() const override;
    void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
    void SetSample(Sample* sample);
-   void PlaySample();
+   float GetSampleLengthForCanvasInPitchBase();
+   void PlaySample(int notePitch = 48);
    void OnPostResize() override;
    void OnClicked(float x, float y, bool right) override;
    void SongCanvasOptionsUpdated() override;
@@ -42,7 +53,7 @@ public:
    void ReloadAudioOptions();
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
-   int GetActiveOptions() const { return mVolumeEnabled + mPitchEnabled + mADSREnabled;}
+   int GetActiveOptions() const { return mVolumeEnabled + mADSREnabled;}
 
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
    void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
@@ -54,7 +65,7 @@ public:
    void DrawRackGraphics() override;
 
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override {mMemVolume = slider->GetValue();};
-   void IntSliderUpdated(IntSlider* slider, int oldVal, double time) override {mVoiceParams.mSamplePitch = slider->GetValue();};
+   void IntSliderUpdated(IntSlider* slider, int oldVal, double time) override {};
 
    DrawAudioBufferSettings mDrawAudioBufferSettings;
 
@@ -99,22 +110,21 @@ private:
    bool mLongSample{ false };
    PatchCableSource* mSamplerCable{ nullptr };
    bool mSCLoadingDone{ true };
+   float mSampleBaseTimeDuration { -1.0f };
+   float mSampleBaseOldTimeDuration { -1.0f };
 
    bool mExpandProperties { true };
    bool mExpandPropertiesButtonHovered { false };
 
    bool mVolumeEnabled { false };
    bool mADSREnabled { false };
-   bool mPitchEnabled { false };
 
    FloatSlider* mVolumeSlider { nullptr };
-   IntSlider* mPitchSlider { nullptr };
    ADSRDisplay* mADSRDisplay { nullptr };
 
    ofColor const kOptionNameColour{101,198,101,255};
 
-   int mMemPitch { 48 };
-   float mMemVolume { 1 };
+   float mMemVolume { 0.5f };
    ADSR mMemADSR;
 
    float const kSamplerButtonWidthPref{ 76 };
@@ -123,7 +133,7 @@ private:
    float const kOptionsPadding { 4 };
    float const kExpandPropertiesButtonWidthPref { 10 };
 
-   float mExpandPropertiesWidth;
+   float mExpandPropertiesWidth { 0 };
    ofVec2f mExpandPropertiesTrianglePos {0,0};
    ChannelBuffer mWriteBuffer;
    int mSamplesPlaying{ 0 };
@@ -131,5 +141,4 @@ private:
    SampleVoiceParams mVoiceParams{};
    float mSampleDisplayNameWidth{ 0 };
    const float mSampleDisplayNameWidthDefault{ 55 };
-   double mLastProcessTime;
 };

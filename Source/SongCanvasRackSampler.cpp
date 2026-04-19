@@ -15,9 +15,8 @@ SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCa
 , mPolyMgr(this)
 , mSampleButton(this)
 {
-   mSampleDisplayNameWidth = 50;
    SetColor(ofColor::green);
-   mVoiceParams.mVol = 0.5f;
+   mVoiceParams.mVol = mMemVolume;
    mVoiceParams.mAdsr.Set(10, 0, 1, 10);
    mMemADSR = mVoiceParams.mAdsr;
    mVoiceParams.mSample = mSample;
@@ -25,7 +24,6 @@ SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCa
 
    mSampleDisplayNameWidth = mSampleDisplayNameWidthDefault;
    mDrawAudioBufferSettings.maxChannels = 1;
-
 
    mPolyMgr.Init(kVoiceType_Sampler, &mVoiceParams);
 }
@@ -48,10 +46,6 @@ void SongCanvasRackSampler::CreateUIControls()
    mVolumeSlider->SetShowName(false);
    mVolumeSlider->SetNoHover(true);
 
-   mPitchSlider = new IntSlider(this, "pitch", 0, mHeight + 2, 30, 15, &mMemPitch, 0, 127);
-   mPitchSlider->SetShowName(false);
-   mPitchSlider->SetNoHover(true);
-
    mADSRDisplay = new ADSRDisplay(this, "ADSR", 3, mHeight + 2, 80, 50, &mVoiceParams.mAdsr);
    mADSRDisplay->SetNoHover(true);
 }
@@ -63,13 +57,52 @@ void SongCanvasRackSampler::OnEnter(SongCanvas_CanvasElement* element)
       if (!mSample->IsSampleLoading())
       {
          Excite(1);
-         PlaySample();
+         PlaySample(GetPitchFromCanvasElement(element));
       }
    }
 }
 void SongCanvasRackSampler::OnExit(SongCanvas_CanvasElement* element)
 {
    //TODO
+}
+
+int SongCanvasRackSampler::GetPitchFromCanvasElement(SongCanvas_CanvasElement* element)
+{
+   if (!element)
+      return 48;
+   return GetPitchFromCanvasElementSize(element->GetEnd() - element->GetStart());
+}
+
+int SongCanvasRackSampler::GetPitchFromCanvasElementSize(float size)
+{
+   if (size <= 0.0f) {
+      return 0;
+   }
+   float sampleSize = GetSampleLengthForCanvasInPitchBase();
+   double ratio = static_cast<double>(sampleSize) / static_cast<double>(size);
+
+   // Calculate the pitch shift in semitones (Delta P).
+   // Delta P = 12 * log2(Ratio).
+   double deltaPitch = 12.0 * std::log2(ratio);
+
+   int calculatedPitch = static_cast<int>(std::round(48.0 + deltaPitch));
+
+   return calculatedPitch;
+}
+
+float SongCanvasRackSampler::GetCanvasElementSizeFromPitch(int notePitch)
+{
+   float sampleSize = GetSampleLengthForCanvasInPitchBase();
+   //Sometimes its good practice to cram a little bit of math. It goes a long way...
+   //Theory still hazy though.
+   //- Ark
+   return sampleSize/exp2f((static_cast<float>(notePitch)-48.0f)/12);
+}
+
+//Updates a sample length visually based on the pitch reflected in its size.
+void SongCanvasRackSampler::UpdateSampleLength(SongCanvas_CanvasElement* element)
+{
+
 }
 
 void SongCanvasRackSampler::LoadFileSample()
@@ -89,6 +122,7 @@ void SongCanvasRackSampler::LoadFileSample()
       SetSample(sample);
    }
 }
+
 
 void SongCanvasRackSampler::ButtonClicked(ClickButton* button, double time)
 {
@@ -115,6 +149,7 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
       delete mSample;
    mSample = sample;
    mVoiceParams.mSample = mSample;
+
    sample->SetPlayPosition(0);
    mSampleDisplayNameWidth = mSampleDisplayNameWidthDefault;
    if (mSample)
@@ -173,22 +208,25 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
          auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
 
          //Position of a canvas element. 0 -> measure 0. 1 -> measure max.
-         float sampleLength = mSample->LengthInSeconds() / (TheTransport->MsPerBar() / 1000) / mSongCanvas->GetMeasureCount();
+         float sampleLength = GetSampleLengthForCanvasInPitchBase();
          for (auto e : r)
          {
             float start = e->GetStart();
             e->SetEnd(start + sampleLength);
+            //e->
          }
       }
    }
-
-   //Finally update our row, so we can resize to the proper size.
-   UpdateRow();
 }
 
-void SongCanvasRackSampler::PlaySample()
+float SongCanvasRackSampler::GetSampleLengthForCanvasInPitchBase()
 {
-   NoteMessage note(mLastProcessTime, 48, 127);
+   return mSample->LengthInSeconds() / (TheTransport->MsPerBar() / 1000) / mSongCanvas->GetMeasureCount();
+}
+
+void SongCanvasRackSampler::PlaySample(int notePitch)
+{
+   NoteMessage note(NextBufferTime(mSongCanvas), notePitch, 127);
    mPolyMgr.Start(note.time, note.pitch, note.velocity / 127.0f, note.voiceIdx, note.modulation);
 }
 void SongCanvasRackSampler::Process(double time)
@@ -199,8 +237,6 @@ void SongCanvasRackSampler::Process(double time)
 
    if (!mEnabled || mSample == nullptr)
       return;
-
-   mLastProcessTime = time;
 
    if (mVolumeEnabled)
       ComputeSliders(0);
@@ -231,8 +267,8 @@ void SongCanvasRackSampler::Process(double time)
 
 void SongCanvasRackSampler::DrawRackGraphics()
 {
-   if (gHoveredUIControl)
-      DrawTextNormal(gHoveredUIControl->Name(),3,6,8);
+   //if (gHoveredUIControl)
+   //   DrawTextNormal(gHoveredUIControl->Name(),3,6,8);
    mSampleButton.Draw();
    if (GetActiveOptions())
    {
@@ -252,19 +288,6 @@ void SongCanvasRackSampler::DrawRackGraphics()
             float sw = GetStringWidth("volume");
             float centeredX = x + (w - sw) / 2.0f;
             DrawTextNormal("volume", centeredX, y + textYOffset, 13);
-            ofPopStyle();
-         }
-         if (mPitchEnabled)
-         {
-            mPitchSlider->Draw();
-            float x, y;
-            mPitchSlider->GetPosition(x, y,true);
-            float w = mPitchSlider->GetRect(true).width;
-            ofPushStyle();
-            ofSetColor(kOptionNameColour);
-            float sw = GetStringWidth("pitch");
-            float centeredX = x + (w - sw) / 2.0f;
-            DrawTextNormal("pitch", centeredX, y + textYOffset, 13);
             ofPopStyle();
          }
          if (mADSREnabled)
@@ -296,12 +319,10 @@ float SongCanvasRackSampler::GetPreferredWidth() const
 
    val += kSamplerButtonWidthPref;
 
-   int optionsEnabled = mVolumeEnabled + mPitchEnabled + mADSREnabled;
+   int optionsEnabled = mVolumeEnabled + mADSREnabled;
    if (mExpandProperties)
    {
       if (mVolumeEnabled)
-         val += kSliderWidthPref;
-      if (mPitchEnabled)
          val += kSliderWidthPref;
       if (mADSREnabled)
          val += kADSRWidthPref;
@@ -339,7 +360,7 @@ void SongCanvasRackSampler::OnPostResize()
    {
       optionsSpaceRequired += kExpandPropertiesButtonWidthPref;
       if (mExpandProperties)
-         optionsSpaceRequired += (mVolumeEnabled * kSliderWidthPref) + (mPitchEnabled * kSliderWidthPref) + (mADSREnabled * kADSRWidthPref);
+         optionsSpaceRequired += (mVolumeEnabled * kSliderWidthPref) + (mADSREnabled * kADSRWidthPref);
    }
 
    workSpace = MAX(0.5f, workSpace);
@@ -389,13 +410,6 @@ void SongCanvasRackSampler::OnPostResize()
             mVolumeSlider->SetDimensions(sliderWidth, 15);
             offsetX += sliderWidth + paddingWidth;
          }
-         if (mPitchEnabled)
-         {
-            mPitchSlider->ClearOverridePatchCableInputDirection();
-            mPitchSlider->SetPosition(offsetX, 3);
-            mPitchSlider->SetDimensions(sliderWidth, 15);
-            offsetX += sliderWidth + paddingWidth;
-         }
          if (mADSREnabled)
          {
             mADSRDisplay->SetPosition(offsetX, 3);
@@ -410,13 +424,6 @@ void SongCanvasRackSampler::OnPostResize()
             mVolumeSlider->SetOverridePatchCableInputDirection(ofVec2f(0, 1));
             mVolumeSlider->SetPosition(offsetX, 2);
             mVolumeSlider->SetDimensions(1, 1);
-            offsetX += 2;
-         }
-         if (mPitchEnabled)
-         {
-            mPitchSlider->SetOverridePatchCableInputDirection(ofVec2f(0, 1));
-            mPitchSlider->SetPosition(offsetX, 2);
-            mPitchSlider->SetDimensions(1, 1);
             offsetX += 2;
          }
          if (mADSREnabled)
@@ -446,11 +453,11 @@ void SongCanvasRackSampler::OnClicked(float x, float y, bool right)
       {
          if (previewMode == 0 && !mLongSample)
          {
-            PlaySample();
+            PlaySample(48);
          }
          if (previewMode == 2) //Always
          {
-            PlaySample();
+            PlaySample(48);
          }
       }
    }
@@ -498,11 +505,6 @@ std::vector<DropdownListElement> SongCanvasRackSampler::GetRightClickOptions()
    else
       options.push_back({ "remove Volume", 11 });
 
-   if (!mPitchEnabled)
-      options.push_back({ "Pitch", 12 });
-   else
-      options.push_back({ "remove Pitch", 13 });
-
    if (!mADSREnabled)
       options.push_back({ "ADSR", 14 });
    else
@@ -516,10 +518,6 @@ void SongCanvasRackSampler::HandleRightClickDropdown(int optionValue)
       mVolumeEnabled = true;
    if (optionValue == 11)
       mVolumeEnabled = false;
-   if (optionValue == 12)
-      mPitchEnabled = true;
-   if (optionValue == 13)
-      mPitchEnabled = false;
    if (optionValue == 14)
       mADSREnabled = true;
    if (optionValue == 15)
@@ -542,21 +540,8 @@ void SongCanvasRackSampler::ReloadAudioOptions()
    {
       mVolumeSlider->SetNoHover(true);
       mMemVolume = mVoiceParams.mVol;
-      mVoiceParams.mVol = 1;
+      mVoiceParams.mVol = 0.5f;
       IUIControl::DestroyCablesTargetingControls(std::vector<IUIControl*>{ mVolumeSlider });
-   }
-
-   if (mPitchEnabled)
-   {
-      mPitchSlider->SetValue(mMemPitch, NextBufferTime((false)));
-      mPitchSlider->SetNoHover(false);
-   }
-   else
-   {
-      mPitchSlider->SetNoHover(true);
-      mMemPitch = mVoiceParams.mSamplePitch;
-      mVoiceParams.mSamplePitch = 48;
-      IUIControl::DestroyCablesTargetingControls(std::vector<IUIControl*>{ mPitchSlider });
    }
 
    if (mADSREnabled)
@@ -582,10 +567,9 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
    element->mCurrentColorGrad = mCanvasSamplerColor2;
    if (mSample && mSCLoadingDone)
    {
-      float sampleLength = mSample->LengthInSeconds() / (TheTransport->MsPerBar() / 1000) / mSongCanvas->GetMeasureCount();
+      float sampleLength = GetSampleLengthForCanvasInPitchBase();
       element->SetEnd(element->GetStart() + sampleLength);
    }
-   element->SetAllowResize(false);
 }
 void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
 {
@@ -610,6 +594,14 @@ void SongCanvasRackSampler::SaveState(FileStreamOut& out)
    out << hasSample;
    if (mSample)
       mSample->SaveState(out);
+
+   out << mVolumeEnabled;
+   out << mADSREnabled;
+   out << mExpandProperties;
+
+   out << mMemVolume;
+   mMemADSR = mVoiceParams.mAdsr;
+   mMemADSR.SaveState(out);
 }
 void SongCanvasRackSampler::LoadState(FileStreamIn& in, int rev)
 {
@@ -628,12 +620,10 @@ void SongCanvasRackSampler::LoadState(FileStreamIn& in, int rev)
    if (rev >= 1)
    {
       in >> mVolumeEnabled;
-      in >> mPitchEnabled;
       in >> mADSREnabled;
       in >> mExpandProperties;
 
       in >> mMemVolume;
-      in >> mMemPitch;
       mMemADSR.LoadState(in);
    }
 
@@ -725,7 +715,7 @@ void SongCanvasRackSampler::RackSampleButton::OnClick(float x, float y, bool rig
       }
       if (mHoveredPlay)
       {
-         mOwner->PlaySample();
+         mOwner->PlaySample(48);
       }
       if (mHoveredStop)
       {

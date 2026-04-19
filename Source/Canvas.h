@@ -99,7 +99,7 @@ public:
    void SetNumCols(int cols) { mNumCols = cols; }
    int GetNumRows() const { return mNumRows; }
    int GetNumCols() const { return mNumCols; }
-   float GetLengthSizePixels() { return mWidth / mLength / ((mViewEnd - mViewStart) / mLength); }
+   float GetLengthUnitWidth() const { return mWidth / mLength / ((mViewEnd - mViewStart) / mLength); }
    void RescaleNumCols(int cols);
    void AddElement(CanvasElement* element);
    void RemoveElement(CanvasElement* element);
