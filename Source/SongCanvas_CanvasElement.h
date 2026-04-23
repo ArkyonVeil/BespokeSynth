@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CanvasElement.h"
 
 class SongCanvas;
@@ -21,7 +21,7 @@ public:
    uint32_t GetIndex() const { return mIndex; }
    Canvas* GetCanvas() const { return mCanvas; }
    bool UseCustomPosQuantization() override;
-   float GetCustomPosQuantization(float input, int mode) override;
+   float GetCustomPosQuantization(float input, int context) override;
 
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }
@@ -43,7 +43,7 @@ private:
    float mCachedNameSize;
    SongCanvas* mSongCanvas;
    SongCanvasRackElement* mRackPart;
-   uint32_t mIndex{ 0 };
+   int mIndex{ 0 };
    int mRackParentID;
    bool mAllowResizing{ true };
 };

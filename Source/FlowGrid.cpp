@@ -1,4 +1,4 @@
-﻿/// UI Rules:
+/// UI Rules:
 /// Elements are tossed into the element in vector order. From top left.
 /// For an example see the SongCanvas's rack.
 ///
@@ -272,12 +272,22 @@ void FlowGrid::SetDimensions(float width, float yRowSize)
 
 float FlowGrid::GetMinWidth() const
 {
-   //TODO to implement
-   for (auto r : mRows)
+   float maxRowMinWidth = 0;
+   for (auto& r : mRows)
    {
+      if (r.elements.empty())
+         continue;
 
+      float rowTotal = 2 * mRowXBorderOffset;
+      for (int i = 0; i < r.elements.size(); ++i)
+      {
+         rowTotal += r.elements[i]->GetMinWidth();
+         if (i + 1 < static_cast<int>(r.elements.size()))
+            rowTotal += mElementXSpacing;
+      }
+      maxRowMinWidth = MAX(maxRowMinWidth, rowTotal);
    }
-   return 0;
+   return maxRowMinWidth;
 }
 void FlowGrid::DrawModule()
 {

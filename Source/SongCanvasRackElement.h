@@ -1,4 +1,4 @@
-﻿//
+//
 // Created by ArkyonVeil on 13/03/2026.
 //
 #pragma once
@@ -6,7 +6,6 @@
 #include "PolyphonyMgr.h"
 #include "Sample.h"
 #include "SongCanvasMixer.h"
-
 
 class SongCanvas;
 class SongCanvas_CanvasElement;
@@ -28,6 +27,7 @@ public:
 
 struct RackCanvasPartData
 {
+   virtual ~RackCanvasPartData() = default;
 };
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
@@ -68,7 +68,7 @@ public:
    virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
    virtual void DeletedCanvasPart(SongCanvas_CanvasElement* element){};
    virtual bool UseCustomCanvasElementQuantization() { return false; }
-   virtual float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int mode) { return 0; }
+   virtual float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context = 0) { return 0; }
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -86,7 +86,7 @@ public:
    int mInternalRackID;
    bool mRackEnabled;
 
-   std::unordered_map<int, RackCanvasPartData*> mCanvasPartData;
+   std::unordered_map<int, std::unique_ptr<RackCanvasPartData>> mCanvasElementPartData;
 
 protected:
    void DrawModule() override;//Reserved for base graphics.
@@ -108,6 +108,7 @@ protected:
    //Dynamic, affected by compression and draw accurate.
    virtual float GetReservedLeftWidth() const {return GetReservedPrefLeftWidth()*GetCompression();}//Affected by compression. Should place unique stuff after this.
    virtual float GetReservedRightWidth() const {return GetReservedPrefRightWidth()*GetCompression();}//Affected by compression. Typically used for rack outputs.
+   float GetLeftReservedToTextEnd() const {return kLeftWidthPadding + GetStringWidth(mDisplayPartName);}
 
    SongCanvas* mSongCanvas;
    std::string* mElementName;//The true name of the rack.

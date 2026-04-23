@@ -1558,11 +1558,16 @@ void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY, float oldB
 }
 void SongCanvas::onFlowGridNewSelection(FlowGridElement* element)
 {
+   //Guaranteed to be valid.
+   mCanvas->SetAllowElementPlacement(true);
    if (element != GetSelectedRackPart() && GetSelectedRackPart() != nullptr)
    {
       SetRackElementRenameState(GetSelectedRackPart(), false);
    }
-   mCanvas->SetAllowElementPlacement(true);
+}
+void SongCanvas::onFlowGridSelectionCleared(FlowGridElement* element)
+{
+   mCanvas->SetAllowElementPlacement(false);
 }
 
 void SongCanvas::DisposeElement(IClickable* element)
@@ -1586,6 +1591,13 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    samplerPreviewAudio["never"] = 1;
    samplerPreviewAudio["always"] = 2;
    mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click", moduleInfo, 0, nullptr, &samplerPreviewAudio);
+   EnumMap samplerResizePreviewMap;
+   samplerResizePreviewMap["scale"] = 0;
+   samplerResizePreviewMap["pitch"] = 1;
+   samplerResizePreviewMap["percent"] = 2;
+   samplerResizePreviewMap["all"] = 3;
+   mModuleSaveData.LoadEnum<EnumSamplerAudioResizeText>("sampler_resize_text",moduleInfo,0,nullptr,&samplerResizePreviewMap);
+
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap mapCols;
    mapCols["red"] = 0;
@@ -1607,6 +1619,7 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mapCols["trans"] = 16;
    mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style", moduleInfo, 0, nullptr, &mapCols);
    mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style", moduleInfo, 1, nullptr, &mapCols);
+
 }
 void SongCanvas::SetUpFromSaveData()
 {

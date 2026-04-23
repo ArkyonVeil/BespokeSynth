@@ -132,6 +132,7 @@ public:
    bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.
    void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY) override;
    void onFlowGridNewSelection(FlowGridElement* element) override;
+   void onFlowGridSelectionCleared(FlowGridElement* element) override;
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void IncrementInternalRackId() { mInternalRackIDCounter++; } //TODO merge with GetInternalRackId()
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
@@ -197,6 +198,7 @@ public:
       ESPride = 15,
       ESTrans = 16
    };
+
    ofColor GetFancyStyleColour(EnumSongCanvasStyle style, float time);
    static std::array<ofColor, 2> ESCarbonColours;
    static std::array<ofColor, 3> ESRGBColours;
@@ -212,6 +214,14 @@ public:
       Always = 2,
    };
    EnumSamplerAudioPreviewMode mSamplerAudioPreviewMode = EnumSamplerAudioPreviewMode::TwoSecondsOrLess;
+
+   enum class EnumSamplerAudioResizeText
+   {
+      Scale = 0,
+      Pitch = 1,
+      Percent = 2,
+      All = 3,
+   };
 
 private:
    struct SongCanvasLayer

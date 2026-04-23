@@ -121,9 +121,11 @@ public:
    int GetRowOffset() const { return mRowOffset; }
    bool ShouldWrap() const { return mWrap; }
    HighlightEnd GetHighlightEnd() const { return mHighlightEnd; }
+   HighlightEnd GetDragEnd() const {return mDragEnd; }
    void SetMajorColumnInterval(int interval) { mMajorColumnInterval = interval; }
    void SetDragMode(DragMode mode) { mDragMode = mode; }
    DragMode GetDragMode() const { return mDragMode; }
+   bool IsElementDragging() const;
    bool IsRowVisible(int row) const;
    void SetRowColor(int row, ofColor color);
    void SetMinorColumnLineColor(ofColor newColour)

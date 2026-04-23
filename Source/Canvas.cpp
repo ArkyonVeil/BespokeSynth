@@ -210,6 +210,12 @@ bool Canvas::IsOnElement(CanvasElement* element, float x, float y) const
    return element->GetRect(true, false).contains(x, y) || (mWrap && element->GetRect(true, true).contains(x, y));
 }
 
+bool Canvas::IsElementDragging() const
+{
+   if (!mClickedElement || !mClick)
+      return false;
+   return true;
+}
 bool Canvas::IsRowVisible(int row) const
 {
    return row >= mRowOffset && row < mRowOffset + GetNumVisibleRows();
@@ -336,12 +342,7 @@ bool Canvas::MouseMoved(float x, float y)
                }
                else
                {
-                  int mode = 0;
-                  if (freeRescale)
-                     mode = 2;
-                  else if (quantize)
-                     mode = 1;
-                  start = element->GetCustomPosQuantization(start, mode);
+                  start = element->GetCustomPosQuantization(start, 0);
                }
                element->SetStart(start, false);
             }
@@ -369,12 +370,7 @@ bool Canvas::MouseMoved(float x, float y)
                }
                else
                {
-                  int mode = 0;
-                  if (freeRescale)
-                     mode = 2;
-                  else if (quantize)
-                     mode = 1;
-                  end = element->GetCustomPosQuantization(end, mode);
+                  end = element->GetCustomPosQuantization(end, 1);
                }
                element->SetEnd(end);
             }

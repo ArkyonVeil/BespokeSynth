@@ -73,10 +73,10 @@ void SongCanvasRackElement::UpdatePartNameData()
 {
    //This is calculated on a need be basis.
    //First get the preferred size of the string, which is capped at around 200~. This is used to determine the room to allocate.
-   mRackNameStringPreferredWidth = GetStringWidth(*mElementName,kPartNameFontSize);
+   mRackNameStringPreferredWidth = GetStringWidth(*mElementName, kPartNameFontSize);
 
    //Now the DisplayPartName is what's seen, as such it may be affected by compression.
-   mDisplayPartName = TruncateString(*mElementName,kMaxTextSize*GetCompression(),mPartNameTruncationSettings);
+   mDisplayPartName = TruncateString(*mElementName, kMaxTextSize * GetCompression(), mPartNameTruncationSettings);
 }
 
 float SongCanvasRackElement::GetPreferredWidth() const
@@ -86,7 +86,7 @@ float SongCanvasRackElement::GetPreferredWidth() const
 
 float SongCanvasRackElement::GetReservedPrefLeftWidth() const
 {
-   return kLeftWidthPadding + MAX(GetMinTextSpace(),mRackNameStringPreferredWidth) + kPartNameToContentPadding;
+   return kLeftWidthPadding + MAX(GetMinTextSpace(), mRackNameStringPreferredWidth) + kPartNameToContentPadding;
 }
 
 void SongCanvasRackElement::SetPartName(std::string newName) const
@@ -278,7 +278,7 @@ void SongCanvasAudioRackElement::DrawExtendedBaseGraphics()
       color = ofColor(color.r * .2f, color.g * .2f, color.b * .2f, backgroundAlpha);
 */
 
-   SetExciteConstant(highlight*10);
+   SetExciteConstant(highlight * 10);
    mChannelPicker->Draw();
 }
 
@@ -459,7 +459,6 @@ void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 SongCanvasRackPulser::SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas)
 : SongCanvasRackElement(partName, GetFlowGridElementType(), songCanvas)
 {
-
 }
 SongCanvasRackPulser::~SongCanvasRackPulser()
 {
@@ -506,7 +505,7 @@ void SongCanvasRackPulser::OnPostResize()
    if (!mOnePulseMode)
    {
       mIntervalSelector->SetPosition(GetReservedLeftWidth(), mHeight / 4 + 1);
-      if (mWidth < GetPreferredWidth() - 20)
+      if (mWidth < GetLeftReservedToTextEnd() + GetReservedRightWidth() + mIntervalSelector->GetRect().width)
       {
          mIntervalSelector->SetShowing(false);
       }
@@ -693,6 +692,24 @@ void SongCanvasRackPulser::DrawRackGraphics()
    if (!mOnePulseMode)
    {
       mIntervalSelector->Draw();
+      if (!mIntervalSelector->IsShowing())
+      {
+         ofPushStyle();
+
+         ofSetColor(ofColor::white);
+         std::string label = mIntervalSelector->GetLabel(mPulserInterval);
+
+         float availStart = GetLeftReservedToTextEnd();
+         float availEnd = mWidth - GetReservedRightWidth() - mIntervalSelector->GetRect(true).width;
+         if (availEnd < availStart)
+            availEnd = mWidth - 40.f;
+         float centerX = (availStart + availEnd) / 2.0f;
+         int x = (int)(centerX + GetStringWidth(label, 12) / 2.f);
+
+         DrawTextNormal(label, x, mHeight / 2.0f + 4, 12);
+
+         ofPopStyle();
+      }
    }
    else
    {

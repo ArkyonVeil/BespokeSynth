@@ -39,6 +39,13 @@ class FileStreamOut;
 class PatchCableSource;
 class EventCanvas;
 
+enum class DragOperation
+{
+   kNotDragged = 0,
+   kMoveDrag = 1,
+   kLeftDrag = 2,
+   kRightDrag = 3
+};
 class CanvasElement
 {
 public:
@@ -49,21 +56,26 @@ public:
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }
    ofRectangle GetRect(bool clamp, bool wrapped, ofVec2f offset = ofVec2f(0, 0)) const;
-   float GetStart() const;
+   float GetStart() const;//Normalized, 0 to 1, relative to the Canvas
    void SetStart(float start, bool preserveLength);
-   virtual float GetEnd() const;
+   virtual float GetEnd() const;//Normalized, 0 to 1, relative to the Canvas
    void SetEnd(float end);
    std::vector<IUIControl*>& GetUIControls() { return mUIControls; }
    void MoveElementByDrag(ofVec2f dragOffset);
    void GetDragDestinationData(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
    void GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
-   void SetLengthBounds (float minLength, float maxLength){ mCustomMinLength = minLength, mCustomMaxLength = maxLength; }
+   DragOperation GetDragState();
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;
 
+   // Allows the definition of custom quantization/snapping rules
+   // The default method accepts input 0-1. Multiplies it by num columns, rounds it, and divides. Snapping it in place.
+   // The alt quantization ignores columns and multiplies it by x64 instead for much more precise snapping.
+   // These two are fun, but may not cover every case, define yours here!
    virtual bool UseCustomPosQuantization() { return false;}
-   virtual float GetCustomPosQuantization(float input, int mode) {return 0;};
+   virtual float GetCustomPosQuantization(float input, int context) {return 0;};
+
 
    virtual void CheckboxUpdated(std::string label, bool value, double time);
    virtual void FloatSliderUpdated(std::string label, float oldVal, float newVal, double time);
@@ -77,9 +89,6 @@ public:
    int mCol;
    float mOffset;
    float mLength;
-
-   float mCustomMinLength { -999999999.0f};
-   float mCustomMaxLength { 999999999.0f};
 
 protected:
    virtual void DrawContents(bool clamp, bool wrapped, ofVec2f offset) = 0;

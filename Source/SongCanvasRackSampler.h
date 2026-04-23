@@ -1,4 +1,4 @@
-﻿//
+//
 // Created by ArkyonVeil on 14/04/2026.
 //
 
@@ -55,8 +55,12 @@ public:
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
    int GetActiveOptions() const { return mVolumeEnabled + mADSREnabled;}
 
+   //Canvas Stuff
    void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
    void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
+   bool UseCustomCanvasElementQuantization() override { return mSample;}
+   float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context) override;
+
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

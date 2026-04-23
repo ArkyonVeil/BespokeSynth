@@ -50,7 +50,7 @@ void CanvasElement::Draw(ofVec2f offset)
       if (mCanvas->ShouldWrap() && GetEnd() > 1)
          DrawElement(K(clamp), K(wrapped), offset);
    }
-   else
+   else //Offset is not 0, we're dragging.
    {
       ofPushStyle();
       ofSetLineWidth(3.0f);
@@ -265,6 +265,24 @@ void CanvasElement::GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& n
       newRow = ofClamp(int(mRow + rowDrag + .5f), 0, mCanvas->GetNumRows() - 1);
    newOffset = mOffset;
    newOffset = mOffset + colDrag - (newCol - mCol);
+}
+DragOperation CanvasElement::GetDragState()
+{
+   if (mHighlighted)
+   {
+      auto hLight = mCanvas->GetDragEnd();
+      switch (hLight)
+      {
+         case Canvas::kHighlightEnd_None:
+            return mCanvas->IsElementDragging() ? DragOperation::kMoveDrag : DragOperation::kNotDragged;
+         case Canvas::kHighlightEnd_Start:
+            return DragOperation::kLeftDrag;
+         case Canvas::kHighlightEnd_End:
+            return DragOperation::kRightDrag;
+      }
+   }
+
+   return DragOperation::kNotDragged;
 }
 
 void CanvasElement::MoveElementByDrag(ofVec2f dragOffset)

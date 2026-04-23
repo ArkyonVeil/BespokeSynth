@@ -1,4 +1,4 @@
-﻿#include "SongCanvas_CanvasElement.h"
+#include "SongCanvas_CanvasElement.h"
 #include "CanvasElement.h"
 #include "SongCanvas.h"
 
@@ -143,4 +143,4 @@ void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
    mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }
 bool SongCanvas_CanvasElement::UseCustomPosQuantization() {return mRackPart->UseCustomCanvasElementQuantization();}
-float SongCanvas_CanvasElement::GetCustomPosQuantization(float input, int mode) {return mRackPart->GetCustomCanvasElementQuantization(this,input,mode);}
+float SongCanvas_CanvasElement::GetCustomPosQuantization(float input, int context) {return mRackPart->GetCustomCanvasElementQuantization(this,input,context);}

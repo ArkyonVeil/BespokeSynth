@@ -1,4 +1,4 @@
-﻿//
+//
 // Created by ArkyonVeil on 14/04/2026.
 //
 
@@ -75,7 +75,8 @@ int SongCanvasRackSampler::GetPitchFromCanvasElement(SongCanvas_CanvasElement* e
 
 int SongCanvasRackSampler::GetPitchFromCanvasElementSize(float size)
 {
-   if (size <= 0.0f) {
+   if (size <= 0.0f)
+   {
       return 0;
    }
    float sampleSize = GetSampleLengthForCanvasInPitchBase();
@@ -96,13 +97,12 @@ float SongCanvasRackSampler::GetCanvasElementSizeFromPitch(int notePitch)
    //Sometimes its good practice to cram a little bit of math. It goes a long way...
    //Theory still hazy though.
    //- Ark
-   return sampleSize/exp2f((static_cast<float>(notePitch)-48.0f)/12);
+   return sampleSize / exp2f((static_cast<float>(notePitch) - 48.0f) / 12);
 }
 
 //Updates a sample length visually based on the pitch reflected in its size.
 void SongCanvasRackSampler::UpdateSampleLength(SongCanvas_CanvasElement* element)
 {
-
 }
 
 void SongCanvasRackSampler::LoadFileSample()
@@ -135,7 +135,7 @@ bool SongCanvasRackSampler::MouseMoved(float x, float y)
    mExpandPropertiesButtonHovered = false;
    if (GetActiveOptions() > 0)
    {
-      if (GetRectLocal().contains(x,y))
+      if (GetRectLocal().contains(x, y))
       {
          float s = mExpandPropertiesWidth / 2;
          mExpandPropertiesButtonHovered = x > mExpandPropertiesTrianglePos.x - s && x < mExpandPropertiesTrianglePos.x + s;
@@ -192,7 +192,7 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
          }
          vols = (vols / (float)numChannels) / (float)kSearchSize;
 
-         if (vols > 0.05f)
+         if (vols > 0.05f || mSample->LengthInSeconds()>=10)
             mLongSample = true;
          else
             mLongSample = false;
@@ -233,13 +233,24 @@ void SongCanvasRackSampler::Process(double time)
 {
    //PROFILE stuff is in the Song Canvas
 
-   //TODO: Look for optimization opportunities, this might be doing pointless work.
-
    if (!mEnabled || mSample == nullptr)
       return;
 
-   if (mVolumeEnabled)
-      ComputeSliders(0);
+   //Skip processing if no voices are currently playing.
+   bool anyActive = false;
+   for (int i = 0; i < kNumVoices; ++i)
+   {
+      const VoiceInfo& info = mPolyMgr.GetVoiceInfo(i);
+      if (info.mPitch != -1)
+      {
+         anyActive = true;
+         break;
+      }
+   }
+   if (!anyActive)
+      return;
+
+   ComputeSliders(0);
 
    int numChannels = 2;
    int bufferSize = GetMixerBuffer()->BufferSize();
@@ -281,7 +292,7 @@ void SongCanvasRackSampler::DrawRackGraphics()
          {
             mVolumeSlider->Draw();
             float x, y;
-            mVolumeSlider->GetPosition(x, y,true);
+            mVolumeSlider->GetPosition(x, y, true);
             float w = mVolumeSlider->GetRect(true).width;
             ofPushStyle();
             ofSetColor(kOptionNameColour);
@@ -328,7 +339,7 @@ float SongCanvasRackSampler::GetPreferredWidth() const
          val += kADSRWidthPref;
 
 
-      val += MAX(0, kOptionsPadding * optionsEnabled - 1);
+      val += MAX(0, kOptionsPadding * optionsEnabled);
    }
    if (optionsEnabled > 0)
       val += kExpandPropertiesButtonWidthPref;
@@ -400,7 +411,7 @@ void SongCanvasRackSampler::OnPostResize()
    {
       float offsetX = GetReservedLeftWidth() + sampleButtonWidth + expandPropertiesWidth / 2;
       mExpandPropertiesTrianglePos = ofVec2f(offsetX, mHeight / 2);
-      offsetX += expandPropertiesWidth / 2+paddingWidth;
+      offsetX += expandPropertiesWidth / 2 + paddingWidth;
       if (mExpandProperties)
       {
          if (mVolumeEnabled)
@@ -413,7 +424,7 @@ void SongCanvasRackSampler::OnPostResize()
          if (mADSREnabled)
          {
             mADSRDisplay->SetPosition(offsetX, 3);
-            mADSRDisplay->SetDimensions(adsrWidth, mHeight-6);
+            mADSRDisplay->SetDimensions(adsrWidth, mHeight - 6);
             //offsetX += adsrWidth + paddingSize; No other options planned.
          }
       }
@@ -560,7 +571,6 @@ void SongCanvasRackSampler::ReloadAudioOptions()
    UpdateRow();
 }
 
-
 void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
 {
    element->mCurrentColor = mCanvasSamplerColor;
@@ -579,10 +589,95 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
    {
       ofPushMatrix();
       ofTranslate(rect.x, rect.y + 9);
+
+      //Draw the buffer
       DrawAudioBuffer(rect.width, rect.height - 9, mSample->Data(), mDrawAudioBufferSettings);
+      auto ds = element->GetDragState();
+
+      if (ds != DragOperation::kNotDragged)
+      {
+         if (ds == DragOperation::kLeftDrag || ds == DragOperation::kRightDrag)
+         {
+            float fontSize = 8;
+            int pitch = GetPitchFromCanvasElement(element);
+            std::string noteName = NoteName(pitch, false, true);
+            int offsetY = rect.height - 11;
+
+            //Background of Text
+            float textWidth = gFont.GetStringWidth(noteName, fontSize);
+            float pad = 3.0f;
+            if (textWidth + pad < rect.width)
+            {
+               ofRectangle backgroundRect;
+               if (ds == DragOperation::kLeftDrag)
+                  backgroundRect = { 0.f, offsetY - fontSize + 2.f, textWidth + pad * 2.f, fontSize - 1.f };
+               else if (ds == DragOperation::kRightDrag)
+                  backgroundRect = { rect.width - textWidth - pad * 2.f, offsetY - fontSize + 2.f, textWidth + pad * 2.f, fontSize - 1.f };
+
+               ofPushStyle();
+               ofFill();
+               ofSetColor(ofColor::black, 125);
+               ofRect(backgroundRect);
+               ofPopStyle();
+
+               ofPushStyle();
+               if (pitch == 48)
+                  ofSetColor(ofColor::cyan);
+               else
+                  ofSetColor(ofColor::white);
+
+               if (ds == DragOperation::kLeftDrag)
+                  DrawTextNormal(noteName, 2, offsetY, fontSize);
+               else if (ds == DragOperation::kRightDrag)
+                  DrawTextRightJustify(noteName, rect.width - 2, offsetY, fontSize);
+               ofPopStyle();
+            }
+         }
+      }
+
       ofPopMatrix();
    }
 }
+
+
+float SongCanvasRackSampler::GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context)
+{
+   //Goal is to evenly snap these to pitch.
+   int side = context; //0 = Left side dragging, 1 = Right side dragging.
+
+   //The input is 0-1, 0 at the start hand of the canvas, and 1 at the end of the canvas.
+   //We will set our snap alignment to the opposite side to the side being dragged.
+   float size;
+
+   //We also need to know the ends, thankfully they have already been normalized.
+   float start = element->GetStart();
+   float end = element->GetEnd();
+
+   //Let's also get the min max sizes and use those as caps.
+   float minPitchSize = GetCanvasElementSizeFromPitch(127);
+   float maxPitchSize = GetCanvasElementSizeFromPitch(0);
+
+
+   if (side == 0) //If we're dragging the left side, we'll snap backwards from the end
+      size = MAX(minPitchSize, end - input);
+   else //If we're dragging the right side, we'll snap from the start.
+      size = MAX(minPitchSize, input - start);
+
+
+   //Now that we have a side, let's get a pitch estimate
+   int elPitch = GetPitchFromCanvasElementSize(size);
+
+   //Now we estimate the true size of the sample at that pitch
+   float pitchSize = GetCanvasElementSizeFromPitch(elPitch);
+   pitchSize = CLAMP(pitchSize, minPitchSize, maxPitchSize);
+
+   //Now we have everything we need. Let's calculate the snap position.
+   if (side == 0)
+      return end - pitchSize;
+   else
+      return start + pitchSize;
+}
+
 
 void SongCanvasRackSampler::SaveState(FileStreamOut& out)
 {
