@@ -67,6 +67,7 @@ public:
    void OnLoadFinish() override;
    void Process(double time) override;
    void DrawRackGraphics() override;
+   void SetRackEnabled(bool enabled) override;
 
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override {mMemVolume = slider->GetValue();};
    void IntSliderUpdated(IntSlider* slider, int oldVal, double time) override {};

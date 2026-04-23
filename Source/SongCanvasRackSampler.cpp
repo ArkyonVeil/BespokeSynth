@@ -192,7 +192,7 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
          }
          vols = (vols / (float)numChannels) / (float)kSearchSize;
 
-         if (vols > 0.05f || mSample->LengthInSeconds()>=10)
+         if (vols > 0.05f || mSample->LengthInSeconds() >= 10)
             mLongSample = true;
          else
             mLongSample = false;
@@ -321,6 +321,14 @@ void SongCanvasRackSampler::DrawRackGraphics()
       ofFill();
       ofTriangleShaped(mExpandPropertiesTrianglePos.x, mExpandPropertiesTrianglePos.y, MAX(2, mExpandPropertiesWidth - 1), rot);
       ofPopStyle();
+   }
+}
+void SongCanvasRackSampler::SetRackEnabled(bool enabled)
+{
+   SongCanvasAudioRackElement::SetRackEnabled(enabled);
+   if (!enabled)
+   {
+      KillAudio();
    }
 }
 
@@ -521,6 +529,8 @@ std::vector<DropdownListElement> SongCanvasRackSampler::GetRightClickOptions()
    else
       options.push_back({ "remove ADSR", 15 });
 
+   //options.push_back({ "---", -1 });
+   //options.push_back({ "options", 18 });
    return options;
 }
 void SongCanvasRackSampler::HandleRightClickDropdown(int optionValue)
@@ -533,6 +543,10 @@ void SongCanvasRackSampler::HandleRightClickDropdown(int optionValue)
       mADSREnabled = true;
    if (optionValue == 15)
       mADSREnabled = false;
+
+   /*if (optionValue == 18)
+   {
+   }*/
 
    ReloadAudioOptions();
 }
@@ -600,19 +614,80 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
          {
             float fontSize = 8;
             int pitch = GetPitchFromCanvasElement(element);
-            std::string noteName = NoteName(pitch, false, true);
+            std::string sizeText;
+            bool renderAll = false;
+            float allMaxWidth;
+            float allExtraYOffset = 0;
             int offsetY = rect.height - 11;
 
-            //Background of Text
-            float textWidth = gFont.GetStringWidth(noteName, fontSize);
+
+            switch (mSongCanvas->mSamplerAudioResizeText)
+            {
+               case SongCanvas::EnumSamplerAudioResizeText::Scale:
+                  sizeText = NoteName(pitch, false, true);
+                  break;
+               case SongCanvas::EnumSamplerAudioResizeText::Pitch:
+                  sizeText = ofToString(pitch);
+                  break;
+               case SongCanvas::EnumSamplerAudioResizeText::Percent:
+               {
+                  float pitchDifference = 48 - pitch;
+                  float percent = roundf(powf( 2,pitchDifference / 12.0f) * 100.0f);
+                  sizeText = ofToString(percent) + "%";
+                  break;
+               }
+               case SongCanvas::EnumSamplerAudioResizeText::Time:
+               {
+                  float sampleLength = mSample->LengthInSeconds();
+                  float pitchDifference = 48 - pitch;
+                  float percent = powf( 2,pitchDifference / 12.0f);
+                  sizeText = ofGetSecondsToTimeMMSS(sampleLength * percent, false, false, true);
+                  break;
+               }
+               case SongCanvas::EnumSamplerAudioResizeText::All:
+               {
+                  renderAll = true;
+
+                  float pitchDifference = 48 - pitch;
+                  float percent = powf( 2,pitchDifference / 12.0f);
+                  float sampleLength = mSample->LengthInSeconds();
+                  sizeText = NoteName(pitch, false, true);
+
+                  std::string txS1, txS2;
+                  txS1 = ofToString(roundf(percent*100)) + "%";
+                  txS2 = ofGetSecondsToTimeMMSS(sampleLength * percent, false, false, true);
+
+                  allMaxWidth = MAX(gFont.GetStringWidth(txS1, fontSize),gFont.GetStringWidth(txS2, fontSize));
+
+                  sizeText += "\n"+ofToString(pitch);
+                  sizeText += "\n"+txS1;
+                  sizeText += "\n"+txS2;
+               }
+               break;
+            }
+
+            float textWidth;
+            float backHeight = fontSize - 1.0f;
+            if (renderAll)
+            {
+               offsetY += 13;
+               backHeight = gFont.GetStringHeight(sizeText,fontSize)*4+3;
+               textWidth = allMaxWidth+2.0f;
+               allExtraYOffset -= 2.0f;
+            }
+            else
+            {
+               textWidth = gFont.GetStringWidth(sizeText, fontSize);
+            }
+
             float pad = 3.0f;
-            if (textWidth + pad < rect.width)
+            if (textWidth + pad < rect.width || renderAll)
             {
                ofRectangle backgroundRect;
                if (ds == DragOperation::kLeftDrag)
-                  backgroundRect = { 0.f, offsetY - fontSize + 2.f, textWidth + pad * 2.f, fontSize - 1.f };
+                  backgroundRect = { 0.f, offsetY - fontSize + 2.f + allExtraYOffset, textWidth + pad * 2.f, backHeight };
                else if (ds == DragOperation::kRightDrag)
-                  backgroundRect = { rect.width - textWidth - pad * 2.f, offsetY - fontSize + 2.f, textWidth + pad * 2.f, fontSize - 1.f };
+                  backgroundRect = { rect.width - textWidth - pad * 2.f, offsetY - fontSize + 2.f + allExtraYOffset, textWidth + pad * 2.f, backHeight };
 
                ofPushStyle();
                ofFill();
@@ -627,9 +702,14 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
                   ofSetColor(ofColor::white);
 
                if (ds == DragOperation::kLeftDrag)
-                  DrawTextNormal(noteName, 2, offsetY, fontSize);
+                  DrawTextNormal(sizeText, 2, offsetY, fontSize);
                else if (ds == DragOperation::kRightDrag)
-                  DrawTextRightJustify(noteName, rect.width - 2, offsetY, fontSize);
+               {
+                  if (!renderAll)
+                     DrawTextRightJustify(sizeText, rect.width - 2, offsetY, fontSize);
+                  else
+                     DrawTextNormal(sizeText, rect.width - textWidth -1, offsetY, fontSize);
+               }
                ofPopStyle();
             }
          }

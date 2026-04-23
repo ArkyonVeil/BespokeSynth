@@ -831,7 +831,10 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 }
 void SongCanvas::Resize(float w, float h)
 {
-   w = MAX(w, 300);
+   int xEndRackSpacing = 46;
+   float getModuleMinWidth = MAX(300,8+mRackGrid->GetMinWidth()+xEndRackSpacing);
+
+   w = MAX(w, getModuleMinWidth);
    h = MAX(h, GetModuleMinHeight());
 
    if (mMeasureSize == 0)
@@ -882,7 +885,7 @@ void SongCanvas::Resize(float w, float h)
    }
 
 
-   int xEndRackSpacing = 46;
+
    mRackGrid->SetPosition(8, GetRackGridStartYOffset());
    mRackGrid->SetDimensions(mWidth - xEndRackSpacing);
    mRackAddNewButton->SetPosition(8 + mWidth - xEndRackSpacing, GetRackGridStartYOffset());
@@ -1502,12 +1505,12 @@ void SongCanvas::OnTransportAdvanced(float amount)
          {
             if (cL[i]->GetStart() < mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
             {
-               if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled)
+               if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
                {
                   mActiveElements.push_back(cL[i]);
                   cL[i]->GetRackElement()->OnEnter(cL[i]);
                }
-               if (seqLayers[cL[i]->mRow].enabled)
+               if (seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
                   cL[i]->GetRackElement()->OnProcessTransport();
                else
                {
@@ -1591,11 +1594,13 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    samplerPreviewAudio["never"] = 1;
    samplerPreviewAudio["always"] = 2;
    mModuleSaveData.LoadEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click", moduleInfo, 0, nullptr, &samplerPreviewAudio);
+
    EnumMap samplerResizePreviewMap;
    samplerResizePreviewMap["scale"] = 0;
    samplerResizePreviewMap["pitch"] = 1;
    samplerResizePreviewMap["percent"] = 2;
-   samplerResizePreviewMap["all"] = 3;
+   samplerResizePreviewMap["time"] = 3;
+   samplerResizePreviewMap["all"] = 4;
    mModuleSaveData.LoadEnum<EnumSamplerAudioResizeText>("sampler_resize_text",moduleInfo,0,nullptr,&samplerResizePreviewMap);
 
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
@@ -1633,6 +1638,8 @@ void SongCanvas::SetUpFromSaveData()
 
    mSamplerAudioPreviewMode = mModuleSaveData.GetEnum<EnumSamplerAudioPreviewMode>("sampler_preview_audio_on_click");
 
+   mSamplerAudioResizeText = mModuleSaveData.GetEnum<EnumSamplerAudioResizeText>("sampler_resize_text");
+
    for (auto rack : mRackGrid->GetAllElements())
    {
       dynamic_cast<SongCanvasRackElement*>(rack)->SongCanvasOptionsUpdated();
@@ -1641,6 +1648,7 @@ void SongCanvas::SetUpFromSaveData()
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
+
 }
 void SongCanvas::SaveState(FileStreamOut& out)
 {
@@ -1977,6 +1985,11 @@ void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
    {
       mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel, rackPartOptions[i].mValue);
    }
+   if(element->IsRackEnabled())
+      mRackElementRightClickDropdown->AddLabel("disable",(int)RackElementRightClickBaseOptions::Disable);
+   else
+      mRackElementRightClickDropdown->AddLabel("enable",(int)RackElementRightClickBaseOptions::Enable);
+
    mRackElementRightClickDropdown->AddLabel("rename", (int)RackElementRightClickBaseOptions::Rename);
    mRackElementRightClickDropdown->AddLabel("---", 0);
    mRackElementRightClickDropdown->AddLabel("delete", (int)RackElementRightClickBaseOptions::Delete);
@@ -2006,6 +2019,12 @@ void SongCanvas::ProcessRackElementRightClickDropdown(DropdownList* list)
          mCanvas->SetAllowElementPlacement(false);
       }
       break;
+      case RackElementRightClickBaseOptions::Enable:
+         mRightClickDropdownElementContext->SetRackEnabled(true);
+         break;
+      case RackElementRightClickBaseOptions::Disable:
+         mRightClickDropdownElementContext->SetRackEnabled(false);
+         break;
       default:
       {
          //Handle additional options here.

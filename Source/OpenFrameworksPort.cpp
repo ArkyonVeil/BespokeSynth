@@ -578,6 +578,41 @@ std::string ofGetTimestampString(std::string in)
    return in;
 }
 
+std::string ofGetSecondsToTimeMMSS(float seconds, bool alwaysDrawMinutes, bool padMinutes, bool drawTenths)
+{
+   int totalSeconds = (int)seconds; // truncate
+   int mins = totalSeconds / 60;
+   int secs = totalSeconds % 60;
+
+   char buff[32];
+   bool showMins = alwaysDrawMinutes || mins > 0;
+
+   if (drawTenths)
+   {
+      int tenth = ((int)(seconds * 10)) % 10;
+      if (showMins && padMinutes)
+         snprintf(buff, sizeof(buff), "%02d:%02d.%d", mins, secs, tenth);
+      else if (showMins)
+         snprintf(buff, sizeof(buff), "%d:%02d.%d", mins, secs, tenth);
+      else if (padMinutes)
+         snprintf(buff, sizeof(buff), "00:%02d.%d", secs, tenth);
+      else
+         snprintf(buff, sizeof(buff), "0:%02d.%d", secs, tenth);
+   }
+   else
+   {
+      if (showMins && padMinutes)
+         snprintf(buff, sizeof(buff), "%02d:%02d", mins, secs);
+      else if (showMins)
+         snprintf(buff, sizeof(buff), "%d:%02d", mins, secs);
+      else if (padMinutes)
+         snprintf(buff, sizeof(buff), "00:%02d", secs);
+      else
+         snprintf(buff, sizeof(buff), "0:%02d", secs);
+   }
+   return std::string(buff);
+}
+
 void ofTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
    ofBeginShape();

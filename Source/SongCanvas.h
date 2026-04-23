@@ -220,8 +220,10 @@ public:
       Scale = 0,
       Pitch = 1,
       Percent = 2,
-      All = 3,
+      Time = 3,
+      All = 4,
    };
+   EnumSamplerAudioResizeText mSamplerAudioResizeText = EnumSamplerAudioResizeText::Scale;
 
 private:
    struct SongCanvasLayer
@@ -371,6 +373,8 @@ private:
       Nothing = 0,
       Rename = 1,
       Delete = 2,
+      Enable = 3,
+      Disable = 4,
    };
    int mRackElementRightClickIndex;
 

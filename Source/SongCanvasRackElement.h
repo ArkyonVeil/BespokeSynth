@@ -81,10 +81,12 @@ public:
    float GetCompression() const { return MIN(1,mWidth/GetPreferredWidth());}//Returns the current scale, in comparison to the preferred size. 1->no comp. 0.5->half comp. 0->infinite comp
    virtual ofVec2f GetOutputPos() const { return {mWidth-GetReservedRightWidth()/2,mHeight / 2};}
 
+   bool IsRackEnabled() const { return mRackEnabled;}
+   virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled;}
+
    virtual void SongCanvasOptionsUpdated(){};
 
    int mInternalRackID;
-   bool mRackEnabled;
 
    std::unordered_map<int, std::unique_ptr<RackCanvasPartData>> mCanvasElementPartData;
 
@@ -129,6 +131,7 @@ protected:
 
 private:
    bool mRenameActive = false;
+   bool mRackEnabled;
    float mExcitePower{ 0 };
    float mExciteWiggle{ 0 };
    float mExciteDrag{ 0 };
@@ -138,6 +141,7 @@ private:
 
    float mRackNameStringPreferredWidth{ 0 };
    bool mBufferQuickRename = false;
+
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;

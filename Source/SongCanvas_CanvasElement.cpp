@@ -108,9 +108,14 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
          }
          mCachedNameSize = rect.width;
       }
-
-
       DrawTextNormal(mDisplayName, rect.x + mTextDrawXOffset, rect.y + 9 + addedTextYOffset, 9);
+
+      if (!mRackPart->IsRackEnabled())
+      {
+         ofSetColor(0,0,0,125);
+         ofFill();
+         ofRect(rect, 2);
+      }
    }
 
 
