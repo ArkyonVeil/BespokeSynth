@@ -617,14 +617,15 @@ PatchCablePos PatchCable::GetPatchCablePos()
       IDrawableModule* targetModuleParentContainerModule = targetModuleParentContainer ? targetModuleParentContainer->GetOwner() : nullptr;
       if (targetModuleParentContainerModule && targetModuleParentContainerModule->Minimized())
          targetModuleParent = targetModuleParentContainerModule;
-      if (targetModuleParent && (targetModuleParent->Minimized() || target->IsShowing() == false))
+      bool canTargetHoldCable = target->IsShowing() || target->HoldCableWhileHidden();
+      if (targetModuleParent && (targetModuleParent->Minimized() || canTargetHoldCable == false))
       {
          targetModuleParent->GetPosition(xThat, yThat);
          targetModuleParent->GetDimensions(wThat, hThat);
          if (targetModuleParent->HasTitleBar())
             yThatAdjust = IDrawableModule::TitleBarHeight();
       }
-      if (targetModuleGrandparent && (targetModuleGrandparent->Minimized() || target->IsShowing() == false))
+      if (targetModuleGrandparent && (targetModuleGrandparent->Minimized() || canTargetHoldCable == false))
       {
          targetModuleGrandparent->GetPosition(xThat, yThat);
          targetModuleGrandparent->GetDimensions(wThat, hThat);

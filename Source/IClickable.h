@@ -75,6 +75,7 @@ public:
    virtual bool CheckNeedsDraw();
    virtual void SetShowing(bool showing) { mShowing = showing; }
    bool IsShowing() const { return mShowing; }
+   bool HoldCableWhileHidden() const { return mHoldCableWhileHidden; }
    //Triggers a short (typically yellow) glow effect over the element when triggered remotely by invisible cables such as from midicontroller
    virtual void StartBeacon() { mBeaconTime = gTime; }
    float GetBeaconAmount() const;
@@ -93,6 +94,7 @@ public:
    void ClearOverridePatchCableInputDirection() { mOverridePatchCableDir = ofVec2f(0, 0), mHasOverridePatchCableDir = false; };
    ofVec2f GetOverridePatchCableInputDirection() const { return mOverridePatchCableDir; }
    bool HasOverridePatchCableInputDirection() const { return mHasOverridePatchCableDir; }
+   void SetHoldCableWhileHidden(const bool value) {mHoldCableWhileHidden = value;}
 
    //Naming and Overrides
    void SetOverrideDisplayName(std::string name)
@@ -133,6 +135,7 @@ protected:
    float mY{ 0 };
    IClickable* mParent{ nullptr };
    bool mShowing{ true };
+   bool mHoldCableWhileHidden { false };
 
 private:
    char mName[MAX_TEXTENTRY_LENGTH]{};

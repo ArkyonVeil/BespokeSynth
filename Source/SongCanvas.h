@@ -150,7 +150,7 @@ public:
    int GetInternalRackId() const { return mInternalRackIDCounter; }
    void IncrementInternalRackId() { mInternalRackIDCounter++; } //TODO merge with GetInternalRackId()
    DropdownList* GetRackRightClickDropdown() const { return mRackElementRightClickDropdown; }
-   SongCanvasRackElement* mRightClickDropdownElementContext = nullptr;
+   SongCanvasRackElement* mRightClickDropdownElementContext{ nullptr };
 
    //Transport
    void OnTransportAdvanced(float amount) override;
@@ -161,6 +161,7 @@ public:
    SongCanvasMixer* GetMixer(int index);
    SongCanvasMixer* GetMixerRef(int index) const;
    void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
+   float GetMixerSpaceAvailable() const { return kMixerPreferredWidth*mMixerDrawCompression;};
 
    //Animation
    float RescaleAnimationSpeedDelta() { return ofGetDeltaTime() * 96 * mDeltaAnimSpeedMultiplier; }
@@ -305,8 +306,8 @@ private:
    static const int AdvancedConfigHSize = 100;
    static const int FlowGridRowHeightSize = 32;
 
-   float mBottomOffsetSize = 16;
-   float mBottomOffsetTarget = 16;
+   float mBottomOffsetSize{ 16 };
+   float mBottomOffsetTarget{ 16 };
    bool mFlagResizeAnimationNeeded = false;
 
    float mUserPreferredWidth{ -1 };
@@ -354,10 +355,10 @@ private:
       return GetCanvasYOffset() + mCanvas->GetHeight() + 8;
    }
 
-   int mInternalRackIDCounter = 0;
+   int mInternalRackIDCounter{ 0 };
    int mExtraColumns;
-   int mFlowGridRows = 2;
-   int mPartNameCount = 4;
+   int mFlowGridRows{ 2 };
+   int mPartNameCount{ 4 };
 
    int GetCanvasStartXOffset() const
    {
@@ -369,7 +370,7 @@ private:
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
    std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[201];
-   int mChunkAmount = 10;
+   int mChunkAmount{ 10 };
 
    std::vector<SongCanvas_CanvasElement*> mActiveElements{};
 
@@ -380,7 +381,7 @@ private:
    std::vector<SongCanvasLayer> seqLayers{};
    std::vector<SongCanvasLayer> layerBuffer{}; //The reason for this is clumsy <>3
 
-   ClickButton* mRackAddNewButton = nullptr;
+   ClickButton* mRackAddNewButton{ nullptr };
 
    DropdownList* mRackAddNewDropdown{ nullptr };
    DropdownList* mRackElementRightClickDropdown{ nullptr };
@@ -435,25 +436,26 @@ private:
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
-   float mDeltaAnimSpeedMultiplier{ 1 };
+   float mDeltaAnimSpeedMultiplier { 1 };
 
    //Audio Handling
-   float mMixerStartingXOffset = 26;
-   float GetMixerXPadding() { return 54; };
+   float mMixerStartingXOffset{ 26 };
    SongCanvasMixer* mMixerControlsSelected{ nullptr };
-   void UpdateSongCanvasMixerSpacing();
+   void UpdateSongCanvasMixerYSpacing();
    void ScheduleMixerDisposal(SongCanvasMixer* mixer);
    void ScheduleRackDisposal(SongCanvasRackElement* rack);
-   float mMixerControlsHeight = 44;
-   float mMixerControlsWidth = 120;
-   float mMixerControlsYOffset = 5;
-   float mMixerControlsDrawHeight = 0;
-   float mMixerControlsDrawHeightTarget = 0;
-   float mMixerControlsEdgeMin = 8;
+   float const kMixerPreferredWidth{ 54 };
+   float const kMixerControlsHeight{ 44 };
+   float const kMixerControlsWidth{ 120 };
+   float mMixerControlsYOffset{ 5 };
+   float mMixerControlsDrawHeight{ 0 };
+   float mMixerControlsDrawHeightTarget{ 0 };
+   float mMixerControlsEdgeMin{ 8 };
    ofVec2f mMixerOrphanSourceCoord{ 0, 0 };
    float mSelectedMixerX; //Temp mixer cords, not updated if no mixer is selected.
    bool mScheduleMixerSort{ false };
    int mHighlightHintMixerId { -1 };
+   float mMixerDrawCompression { 1.0f };//0, width 0, 1
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
@@ -463,5 +465,5 @@ private:
    std::vector<SongCanvasRackElement*> mRackDisposalQueue{}; //
 
    //Expert variables (Unused)
-   bool expertPanelEnabled = false;
+   bool expertPanelEnabled{ false };
 };

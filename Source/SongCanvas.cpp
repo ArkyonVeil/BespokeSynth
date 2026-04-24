@@ -112,6 +112,7 @@ void SongCanvas::CreateUIControls()
    mCanvas->SetNumVisibleRows(5);
    mCanvas->SetMajorColumnInterval(4);
    mCanvas->SetScrollZoomSpeed(5);
+   mCanvas->SetElementPlacementHintSize(4);
    mCanvas->SetInvertDragSnapBehavior(true);
    mCanvas->SetAllowElementPlacement(false);
    mCanvas->mViewEnd = mMeasureCount;
@@ -698,7 +699,7 @@ void SongCanvas::DrawModule()
    ofPushStyle();
    //Mixers
    float offsetY = mHeight;
-   float mixerPadding = GetMixerXPadding();
+   float mixerPadding = GetMixerSpaceAvailable();
    for (int i = 0; i < mMixers.size(); ++i)
    {
       float mMixerXPos = mMixerStartingXOffset + i * mixerPadding;
@@ -729,15 +730,15 @@ void SongCanvas::DrawModule()
       ofSetColor(0, 0, 0, 75);
       ofFill();
 
-      float controlXOffset = mSelectedMixerX - mMixerControlsWidth / 2;
-      controlXOffset = CLAMP(controlXOffset, mMixerControlsEdgeMin, mWidth - mMixerControlsEdgeMin - mMixerControlsWidth);
+      float controlXOffset = mSelectedMixerX - kMixerControlsWidth / 2;
+      controlXOffset = CLAMP(controlXOffset, mMixerControlsEdgeMin, mWidth - mMixerControlsEdgeMin - kMixerControlsWidth);
 
       float controlYOffset = mHeight - mBottomOffsetSize + 12;
-      ofRect(controlXOffset, controlYOffset, mMixerControlsWidth, mMixerControlsDrawHeight);
+      ofRect(controlXOffset, controlYOffset, kMixerControlsWidth, mMixerControlsDrawHeight);
 
       ofSetColor(255, 255, 255, 80);
       ofNoFill();
-      ofRect(controlXOffset, controlYOffset, mMixerControlsWidth, mMixerControlsDrawHeight);
+      ofRect(controlXOffset, controlYOffset, kMixerControlsWidth, mMixerControlsDrawHeight);
 
       float triBaseX = mSelectedMixerX;
       float triBaseY = controlYOffset + mMixerControlsDrawHeight + 1;
@@ -898,6 +899,9 @@ void SongCanvas::Resize(float w, float h)
    mRackGrid->SetDimensions(mWidth - xEndRackSpacing);
    mRackAddNewButton->SetPosition(8 + mWidth - xEndRackSpacing, GetRackGridStartYOffset());
    mRackAddNewButton->SetDimensions(28, mRackGrid->GetHeight());
+
+   //Mixers!
+   mMixerDrawCompression = MIN(1.0f,(mWidth-mMixerStartingXOffset*2)/mMixers.size()*kMixerPreferredWidth);
 
    ReloadHeader();
 }
@@ -1088,6 +1092,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       }
       UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
+   mCanvas->SetElementPlacementHintSize((mCanvas->GetNumCols()/mMeasureCount));
    mTransportSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureCountTextbox->UpdateDisplayString();
@@ -1295,7 +1300,7 @@ void SongCanvas::OnClicked(float x, float y, bool right)
    if (!mMixers.empty())
    {
       float offsetY = mHeight;
-      float mixerPadding = GetMixerXPadding();
+      float mixerPadding = GetMixerSpaceAvailable();
       for (int i = 0; i < mMixers.size(); ++i)
       {
          float mX = x - mMixerStartingXOffset - i * mixerPadding;
@@ -1318,7 +1323,7 @@ bool SongCanvas::MouseMoved(float x, float y)
    if (!mMixers.empty())
    {
       float offsetY = mHeight;
-      float mixerPadding = GetMixerXPadding();
+      float mixerPadding = GetMixerSpaceAvailable();
       for (int i = 0; i < mMixers.size(); ++i)
       {
          float mX = x - mMixerStartingXOffset - i * mixerPadding;
@@ -2181,7 +2186,7 @@ void SongCanvas::SortMixers(int reserveIndex)
    }
 
    //Now set the footer size depending on the number of mixers.
-   UpdateSongCanvasMixerSpacing();
+   UpdateSongCanvasMixerYSpacing();
 }
 
 void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
@@ -2209,7 +2214,7 @@ void SongCanvas::SetMixerControlsState(bool active, int mixerIndex)
          }
       }
    }
-   UpdateSongCanvasMixerSpacing();
+   UpdateSongCanvasMixerYSpacing();
 }
 
 void SongCanvas::SampleDropped(int x, int y, Sample* sample)
@@ -2232,7 +2237,7 @@ void SongCanvas::FilesDropped(std::vector<std::string> files, int x, int y)
    mPartNameCount++;
 }
 
-void SongCanvas::UpdateSongCanvasMixerSpacing()
+void SongCanvas::UpdateSongCanvasMixerYSpacing()
 {
    float target;
    if (!mMixers.empty())
@@ -2246,8 +2251,8 @@ void SongCanvas::UpdateSongCanvasMixerSpacing()
 
    if (MixerControlsEnabled())
    {
-      target += mMixerControlsYOffset + mMixerControlsHeight;
-      mMixerControlsDrawHeightTarget = mMixerControlsHeight;
+      target += mMixerControlsYOffset + kMixerControlsHeight;
+      mMixerControlsDrawHeightTarget = kMixerControlsHeight;
    }
    else
    {

@@ -44,10 +44,12 @@ void SongCanvasRackSampler::CreateUIControls()
    SongCanvasAudioRackElement::CreateUIControls();
    mVolumeSlider = new FloatSlider(this, "volume", 0, mHeight + 2, 30, 15, &mVoiceParams.mVol, 0, 2, 2);
    mVolumeSlider->SetShowName(false);
-   mVolumeSlider->SetNoHover(true);
+   mVolumeSlider->SetShowing(false);
+   mVolumeSlider->SetHoldCableWhileHidden(true);
 
    mADSRDisplay = new ADSRDisplay(this, "ADSR", 3, mHeight + 2, 80, 50, &mVoiceParams.mAdsr);
-   mADSRDisplay->SetNoHover(true);
+   mADSRDisplay->SetShowing(false);
+   mADSRDisplay->SetHoldCableWhileHidden(true);
 }
 
 void SongCanvasRackSampler::OnEnter(SongCanvas_CanvasElement* element)
@@ -553,17 +555,14 @@ void SongCanvasRackSampler::HandleRightClickDropdown(int optionValue)
 
 void SongCanvasRackSampler::ReloadAudioOptions()
 {
-   //ArkyonVeil's Note: As seen in the SC Mixer. Setting these to NoHover is an intentional workaround
-   //to the fact that SetShowing affects cable patch points. This allows cables to still be controlled by the
-   //elements, while skipping the drawing code that makes them visible.
    if (mVolumeEnabled)
    {
       mVolumeSlider->SetValue(mMemVolume, NextBufferTime(false));
-      mVolumeSlider->SetNoHover(false); //TODO add true support
+      mVolumeSlider->SetShowing(true);
    }
    else
    {
-      mVolumeSlider->SetNoHover(true);
+      mVolumeSlider->SetShowing(false);
       mMemVolume = mVoiceParams.mVol;
       mVoiceParams.mVol = 0.5f;
       IUIControl::DestroyCablesTargetingControls(std::vector<IUIControl*>{ mVolumeSlider });
@@ -571,12 +570,12 @@ void SongCanvasRackSampler::ReloadAudioOptions()
 
    if (mADSREnabled)
    {
-      mADSRDisplay->SetNoHover(false);
+      mADSRDisplay->SetShowing(true);
       mVoiceParams.mAdsr = mMemADSR;
    }
    else
    {
-      mADSRDisplay->SetNoHover(true);
+      mADSRDisplay->SetShowing(false);
       mMemADSR = mVoiceParams.mAdsr;
       mVoiceParams.mAdsr.Clear();
       mVoiceParams.mAdsr.Set(10, 0, 1, 10);

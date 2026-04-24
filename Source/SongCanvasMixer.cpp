@@ -44,6 +44,10 @@ void SongCanvasMixer::CreateUIControls()
 
    mVolumeSlider->SetOverrideDisplayName("volume");
    mPanSlider->SetOverrideDisplayName("pan");
+
+   mVolumeSlider->SetHoldCableWhileHidden(true);
+   mPanSlider->SetHoldCableWhileHidden(true);
+
    mLeftChannelLevel.SetLimit(1);
    mLeftChannelLevel.SetLevelFillDirection(LevelMeterDisplay::LevelMeterFillDirection::RightToLeft);
    mRightChannelLevel.SetLimit(1);
@@ -335,8 +339,8 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
 
 void SongCanvasMixer::SetMixerControlsVisibility(bool state)
 {
-   mVolumeSlider->SetNoHover(!state);
-   mPanSlider->SetNoHover(!state);
+   mVolumeSlider->SetShowing(state);
+   mPanSlider->SetShowing(state);
 
    if (state)
    {

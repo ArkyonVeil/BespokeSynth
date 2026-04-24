@@ -115,13 +115,29 @@ public:
    float GetCursorPos() const { return mCursorPos; }
    CanvasElement* CreateElement(int col, int row) { return mElementCreator(this, col, row); }
    CanvasCoord GetCoordAt(int x, int y);
+   CanvasCoord GetCoordHovered() const { return mHoverCoord;};//-1,-1 if not hovered.
    void SetNumVisibleRows(int rows) { mNumVisibleRows = rows; }
    int GetNumVisibleRows() const { return MIN(mNumVisibleRows, mNumRows); }
    void SetRowOffset(int offset) { mRowOffset = ofClamp(offset, 0, mNumRows - mNumVisibleRows); }
    int GetRowOffset() const { return mRowOffset; }
+   ofVec2f Canvas::GetRowY(int row) const //Gets the Y start and Y end of a row. Relative to the canvas render box.
+   {
+      int visibleIndex = row - mRowOffset;
+      if (visibleIndex < 0 || visibleIndex >= GetNumVisibleRows())
+         return ofVec2f(-1, -1);
+      float rowHeight = GetHeight() / GetNumVisibleRows();
+      return {visibleIndex * rowHeight, (visibleIndex + 1) * rowHeight}; // {top, bottom}
+   }
+   ofVec2f GetColumnX(int col) const //Gets the X start and X end of a column. Relative to the canvas render box.
+   {
+      float startX = ofMap((float)col / GetNumCols(), mViewStart / mLength, mViewEnd / mLength, 0, 1) * mWidth;
+      float endX = ofMap(((float)col + 1.0f) / GetNumCols(), mViewStart / mLength, mViewEnd / mLength, 0, 1) * mWidth;
+      return {startX, endX}; // {left, right}
+   }
    bool ShouldWrap() const { return mWrap; }
    HighlightEnd GetHighlightEnd() const { return mHighlightEnd; }
    HighlightEnd GetDragEnd() const {return mDragEnd; }
+   void SetElementPlacementHintSize(float size) {mElementPlaceHintSizeMultiplier = size;}//1 = 1 column. Default 0, no hint.
    void SetMajorColumnInterval(int interval) { mMajorColumnInterval = interval; }
    void SetDragMode(DragMode mode) { mDragMode = mode; }
    DragMode GetDragMode() const { return mDragMode; }
@@ -206,6 +222,8 @@ private:
    ofColor mMinorColumnColour{ 0, 0, 0, 50 };
    bool mDefaultMinorColumnColour{ true };
    float mZoomScrollMultiplier{ 1.0f };
+   CanvasCoord mHoverCoord {-1,-1};
+   float mElementPlaceHintSizeMultiplier { 0.0f };
 
    int mNumRows;
    int mNumCols;

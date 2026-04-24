@@ -120,6 +120,25 @@ void Canvas::Render()
       ofPopStyle();
    }
 
+   if (GetKeyModifiers() & kModifier_Shift) //We're pressing shift which allows the placement of elements. Let's draw a subtle guide.
+   {
+      if (mHoverCoord.col >= 0 && mAllowElementPlacement && !mClick && mElementPlaceHintSizeMultiplier!=0)//Valid and allowed.
+      {
+         ofPushStyle();
+         ofVec2f lXV = GetColumnX(mHoverCoord.col);
+         ofVec2f lYV = GetRowY(mHoverCoord.row);
+         lXV.y = (lXV.y-lXV.x)*mElementPlaceHintSizeMultiplier+lXV.x;
+         ofFill();
+         float grad1 = lXV.x;
+         float grad2 = lXV.y - (lXV.y-lXV.x)*0.0f;
+         ofSetColorGradient({255,255,255,23},ofColor::clear,{grad1,0},{grad2,0});
+         //ofSetColor(ofColor::white);
+         ofRect({lXV.x,lYV.x,(lXV.y-lXV.x),lYV.y-lYV.x},0);
+         ofPopStyle();
+      }
+   }
+
+
    float pos = ofMap(mCursorPos, mViewStart / mLength, mViewEnd / mLength, 0, 1) * GetWidth();
    if (pos >= 0 && pos < GetWidth())
    {
@@ -381,6 +400,8 @@ bool Canvas::MouseMoved(float x, float y)
 
    if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
    {
+      mHoverCoord = GetCoordAt(x, y);
+
       if (mClick)
       {
          if (mClickedElement != nullptr)
@@ -430,6 +451,7 @@ bool Canvas::MouseMoved(float x, float y)
    }
    else
    {
+      mHoverCoord = CanvasCoord{ -1, -1 };
    }
 
    if (mDragSelecting)
