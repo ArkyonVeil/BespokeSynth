@@ -39,7 +39,7 @@ class FileStreamOut;
 class PatchCableSource;
 class EventCanvas;
 
-enum class DragOperation
+enum class CanvasElementDragOperation
 {
    kNotDragged = 0,
    kMoveDrag = 1,
@@ -64,7 +64,7 @@ public:
    void MoveElementByDrag(ofVec2f dragOffset);
    void GetDragDestinationData(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
    void GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& newRow, int& newCol, float& newOffset) const;
-   DragOperation GetDragState();
+   CanvasElementDragOperation GetDragState();
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;

@@ -441,6 +441,9 @@ void SongCanvas::DrawModule()
       Resize(mWidth, mHeight);
    }
 
+   if (mScheduleMixerSort)
+      SortMixers();
+
    int startCanvasOffset;
    if (expertPanelEnabled)
       startCanvasOffset = LayersListWidthSize + AdvancedConfigHSize;
@@ -836,6 +839,11 @@ void SongCanvas::Resize(float w, float h)
 
    w = MAX(w, getModuleMinWidth);
    h = MAX(h, GetModuleMinHeight());
+
+   if (TheSynth->GetResizingModule() == this) {
+      mUserPreferredWidth = w;
+      mUserPreferredHeight = h;
+   }
 
    if (mMeasureSize == 0)
    {
@@ -1299,6 +1307,7 @@ void SongCanvas::OnClicked(float x, float y, bool right)
 
 bool SongCanvas::MouseMoved(float x, float y)
 {
+   SetMixerIdHighlight(-1);
    IDrawableModule::MouseMoved(x, y);
 
    mMeasureSliderHovered = mMeasureSlider->GetRect(true).contains(x, y);
@@ -1951,14 +1960,13 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
       mCanvas->RemoveElement(re);
    }
    //If an audio element, we'll have to do some extra disposal.
-   SongCanvasAudioRackElement* aEle = dynamic_cast<SongCanvasAudioRackElement*>(element);
-   if (aEle)
+   SongCanvasAudioRackElement* audioElement = dynamic_cast<SongCanvasAudioRackElement*>(element);
+   if (audioElement)
    {
-      RemoveFromVector(aEle, mAudioRacks);
-      SortMixers();
+      ScheduleRackDisposal(audioElement);
    }
-
-   mRackGrid->RemoveFlowElement(element);
+   else
+      mRackGrid->DeleteFlowElement(element);
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {
@@ -2054,12 +2062,20 @@ void SongCanvas::Process(double time)
 
    if (!mEnabled)
       return;
-   //Check if there's mixers in need of dumping.
-   while (!mScheduledMixerDisposals.empty())
+   //Dead racks? Have at it!
+   int cleans = mRackGrid->Cleanup();
+   if (cleans > 0)
    {
-      const auto d = mScheduledMixerDisposals[mScheduledMixerDisposals.size() - 1];
+      mScheduleMixerSort = true;
+   }
+
+   //Check if there's mixers in need of dumping.
+   while (!mMixerDisposalQueue.empty())
+   {
+      const auto d = mMixerDisposalQueue[mMixerDisposalQueue.size() - 1];
+      RemoveFromVector(d, mMixers);
       delete d;
-      mScheduledMixerDisposals.pop_back();
+      mMixerDisposalQueue.pop_back();
    }
 
    //Process the audio making racks
@@ -2245,6 +2261,9 @@ void SongCanvas::UpdateSongCanvasMixerSpacing()
 void SongCanvas::ScheduleMixerDisposal(SongCanvasMixer* mixer)
 {
    mixer->PreDispose();
-   RemoveFromVector(mixer, mMixers);
-   mScheduledMixerDisposals.push_back(mixer);
+   mMixerDisposalQueue.push_back(mixer);
+}
+void SongCanvas::ScheduleRackDisposal(SongCanvasRackElement* rack)
+{
+   mRackGrid->ScheduleDeletion(rack);
 }

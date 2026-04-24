@@ -61,7 +61,7 @@ public:
    FlowGrid* GetFlowGrid() const { return mFlowGridParent; }
 
    void SetHovered(bool hovered) { mHovered = hovered; }
-   bool GetHovered() { return mHovered; }
+   bool IsHovered() const { return mHovered; }
 
    ofRectangle GetRect() const { return { mX, mY, mWidth, mHeight }; };
    ofRectangle GetRectRelativeToGrid() const;

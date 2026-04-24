@@ -86,12 +86,22 @@ float SongCanvasRackElement::GetPreferredWidth() const
 
 float SongCanvasRackElement::GetReservedPrefLeftWidth() const
 {
-   return kLeftWidthPadding + MAX(GetMinTextSpace(), mRackNameStringPreferredWidth) + kPartNameToContentPadding;
+   float textSize = MAX(GetRenameSpaceUsed(), MAX(GetMinTextSpace(), mRackNameStringPreferredWidth));
+   return kLeftWidthPadding + textSize + kPartNameToContentPadding;
+}
+float SongCanvasRackElement::GetLeftReservedToTextEnd() const
+{
+   return kLeftWidthPadding + MAX(GetRenameSpaceUsed(),GetStringWidth(mDisplayPartName));
+}
+float SongCanvasRackElement::GetRenameSpaceUsed() const
+{
+   return mRenameActive ? mElementRenameTextBox->GetRect().width : 0;
 }
 
-void SongCanvasRackElement::SetPartName(std::string newName) const
+void SongCanvasRackElement::SetPartName(std::string newName)
 {
    *mElementName = newName;
+   UpdatePartNameData();
 }
 
 void SongCanvasRackElement::SaveState(FileStreamOut& out)
@@ -230,6 +240,13 @@ void SongCanvasRackElement::DrawModule()
          DrawTextNormal(mDisplayPartName, kLeftWidthPadding, mHeight / 2 + 5.5);
       }
    }
+   if (!mRackEnabled)
+   {
+      ofFill();
+      ofSetColor({0,0,0,125});
+      ofRect(GetRectLocal());
+   }
+
    ofPopStyle();
 }
 
@@ -300,12 +317,19 @@ void SongCanvasAudioRackElement::SetMixer(SongCanvasMixer* mixer)
 void SongCanvasAudioRackElement::TextEntryComplete(TextEntry* entry)
 {
    SwapMixers(mMixerIndex);
+   mSongCanvas->SetMixerIdHighlight(mMixerIndex);
 }
 
 void SongCanvasAudioRackElement::OnPostResize()
 {
    SongCanvasRackElement::OnPostResize();
    mChannelPicker->SetPosition(mWidth - 26, GetCenteredElementY(mChannelPicker));
+}
+bool SongCanvasAudioRackElement::MouseMoved(float x, float y)
+{
+   if (mChannelPicker->GetRect(true).grow(2).contains(x,y))
+      mSongCanvas->SetMixerIdHighlight(mMixerIndex);
+   return SongCanvasRackElement::MouseMoved(x, y);
 }
 void SongCanvasAudioRackElement::SaveState(FileStreamOut& out)
 {

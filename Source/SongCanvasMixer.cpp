@@ -24,6 +24,7 @@ void SongCanvasMixer::PreDispose()
    mOwner->RemovePatchCableSource(mCableOut);
    mOwner->RemoveUIControl(mVolumeSlider);
    mOwner->RemoveUIControl(mPanSlider);
+   mIsDeleted = true;
 }
 
 void SongCanvasMixer::AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord)
@@ -59,6 +60,9 @@ void SongCanvasMixer::CreateUIControls()
 
 void SongCanvasMixer::Process()
 {
+   if (mIsDeleted)
+      return;
+
    mNumChannels = GetBuffer()->NumActiveChannels();
 
    //Sync with output buffer
@@ -129,6 +133,8 @@ void SongCanvasMixer::Process()
 
 void SongCanvasMixer::Draw(float x, float y)
 {
+   if (mIsDeleted)
+      return;
    mCableOut->SetManualPosition(x, y);
    ofPushStyle();
    float mixStartX = x + mRectBounds.x;
@@ -211,6 +217,12 @@ void SongCanvasMixer::Draw(float x, float y)
       ofSetColor(ofColor::cyan);
       ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
    }
+   if (mMixerIndex == mOwner->GetMixerIdHighlight())
+   {
+      ofNoFill();
+      ofSetColor(ofColor::yellow);
+      ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
+   }
    if (!IsSelected())
    {
       float miniPosX, miniPosY;
@@ -225,6 +237,9 @@ void SongCanvasMixer::Draw(float x, float y)
 
 void SongCanvasMixer::DrawMixerControls(float x, float y)
 {
+   if (mIsDeleted)
+      return;
+
    ofSetColor(ofColor(220, 220, 220));
    float offsetX = x + 6;
    float offsetY = y + 6;
@@ -274,8 +289,10 @@ void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
 //Received on any movement.
 void SongCanvasMixer::MouseMove(float x, float y)
 {
-   mHovered = mRectBounds.contains(x, y);
+   if (mIsDeleted)
+      return;
 
+   mHovered = mRectBounds.contains(x, y);
    mHoverName = mNameBounds.contains(x, y);
 }
 

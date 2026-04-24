@@ -35,7 +35,7 @@ public:
    SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas);
    ~SongCanvasRackElement() override{};
 
-   void SetPartName(std::string newName) const;
+   void SetPartName(std::string newName);
    void Excite(float excitePower)
    {
       if (mExcitePower < excitePower)
@@ -110,7 +110,7 @@ protected:
    //Dynamic, affected by compression and draw accurate.
    virtual float GetReservedLeftWidth() const {return GetReservedPrefLeftWidth()*GetCompression();}//Affected by compression. Should place unique stuff after this.
    virtual float GetReservedRightWidth() const {return GetReservedPrefRightWidth()*GetCompression();}//Affected by compression. Typically used for rack outputs.
-   float GetLeftReservedToTextEnd() const {return kLeftWidthPadding + GetStringWidth(mDisplayPartName);}
+   float GetLeftReservedToTextEnd() const;
 
    SongCanvas* mSongCanvas;
    std::string* mElementName;//The true name of the rack.
@@ -130,6 +130,8 @@ protected:
    TextTruncationSettings mPartNameTruncationSettings;
 
 private:
+
+   float GetRenameSpaceUsed() const;
    bool mRenameActive = false;
    bool mRackEnabled;
    float mExcitePower{ 0 };
@@ -166,6 +168,7 @@ public:
    int GetNumTargets() override { return 0; };
    bool ShouldSuppressAutomaticOutputCable() override { return true; };
    void OnPostResize() override;
+   bool MouseMoved(float x, float y) override;
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

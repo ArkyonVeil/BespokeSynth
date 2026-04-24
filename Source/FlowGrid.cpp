@@ -52,7 +52,7 @@ FlowGrid::~FlowGrid()
 {
    for (auto el : mElementList)
    {
-      RemoveFlowElement(el);
+      DeleteFlowElement(el);
    }
 }
 void FlowGrid::CreateUIControls()
@@ -761,8 +761,9 @@ void FlowGrid::RecalculateFlowGrid()
       UpdateRow(i, true);
    }
 }
-void FlowGrid::RemoveFlowElement(FlowGridElement* element)
+void FlowGrid::ScheduleDeletion(FlowGridElement* element)
 {
+   element->MarkAsDeleted();
    bool erased = false;
    for (auto& r : mRows)
    {
@@ -779,11 +780,28 @@ void FlowGrid::RemoveFlowElement(FlowGridElement* element)
          break;
    }
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
-   //ReturnName(element->NameData);
    mOwner->RemoveChild(element);
-   delete element;
+   mDisposalQueue.push_back(element);//Schedule for annihilation.
    RecalculateFlowGrid();
    CheckCleanupRows();
+}
+void FlowGrid::DeleteFlowElement(FlowGridElement* element)
+{
+   if (!element->IsDeleted())
+      ScheduleDeletion(element);
+   delete element;
+}
+int FlowGrid::Cleanup()
+{
+   int cleans = 0;
+   while (!mDisposalQueue.empty())
+   {
+      const auto d = mDisposalQueue[mDisposalQueue.size() - 1];
+      delete d;
+      mDisposalQueue.pop_back();
+      cleans++;
+   }
+   return cleans;
 }
 
 void FlowGrid::ReturnName(FlowNameAssigment* nAssign)

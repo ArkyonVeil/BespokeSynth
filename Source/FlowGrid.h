@@ -63,13 +63,18 @@ public:
    void UpdateRow(int index, bool updateFillState);
    int GetRowIndexOfElement(FlowGridElement* element) const;
    void RecalculateFlowGrid();
-   void RemoveFlowElement(FlowGridElement* element);
    void ReturnName(FlowNameAssigment* nAssign);
    void AddRow();
    void PopRow();
    void ResizeFlowGrid();
    void InitAllFlowElements() const; //Only called automatically after the parent module is initialized.
    std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
+
+   //Removes and deletes the Flow Element. If the element is multithreaded (also on the audio thread) call
+   //ScheduleDeletion() first, then Delete or Cleanup in the audio thread.
+   void DeleteFlowElement(FlowGridElement* element);
+   void ScheduleDeletion(FlowGridElement* element);//Schedules a rack module for deletion. Removes it from call chains and readies it for Cleanup.
+   int Cleanup();//Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
@@ -119,7 +124,6 @@ private:
       Center
    };
 
-
    FlowGridDirection mSortDirection{ Left };
 
 
@@ -131,6 +135,7 @@ private:
    FlowGridElement* mLastSelectedElement{ nullptr };
    IFlowGridListener* mListener;
    std::vector<FlowGridElement*> mElementList;
+   std::vector<FlowGridElement*> mDisposalQueue;
    float mRowScalingSize[30];
 
 

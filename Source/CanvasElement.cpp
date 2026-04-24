@@ -266,7 +266,7 @@ void CanvasElement::GetDragDestinationDataUnquantized(ofVec2f dragOffset, int& n
    newOffset = mOffset;
    newOffset = mOffset + colDrag - (newCol - mCol);
 }
-DragOperation CanvasElement::GetDragState()
+CanvasElementDragOperation CanvasElement::GetDragState()
 {
    if (mHighlighted)
    {
@@ -274,15 +274,15 @@ DragOperation CanvasElement::GetDragState()
       switch (hLight)
       {
          case Canvas::kHighlightEnd_None:
-            return mCanvas->IsElementDragging() ? DragOperation::kMoveDrag : DragOperation::kNotDragged;
+            return mCanvas->IsElementDragging() ? CanvasElementDragOperation::kMoveDrag : CanvasElementDragOperation::kNotDragged;
          case Canvas::kHighlightEnd_Start:
-            return DragOperation::kLeftDrag;
+            return CanvasElementDragOperation::kLeftDrag;
          case Canvas::kHighlightEnd_End:
-            return DragOperation::kRightDrag;
+            return CanvasElementDragOperation::kRightDrag;
       }
    }
 
-   return DragOperation::kNotDragged;
+   return CanvasElementDragOperation::kNotDragged;
 }
 
 void CanvasElement::MoveElementByDrag(ofVec2f dragOffset)

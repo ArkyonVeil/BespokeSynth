@@ -608,9 +608,9 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
       DrawAudioBuffer(rect.width, rect.height - 9, mSample->Data(), mDrawAudioBufferSettings);
       auto ds = element->GetDragState();
 
-      if (ds != DragOperation::kNotDragged)
+      if (ds != CanvasElementDragOperation::kNotDragged)
       {
-         if (ds == DragOperation::kLeftDrag || ds == DragOperation::kRightDrag)
+         if (ds == CanvasElementDragOperation::kLeftDrag || ds == CanvasElementDragOperation::kRightDrag)
          {
             float fontSize = 8;
             int pitch = GetPitchFromCanvasElement(element);
@@ -684,9 +684,9 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
             if (textWidth + pad < rect.width || renderAll)
             {
                ofRectangle backgroundRect;
-               if (ds == DragOperation::kLeftDrag)
+               if (ds == CanvasElementDragOperation::kLeftDrag)
                   backgroundRect = { 0.f, offsetY - fontSize + 2.f + allExtraYOffset, textWidth + pad * 2.f, backHeight };
-               else if (ds == DragOperation::kRightDrag)
+               else if (ds == CanvasElementDragOperation::kRightDrag)
                   backgroundRect = { rect.width - textWidth - pad * 2.f, offsetY - fontSize + 2.f + allExtraYOffset, textWidth + pad * 2.f, backHeight };
 
                ofPushStyle();
@@ -701,9 +701,9 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
                else
                   ofSetColor(ofColor::white);
 
-               if (ds == DragOperation::kLeftDrag)
+               if (ds == CanvasElementDragOperation::kLeftDrag)
                   DrawTextNormal(sizeText, 2, offsetY, fontSize);
-               else if (ds == DragOperation::kRightDrag)
+               else if (ds == CanvasElementDragOperation::kRightDrag)
                {
                   if (!renderAll)
                      DrawTextRightJustify(sizeText, rect.width - 2, offsetY, fontSize);
@@ -924,7 +924,7 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
       bool clipOptions = mRect.width <= kMinWidthDrawButtons;
 
       ofSetColor(ofColor(230, 230, 230));
-      if (!mOwner->GetHovered())
+      if (!mOwner->IsHovered())
       {
          mNameDisplayAnimOffset = 0;
          DrawTextNormal(mDisplayName, 2, 9, 9);

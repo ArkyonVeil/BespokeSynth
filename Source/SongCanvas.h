@@ -128,7 +128,21 @@ public:
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
    SongCanvasRackElement* GetRackPartWithID(int id);
    SongCanvasRackElement* GetSelectedRackPart() const;
-   float GetModuleMinHeight() { return 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16; }
+   float GetModuleMinWidth()
+   {
+      int xEndRackSpacing = 46;
+      float base = MAX(300, 8 + mRackGrid->GetMinWidth() + xEndRackSpacing);
+      if (mUserPreferredWidth > 0)
+         return MAX(base, mUserPreferredWidth);
+      return base;
+   }
+   float GetModuleMinHeight()
+   {
+      float base = 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16;
+      if (mUserPreferredHeight > 0)
+         return MAX(base, mUserPreferredHeight);
+      return base;
+   }
    bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.
    void onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY) override;
    void onFlowGridNewSelection(FlowGridElement* element) override;
@@ -162,6 +176,8 @@ public:
    void SampleDropped(int x, int y, Sample* sample) override;
    void FilesDropped(std::vector<std::string> files, int x, int y) override;
    bool CanDropSample() const override { return true; }
+   void SetMixerIdHighlight(int id) { mHighlightHintMixerId = id;}
+   int GetMixerIdHighlight() {return mHighlightHintMixerId;}
 
    //Garbage Disposal
    void DisposeElement(IClickable* element);
@@ -292,6 +308,9 @@ private:
    float mBottomOffsetSize = 16;
    float mBottomOffsetTarget = 16;
    bool mFlagResizeAnimationNeeded = false;
+
+   float mUserPreferredWidth{ -1 };
+   float mUserPreferredHeight{ -1 };
 
    bool mLocalMode{ false }; //If false, runs on local timing.
    int mMeasureStart{ 0 };
@@ -424,6 +443,7 @@ private:
    SongCanvasMixer* mMixerControlsSelected{ nullptr };
    void UpdateSongCanvasMixerSpacing();
    void ScheduleMixerDisposal(SongCanvasMixer* mixer);
+   void ScheduleRackDisposal(SongCanvasRackElement* rack);
    float mMixerControlsHeight = 44;
    float mMixerControlsWidth = 120;
    float mMixerControlsYOffset = 5;
@@ -432,10 +452,15 @@ private:
    float mMixerControlsEdgeMin = 8;
    ofVec2f mMixerOrphanSourceCoord{ 0, 0 };
    float mSelectedMixerX; //Temp mixer cords, not updated if no mixer is selected.
+   bool mScheduleMixerSort{ false };
+   int mHighlightHintMixerId { -1 };
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
-   std::vector<SongCanvasMixer*> mScheduledMixerDisposals{};
+
+   //Need to destroy a multithreaded object, dump it here!
+   std::vector<SongCanvasMixer*> mMixerDisposalQueue{};
+   std::vector<SongCanvasRackElement*> mRackDisposalQueue{}; //
 
    //Expert variables (Unused)
    bool expertPanelEnabled = false;

@@ -30,6 +30,7 @@ public:
 
    int mMixerIndex; //Please do not write to this.
    int const kMixerVersion{ 0 };
+   bool mIsDeleted { false };
 
 private:
    SongCanvas* mOwner;

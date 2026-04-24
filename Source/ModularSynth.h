@@ -197,11 +197,12 @@ public:
    }
 
    void SetResizeModule(IDrawableModule* module) { mResizeModule = module; }
+   IDrawableModule* GetResizingModule() const { return mResizeModule;}
 
    void SetGroupSelectContext(ModuleContainer* context) { mGroupSelectContext = context; }
    bool IsGroupSelecting() const { return mGroupSelectContext != nullptr; }
 
-   IDrawableModule* GetMoveModule() { return mMoveModule; }
+   IDrawableModule* GetMoveModule() const { return mMoveModule; }
    ModuleFactory* GetModuleFactory() { return &mModuleFactory; }
    juce::AudioDeviceManager& GetAudioDeviceManager() { return *mGlobalAudioDeviceManager; }
    juce::AudioFormatManager& GetAudioFormatManager() { return *mGlobalAudioFormatManager; }
