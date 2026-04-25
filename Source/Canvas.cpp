@@ -148,8 +148,14 @@ void Canvas::Render()
       ofPopStyle();
    }
 
-   ofPopStyle();
-   ofPopMatrix();
+   /* Debug hover code.
+    ofPushStyle();
+    ofSetColor(255, 255, 55);
+    DrawTextNormal("col=" + ofToString(mHoverCoord.col) + " row=" + ofToString(mHoverCoord.row), 5, GetHeight() - 20);
+    ofPopStyle();*/
+
+    ofPopStyle();
+    ofPopMatrix();
 }
 
 void Canvas::AddElement(CanvasElement* element)
@@ -736,11 +742,11 @@ void Canvas::EraseElementsAt(float pos)
       RemoveElement(elem);
 }
 
-CanvasCoord Canvas::GetCoordAt(int x, int y)
+CanvasCoord Canvas::GetCoordAt(int x, int y) const
 {
    if (x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight())
    {
-      int col = int(ofMap(x / mWidth, 0, mLength, mViewStart, mViewEnd) * mNumCols);
+      int col = ofLerp(mViewStart/mLength,mViewEnd/mLength,(float)x/mWidth)*mNumCols;
       int row = (y / GetHeight()) * GetNumVisibleRows() + mRowOffset;
       return CanvasCoord(col, row);
    }

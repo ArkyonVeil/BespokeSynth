@@ -114,7 +114,7 @@ public:
    void SetCursorPos(float pos) { mCursorPos = pos; }
    float GetCursorPos() const { return mCursorPos; }
    CanvasElement* CreateElement(int col, int row) { return mElementCreator(this, col, row); }
-   CanvasCoord GetCoordAt(int x, int y);
+   CanvasCoord GetCoordAt(int x, int y) const;
    CanvasCoord GetCoordHovered() const { return mHoverCoord;};//-1,-1 if not hovered.
    void SetNumVisibleRows(int rows) { mNumVisibleRows = rows; }
    int GetNumVisibleRows() const { return MIN(mNumVisibleRows, mNumRows); }
