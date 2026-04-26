@@ -28,6 +28,9 @@ public:
    bool IsSelected();
    void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override;
 
+   ofRectangle GetRect() const { return {kRectBounds.x*comp,kRectBounds.y,kRectBounds.width*comp,kRectBounds.height};}
+   ofRectangle GetNameRect() const { return {mNameBounds.x*comp,mNameBounds.y,mNameBounds.width*comp,mNameBounds.height};}
+   float comp { 1 };
    int mMixerIndex; //Please do not write to this.
    int const kMixerVersion{ 0 };
    bool mIsDeleted { false };
@@ -51,8 +54,8 @@ private:
    bool mEnabled{ true };
    bool mHovered{ false };
    bool mHoverName{ false };
-   ofRectangle mRectBounds{ -25, -16, 50, 16 };
-   ofRectangle mNameBounds;
+   ofRectangle const kRectBounds{ -25, -16, 50, 16 };
+   ofRectangle mNameBounds { -2, -2 , 4, 4 };
 
    ofColor mMixerBarBackgroundCol{ 15, 15, 15 };
    ofColor mMixerBarGuideCol{ 70, 80, 80 };

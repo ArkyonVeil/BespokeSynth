@@ -57,7 +57,7 @@ void SongCanvasMixer::CreateUIControls()
    float extraWidth = 0;
    if (mMixerIndex > 9)
       extraWidth += 1;
-   mNameBounds = ofRectangle(mRectBounds.x + 1, mRectBounds.y - 9, 2.5f + GetStringWidth(ofToString(mMixerIndex), 8) + extraWidth, 9);
+   mNameBounds = ofRectangle(kRectBounds.x + 1, kRectBounds.y - 9, 2.5f + GetStringWidth(ofToString(mMixerIndex), 8) + extraWidth, 9);
 
    SetMixerControlsVisibility(false);
 }
@@ -141,34 +141,44 @@ void SongCanvasMixer::Draw(float x, float y)
       return;
    mCableOut->SetManualPosition(x, y);
    ofPushStyle();
-   float mixStartX = x + mRectBounds.x;
+   ofPushMatrix();
+   ofTranslate(x,y);
+
+   comp = mOwner->GetMixerCompression();
+
+   float rectX = GetRect().x;
+   float rectWidth = GetRect().width;
+
+   float nameBoundsX = GetNameRect().x;
+   float nameBoundsWidth = GetNameRect().width;
+
 
    //Draw the title
    if (mEnabled)
       ofSetColor(ofColor::cyan);
    else
       ofSetColor(ofColor::grey);
-   DrawTextNormal(ofToString(mMixerIndex), mixStartX + 2, y - mRectBounds.height - 1.0f, 10); //Channel name
+   DrawTextNormal(ofToString(mMixerIndex), rectX+2, -kRectBounds.height - 1.0f, 10); //Channel name
    //Hover title overlay
    if (mHoverName)
    {
       ofSetColor(ofColor::white, 100);
       ofFill();
-      ofRect(x + mNameBounds.x, y + mNameBounds.y, mNameBounds.width, mNameBounds.height, 2);
+      ofRect(nameBoundsX, mNameBounds.y, nameBoundsWidth, mNameBounds.height, 2);
    }
 
    //Indent Selection
    float backA = mEnabled ? 50 : 100;
    ofSetColor(ofColor(0, 0, 0, backA));
    ofFill();
-   ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
+   ofRect(rectX, kRectBounds.y, rectWidth, kRectBounds.height + 5);
 
    //Background
    float offsetX;
-   float offsetY = y - 12;
-   float barSize = 42;
+   float offsetY = -12;
+   float barSize = 42.0f*comp;
 
-   offsetX = x - barSize / 2;
+   offsetX = -barSize / 2;
 
    float mMixerBarVPanHeight = 5;
 
@@ -188,15 +198,14 @@ void SongCanvasMixer::Draw(float x, float y)
    float chR = (1 - MAX(0, -mPan)) * mVolume;
 
    float fillWidth = (chL * barSize * 0.5f) + (chR * barSize * 0.5f);
-   float fillOffset = (barSize / 2) - (barSize * chL * 0.5);
+   float fillOffset = (barSize / 2.0f) - (barSize * chL * 0.5f);
 
    if (fillWidth > 1) //Only bother rendering if there's enough pixels.
    {
-      float fillA = mEnabled ? 255 : 100;
+      int fillA = mEnabled ? 255 : 100;
       ofSetColor(ofColor(235, 235, 235, fillA));
       ofRect(offsetX + fillOffset, offsetY, fillWidth, mMixerBarVPanHeight, 0);
    }
-
 
    //Lefthand Marker
    ofSetColor(mMixerBarGuideCol);
@@ -219,23 +228,24 @@ void SongCanvasMixer::Draw(float x, float y)
    {
       ofNoFill();
       ofSetColor(ofColor::cyan);
-      ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
+      ofRect(rectX,kRectBounds.y, rectWidth, kRectBounds.height + 5);
    }
    if (mMixerIndex == mOwner->GetMixerIdHighlight())
    {
       ofNoFill();
       ofSetColor(ofColor::yellow);
-      ofRect(x + mRectBounds.x, y + mRectBounds.y, mRectBounds.width, mRectBounds.height + 5);
+      ofRect(rectX,kRectBounds.y, rectWidth, kRectBounds.height + 5);
    }
    if (!IsSelected())
    {
       float miniPosX, miniPosY;
-      miniPosX = x - 20;
-      miniPosY = y - 2;
+      miniPosX = 20.0f*comp;
+      miniPosY = 2;
       mPanSlider->SetPosition(miniPosX, miniPosY);
       mVolumeSlider->SetPosition(miniPosX, miniPosY);
    }
 
+   ofPopMatrix();
    ofPopStyle();
 }
 
@@ -296,8 +306,10 @@ void SongCanvasMixer::MouseMove(float x, float y)
    if (mIsDeleted)
       return;
 
-   mHovered = mRectBounds.contains(x, y);
-   mHoverName = mNameBounds.contains(x, y);
+   comp = mOwner->GetMixerCompression();
+
+   mHovered = GetRect().contains(x,y);
+   mHoverName = GetNameRect().contains(x,y);
 }
 
 //Its Relative-> 0,0 on cable location.
@@ -307,7 +319,7 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
    if (right)
       return;
 
-   if (mRectBounds.contains(x, y))
+   if (GetRect().contains(x, y))
    {
       if (IsSelected())
       {
@@ -327,7 +339,7 @@ void SongCanvasMixer::MouseClick(float x, float y, bool right)
          mOwner->SetMixerControlsState(true, mMixerIndex);
       }
    }
-   if (mNameBounds.contains(x, y))
+   if (GetNameRect().contains(x, y))
    {
       mEnabled = !mEnabled;
       if (!mEnabled && mTarget)

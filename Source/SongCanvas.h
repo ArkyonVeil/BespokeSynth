@@ -162,6 +162,7 @@ public:
    SongCanvasMixer* GetMixerRef(int index) const;
    void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
    float GetMixerSpaceAvailable() const { return kMixerPreferredWidth*mMixerDrawCompression;};
+   float GetMixerCompression() const {return mMixerDrawCompression;}
 
    //Animation
    float RescaleAnimationSpeedDelta() { return ofGetDeltaTime() * 96 * mDeltaAnimSpeedMultiplier; }

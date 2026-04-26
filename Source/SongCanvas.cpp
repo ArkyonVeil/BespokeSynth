@@ -700,9 +700,10 @@ void SongCanvas::DrawModule()
    //Mixers
    float offsetY = mHeight;
    float mixerPadding = GetMixerSpaceAvailable();
+   float startOffset = mMixerStartingXOffset * 0.2f + mMixerStartingXOffset * 0.8f * GetMixerCompression();
    for (int i = 0; i < mMixers.size(); ++i)
    {
-      float mMixerXPos = mMixerStartingXOffset + i * mixerPadding;
+      float mMixerXPos = startOffset + i * mixerPadding;
       if (mMixers[i] == mMixerControlsSelected)
       {
          mSelectedMixerX = mMixerXPos;
@@ -836,12 +837,13 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
 void SongCanvas::Resize(float w, float h)
 {
    int xEndRackSpacing = 46;
-   float getModuleMinWidth = MAX(300,8+mRackGrid->GetMinWidth()+xEndRackSpacing);
+   float getModuleMinWidth = MAX(300, 8 + mRackGrid->GetMinWidth() + xEndRackSpacing);
 
    w = MAX(w, getModuleMinWidth);
    h = MAX(h, GetModuleMinHeight());
 
-   if (TheSynth->GetResizingModule() == this) {
+   if (TheSynth->GetResizingModule() == this)
+   {
       mUserPreferredWidth = w;
       mUserPreferredHeight = h;
    }
@@ -894,7 +896,6 @@ void SongCanvas::Resize(float w, float h)
    }
 
 
-
    mRackGrid->SetPosition(8, GetRackGridStartYOffset());
    mRackGrid->SetDimensions(mWidth - xEndRackSpacing);
    mRackAddNewButton->SetPosition(8 + mWidth - xEndRackSpacing, GetRackGridStartYOffset());
@@ -902,6 +903,7 @@ void SongCanvas::Resize(float w, float h)
 
    //Mixers!
    mMixerDrawCompression = MIN(1.0f,(mWidth-mMixerStartingXOffset*2)/mMixers.size()*kMixerPreferredWidth);
+
 
    ReloadHeader();
 }
@@ -1092,7 +1094,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       }
       UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
-   mCanvas->SetElementPlacementHintSize((mCanvas->GetNumCols()/mMeasureCount));
+   mCanvas->SetElementPlacementHintSize((mCanvas->GetNumCols() / mMeasureCount));
    mTransportSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureCountTextbox->UpdateDisplayString();
@@ -1318,6 +1320,17 @@ bool SongCanvas::MouseMoved(float x, float y)
    mMeasureSliderHovered = mMeasureSlider->GetRect(true).contains(x, y);
 
    mRackGrid->MouseMoved(x, y);
+   /* Uncomment this to easily check mixer compression
+    * Press Shift and move your mouse around, it's handy!
+   if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+   {
+      if (GetKeyModifiers() & kModifier_Shift)
+      {
+         mMixerDrawCompression = (x * 2.0f) / mWidth;
+         mMixerDrawCompression = MIN(1, mMixerDrawCompression);
+         mFlagResizeAnimationNeeded = true;
+      }
+   }*/
 
    //If there's mixers we may have to count on moving events over them.
    if (!mMixers.empty())
@@ -1615,7 +1628,7 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    samplerResizePreviewMap["percent"] = 2;
    samplerResizePreviewMap["time"] = 3;
    samplerResizePreviewMap["all"] = 4;
-   mModuleSaveData.LoadEnum<EnumSamplerAudioResizeText>("sampler_resize_text",moduleInfo,0,nullptr,&samplerResizePreviewMap);
+   mModuleSaveData.LoadEnum<EnumSamplerAudioResizeText>("sampler_resize_text", moduleInfo, 0, nullptr, &samplerResizePreviewMap);
 
    mModuleSaveData.LoadBool("reset_button_also_stops", moduleInfo, false);
    EnumMap mapCols;
@@ -1638,7 +1651,6 @@ void SongCanvas::LoadLayout(const ofxJSONElement& moduleInfo)
    mapCols["trans"] = 16;
    mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("global_colour_style", moduleInfo, 0, nullptr, &mapCols);
    mModuleSaveData.LoadEnum<EnumSongCanvasStyle>("local_colour_style", moduleInfo, 1, nullptr, &mapCols);
-
 }
 void SongCanvas::SetUpFromSaveData()
 {
@@ -1662,7 +1674,6 @@ void SongCanvas::SetUpFromSaveData()
 }
 void SongCanvas::SaveLayout(ofxJSONElement& moduleInfo)
 {
-
 }
 void SongCanvas::SaveState(FileStreamOut& out)
 {
@@ -1998,10 +2009,10 @@ void SongCanvas::OpenRightClickRackMenu(SongCanvasRackElement* element)
    {
       mRackElementRightClickDropdown->AddLabel(rackPartOptions[i].mLabel, rackPartOptions[i].mValue);
    }
-   if(element->IsRackEnabled())
-      mRackElementRightClickDropdown->AddLabel("disable",(int)RackElementRightClickBaseOptions::Disable);
+   if (element->IsRackEnabled())
+      mRackElementRightClickDropdown->AddLabel("disable", (int)RackElementRightClickBaseOptions::Disable);
    else
-      mRackElementRightClickDropdown->AddLabel("enable",(int)RackElementRightClickBaseOptions::Enable);
+      mRackElementRightClickDropdown->AddLabel("enable", (int)RackElementRightClickBaseOptions::Enable);
 
    mRackElementRightClickDropdown->AddLabel("rename", (int)RackElementRightClickBaseOptions::Rename);
    mRackElementRightClickDropdown->AddLabel("---", 0);
