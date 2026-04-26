@@ -49,6 +49,9 @@ Canvas::Canvas(IDrawableModule* parent, int x, int y, int w, int h, float length
    for (size_t i = 0; i < mRowColors.size(); ++i)
       mRowColors[i] = ofColor(200, 200, 200, 70);
 }
+Canvas::Canvas(ICanvasListener* parent, int x, int y, int w, int h, float length, int rows, int cols, CreateCanvasElementFnWithArgs elementCreator)
+: Canvas(dynamic_cast<IDrawableModule*>(parent), x, y, w, h, length, rows, cols, static_cast<CreateCanvasElementFn>(nullptr))//Ark: Casting a nullptr to a function is peak C++ and I love it.
+{ mElementCreatorWArgs = elementCreator; }
 
 Canvas::~Canvas()
 {
@@ -122,18 +125,18 @@ void Canvas::Render()
 
    if (GetKeyModifiers() & kModifier_Shift) //We're pressing shift which allows the placement of elements. Let's draw a subtle guide.
    {
-      if (mHoverCoord.col >= 0 && mAllowElementPlacement && !mClick && mElementPlaceHintSizeMultiplier!=0)//Valid and allowed.
+      if (mHoverCoord.col >= 0 && mAllowElementPlacement && !mClick && mElementPlaceHintSizeMultiplier != 0) //Valid and allowed.
       {
          ofPushStyle();
          ofVec2f lXV = GetColumnX(mHoverCoord.col);
          ofVec2f lYV = GetRowY(mHoverCoord.row);
-         lXV.y = (lXV.y-lXV.x)*mElementPlaceHintSizeMultiplier+lXV.x;
+         lXV.y = (lXV.y - lXV.x) * mElementPlaceHintSizeMultiplier + lXV.x;
          ofFill();
          float grad1 = lXV.x;
-         float grad2 = lXV.y - (lXV.y-lXV.x)*0.0f;
-         ofSetColorGradient({255,255,255,23},ofColor::clear,{grad1,0},{grad2,0});
+         float grad2 = lXV.y - (lXV.y - lXV.x) * 0.0f;
+         ofSetColorGradient({ 255, 255, 255, 23 }, ofColor::clear, { grad1, 0 }, { grad2, 0 });
          //ofSetColor(ofColor::white);
-         ofRect({lXV.x,lYV.x,(lXV.y-lXV.x),lYV.y-lYV.x},0);
+         ofRect({ lXV.x, lYV.x, (lXV.y - lXV.x), lYV.y - lYV.x }, 0);
          ofPopStyle();
       }
    }
@@ -154,8 +157,8 @@ void Canvas::Render()
     DrawTextNormal("col=" + ofToString(mHoverCoord.col) + " row=" + ofToString(mHoverCoord.row), 5, GetHeight() - 20);
     ofPopStyle();*/
 
-    ofPopStyle();
-    ofPopMatrix();
+   ofPopStyle();
+   ofPopMatrix();
 }
 
 void Canvas::AddElement(CanvasElement* element)
@@ -280,7 +283,17 @@ void Canvas::OnClicked(float x, float y, bool right)
             if (mAllowElementPlacement)
             {
                CanvasCoord coord = GetCoordAt(x, y);
-               CanvasElement* element = CreateElement(coord.col, coord.row);
+               CanvasElement* element;
+               if (mElementCreatorWArgs)
+               {
+                  int arg = 0;
+                  arg = mListener->GetElementFactoryArgs();
+                  element = CreateElement(coord.col, coord.row, arg);
+               }
+               else
+               {
+                  element = CreateElement(coord.col, coord.row);
+               }
                AddElement(element);
                SelectElement(element);
                mHasDuplicatedThisDrag = true; //to prevent a duplicate from being made
@@ -355,7 +368,8 @@ bool Canvas::MouseMoved(float x, float y)
             if (element->GetHighlighted())
             {
                float start = element->GetStart() + startDelta;
-               if (!element->UseCustomPosQuantization())
+               float quantOver = element->DragQuantizationOverride(start, 1);
+               if (quantOver == -1.0f)
                {
                   if (quantize)
                      start = QuantizeToGrid(start);
@@ -364,10 +378,6 @@ bool Canvas::MouseMoved(float x, float y)
                      if (!freeRescale)
                         start = QuantizeToGridMin(start);
                   }
-               }
-               else
-               {
-                  start = element->GetCustomPosQuantization(start, 0);
                }
                element->SetStart(start, false);
             }
@@ -383,7 +393,8 @@ bool Canvas::MouseMoved(float x, float y)
             if (element->GetHighlighted())
             {
                float end = element->GetEnd() + endDelta;
-               if (!element->UseCustomPosQuantization())
+               float quantOver = element->DragQuantizationOverride(end, 1);
+               if (quantOver == -1.0f)
                {
                   if (quantize)
                      end = QuantizeToGrid(end);
@@ -392,10 +403,6 @@ bool Canvas::MouseMoved(float x, float y)
                      if (!freeRescale)
                         end = QuantizeToGridMin(end);
                   }
-               }
-               else
-               {
-                  end = element->GetCustomPosQuantization(end, 1);
                }
                element->SetEnd(end);
             }
@@ -746,7 +753,7 @@ CanvasCoord Canvas::GetCoordAt(int x, int y) const
 {
    if (x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight())
    {
-      int col = ofLerp(mViewStart/mLength,mViewEnd/mLength,(float)x/mWidth)*mNumCols;
+      int col = ofLerp(mViewStart / mLength, mViewEnd / mLength, (float)x / mWidth) * mNumCols;
       int row = (y / GetHeight()) * GetNumVisibleRows() + mRowOffset;
       return CanvasCoord(col, row);
    }
@@ -760,24 +767,28 @@ void Canvas::Clear()
 
 namespace
 {
-   const int kSaveStateRev = 3;
+   const int kSaveStateRev = 5;
 }
 
 void Canvas::SaveState(FileStreamOut& out)
 {
    out << kSaveStateRev;
 
+   out << mLength;
    out << mNumCols;
    out << mNumRows;
    out << mNumVisibleRows;
    out << mRowOffset;
    out << mLoopStart;
    out << mLoopEnd;
+   out << mViewStart;
+   out << mViewEnd;
    out << (int)mElements.size();
    for (int i = 0; i < mElements.size(); ++i)
    {
       out << mElements[i]->mCol;
       out << mElements[i]->mRow;
+      out << mElements[i]->GetFactoryArgs();
       mElements[i]->SaveState(out);
    }
 }
@@ -788,6 +799,8 @@ void Canvas::LoadState(FileStreamIn& in, bool shouldSetValue)
    in >> rev;
    LoadStateValidate(rev <= kSaveStateRev);
 
+   if (rev >= 5)
+      in >> mLength;
    in >> mNumCols;
    in >> mNumRows;
    in >> mNumVisibleRows;
@@ -796,19 +809,32 @@ void Canvas::LoadState(FileStreamIn& in, bool shouldSetValue)
    {
       in >> mLoopStart;
       in >> mLoopEnd;
+      if (rev >= 4)
+      {
+         in >> mViewStart;
+         in >> mViewEnd;
+      }
    }
    mElements.clear();
    int size;
    in >> size;
    for (int i = 0; i < size; ++i)
    {
-      int col = 0, row = 0;
+      int col = 0, row = 0, args = 0;
       if (rev >= 2)
       {
          in >> col;
          in >> row;
+         if (rev >= 4)
+         {
+            in >> args;
+         }
       }
-      CanvasElement* element = mElementCreator(this, col, row);
+      CanvasElement* element;
+      if (mElementCreator)
+         element = mElementCreator(this, col, row);
+      else
+         element = mElementCreatorWArgs(this, col, row, args);
       element->LoadState(in);
       mElements.push_back(element);
    }

@@ -68,14 +68,12 @@ public:
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;
+   virtual int GetFactoryArgs() { return 0; }
 
    // Allows the definition of custom quantization/snapping rules
-   // The default method accepts input 0-1. Multiplies it by num columns, rounds it, and divides. Snapping it in place.
-   // The alt quantization ignores columns and multiplies it by x64 instead for much more precise snapping.
-   // These two are fun, but may not cover every case, define yours here!
-   virtual bool UseCustomPosQuantization() { return false;}
-   virtual float GetCustomPosQuantization(float input, int context) {return 0;};
-
+   // Expects a range of 0-1. 0 being column 0, and 1 the last column on the canvas.
+   // Return -1 to ignore.
+   virtual float DragQuantizationOverride(float input, int context) {return -1;};
 
    virtual void CheckboxUpdated(std::string label, bool value, double time);
    virtual void FloatSliderUpdated(std::string label, float oldVal, float newVal, double time);

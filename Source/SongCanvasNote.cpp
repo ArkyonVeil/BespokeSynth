@@ -147,5 +147,4 @@ void SongCanvasNote::LoadState(FileStreamIn& in)
    SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
    mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }
-bool SongCanvasNote::UseCustomPosQuantization() {return mRackPart->UseCustomCanvasElementQuantization();}
-float SongCanvasNote::GetCustomPosQuantization(float input, int context) {return mRackPart->GetCustomCanvasElementQuantization(this,input,context);}
+float SongCanvasNote::DragQuantizationOverride(float input, int context) {return mRackPart->GetNotePosQuantizationOverride(this,input,context);}

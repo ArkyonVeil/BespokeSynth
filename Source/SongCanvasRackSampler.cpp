@@ -719,8 +719,11 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
 }
 
 
-float SongCanvasRackSampler::GetCustomCanvasElementQuantization(SongCanvasNote* element, float input, int context)
+float SongCanvasRackSampler::GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context)
 {
+   if (!mSample)
+      return -1;
+
    //Goal is to evenly snap these to pitch.
    int side = context; //0 = Left side dragging, 1 = Right side dragging.
 

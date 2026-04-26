@@ -38,6 +38,7 @@ class CanvasControls;
 class CanvasElement;
 
 typedef CanvasElement* (*CreateCanvasElementFn)(Canvas* canvas, int col, int row);
+typedef CanvasElement* (*CreateCanvasElementFnWithArgs)(Canvas* canvas, int col, int row, int args);
 
 class ICanvasListener
 {
@@ -46,6 +47,10 @@ public:
    virtual void CanvasUpdated(Canvas* canvas) = 0;
    virtual void ElementRemoved(CanvasElement* element) {}
    virtual void CanvasElementAdditionSuppressed(float posX, float posY){};
+
+   //Called just before the placement of an element. Used as argument for element factory setup.
+   //Initialize the canvas with a CreateCanvasElementFnWithArgs() to use.
+   virtual int GetElementFactoryArgs() {return 0;}
 };
 
 struct CanvasCoord
@@ -78,6 +83,7 @@ public:
 
 public:
    Canvas(IDrawableModule* parent, int x, int y, int w, int h, float length, int rows, int cols, CreateCanvasElementFn elementCreator);
+   Canvas(ICanvasListener* parent, int x, int y, int w, int h, float length, int rows, int cols, CreateCanvasElementFnWithArgs elementCreator);
    ~Canvas();
 
    void Render() override;
@@ -114,6 +120,7 @@ public:
    void SetCursorPos(float pos) { mCursorPos = pos; }
    float GetCursorPos() const { return mCursorPos; }
    CanvasElement* CreateElement(int col, int row) { return mElementCreator(this, col, row); }
+   CanvasElement* CreateElement(int col, int row, int args) { return mElementCreatorWArgs(this, col, row, args); }
    CanvasCoord GetCoordAt(int x, int y) const;
    CanvasCoord GetCoordHovered() const { return mHoverCoord;};//-1,-1 if not hovered.
    void SetNumVisibleRows(int rows) { mNumVisibleRows = rows; }
@@ -199,7 +206,8 @@ private:
    std::vector<CanvasElement*> mElements;
    CanvasControls* mControls{ nullptr };
    float mCursorPos{ -1 };
-   CreateCanvasElementFn mElementCreator;
+   CreateCanvasElementFn mElementCreator { nullptr };
+   CreateCanvasElementFnWithArgs mElementCreatorWArgs { nullptr };
    int mRowOffset{ 0 };
    bool mWrap{ false };
    bool mDragSelecting{ false };

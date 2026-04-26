@@ -20,8 +20,7 @@ public:
    void SetAllowResize(bool allow) { mAllowResizing = allow; }
    uint32_t GetIndex() const { return mIndex; }
    Canvas* GetCanvas() const { return mCanvas; }
-   bool UseCustomPosQuantization() override;
-   float GetCustomPosQuantization(float input, int context) override;
+   float DragQuantizationOverride(float input, int context) override;
 
    int GetRackElementId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }

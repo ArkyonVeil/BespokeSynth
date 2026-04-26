@@ -53,8 +53,7 @@ public:
    //Canvas Stuff
    void SetupCanvasPart(SongCanvasNote* element) override;
    void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
-   bool UseCustomCanvasElementQuantization() override { return mSample;}
-   float GetCustomCanvasElementQuantization(SongCanvasNote* element, float input, int context) override;
+   float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) override;
 
    void OnTempoUpdated() override;
 
