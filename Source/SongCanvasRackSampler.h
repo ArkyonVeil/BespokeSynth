@@ -11,11 +11,6 @@
 #include "SampleVoice.h"
 #include "SongCanvasRackElement.h"
 
-struct RackCanvasPartDataSampler : RackCanvasPartData
-{
-   int mPitch { 48 };
-};
-
 class SongCanvasRackSampler : public SongCanvasAudioRackElement, public IFloatSliderListener, public IIntSliderListener
 {
 public:
@@ -25,13 +20,13 @@ public:
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
-   void OnEnter(SongCanvas_CanvasElement* element) override;
-   void OnExit(SongCanvas_CanvasElement* element) override;
-   int GetPitchFromCanvasElement(SongCanvas_CanvasElement* element);
+   void OnEnter(SongCanvasNote* element) override;
+   void OnExit(SongCanvasNote* element) override;
+   int GetPitchFromCanvasElement(SongCanvasNote* element);
    int GetPitchFromCanvasElementSize(float size);
    float GetCanvasElementSizeFromPitch(int notePitch);
    void LoadFileSample();
-   void UpdateSampleLength(SongCanvas_CanvasElement* element);
+   void UpdateSampleLength(SongCanvasNote* element);
    float GetPreferredWidth() const override;
    void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
@@ -56,11 +51,12 @@ public:
    int GetActiveOptions() const { return mVolumeEnabled + mADSREnabled;}
 
    //Canvas Stuff
-   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
-   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
+   void SetupCanvasPart(SongCanvasNote* element) override;
+   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
    bool UseCustomCanvasElementQuantization() override { return mSample;}
-   float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context) override;
+   float GetCustomCanvasElementQuantization(SongCanvasNote* element, float input, int context) override;
 
+   void OnTempoUpdated() override;
 
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

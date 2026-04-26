@@ -8,7 +8,7 @@
 #include "SongCanvasMixer.h"
 
 class SongCanvas;
-class SongCanvas_CanvasElement;
+class SongCanvasNote;
 class SongCanvasMixer;
 class SongCanvasRackSampler;
 class PatchCableSource;
@@ -25,15 +25,11 @@ public:
    FlowGridElement* Create(std::string typeName) override;
 };
 
-struct RackCanvasPartData
-{
-   virtual ~RackCanvasPartData() = default;
-};
 class SongCanvasRackElement : public FlowGridElement, public ITimeListener, public IButtonListener
 {
 public:
    SongCanvasRackElement(std::string partName, std::string internalName, SongCanvas* songCanvas);
-   ~SongCanvasRackElement() override{};
+   ~SongCanvasRackElement() override = default;
 
    void SetPartName(std::string newName);
    void Excite(float excitePower)
@@ -46,9 +42,9 @@ public:
 
    void CreateUIControls() override;
    void UpdatePartNameData();
-   virtual void OnEnter(SongCanvas_CanvasElement* element) = 0;
+   virtual void OnEnter(SongCanvasNote* element) = 0;
    virtual void OnProcessTransport(){};
-   virtual void OnExit(SongCanvas_CanvasElement* element) = 0;
+   virtual void OnExit(SongCanvasNote* element) = 0;
    float GetPreferredWidth() const override;
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
@@ -60,15 +56,17 @@ public:
    virtual void OnLoadFinish(){}; //Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
 
    //Save/load unique canvas part data.
-   virtual void SaveCanvasPart(SongCanvas_CanvasElement* obj, FileStreamOut& out){};
-   virtual void LoadCanvasPart(SongCanvas_CanvasElement* obj, FileStreamIn& in, int rev){};
+   virtual void SaveCanvasPart(SongCanvasNote* obj, FileStreamOut& out){};
+   virtual void LoadCanvasPart(SongCanvasNote* obj, FileStreamIn& in, int rev){};
 
    //Canvas stuff
-   virtual void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect){};
-   virtual void SetupCanvasPart(SongCanvas_CanvasElement* element){};
-   virtual void DeletedCanvasPart(SongCanvas_CanvasElement* element){};
+   virtual void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect){};
+   virtual void SetupCanvasPart(SongCanvasNote* element){};
+   virtual void DeletedCanvasPart(SongCanvasNote* element);
    virtual bool UseCustomCanvasElementQuantization() { return false; }
-   virtual float GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context = 0) { return 0; }
+   virtual float GetCustomCanvasElementQuantization(SongCanvasNote* element, float input, int context) { return 0; }
+
+
 
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
@@ -80,6 +78,7 @@ public:
    float GetCenteredElementY(IUIControl* element) const { return (mHeight - element->GetRect(true).height) / 2; }
    float GetCompression() const { return MIN(1,mWidth/GetPreferredWidth());}//Returns the current scale, in comparison to the preferred size. 1->no comp. 0.5->half comp. 0->infinite comp
    virtual ofVec2f GetOutputPos() const { return {mWidth-GetReservedRightWidth()/2,mHeight / 2};}
+   virtual void OnTempoUpdated() {};
 
    bool IsRackEnabled() const { return mRackEnabled;}
    virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled;}
@@ -87,8 +86,6 @@ public:
    virtual void SongCanvasOptionsUpdated(){};
 
    int mInternalRackID;
-
-   std::unordered_map<int, std::unique_ptr<RackCanvasPartData>> mCanvasElementPartData;
 
 protected:
    void DrawModule() override;//Reserved for base graphics.
@@ -147,6 +144,7 @@ private:
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;
+
 };
 
 //Rack elements that produce sound should inherit this for consistent support and convenience methods such as channel assigment.
@@ -199,13 +197,13 @@ public:
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackEnabler("Part", nullptr); };
    bool mEnablerInverted{ false };
-   void OnEnter(SongCanvas_CanvasElement* element) override;
-   void OnExit(SongCanvas_CanvasElement* element) override;
+   void OnEnter(SongCanvasNote* element) override;
+   void OnExit(SongCanvasNote* element) override;
    void DrawRackGraphics() override;
    void OnPostResize() override;
 
-   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
-   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
+   void SetupCanvasPart(SongCanvasNote* element) override;
+   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
 
    void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
@@ -227,8 +225,8 @@ public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackPulser();
    std::string GetFlowGridElementType() const override { return "partpulser"; };
-   void OnEnter(SongCanvas_CanvasElement* element);
-   void OnExit(SongCanvas_CanvasElement* element);
+   void OnEnter(SongCanvasNote* element);
+   void OnExit(SongCanvasNote* element);
    void OnTimeEvent(double time);
    void DrawRackGraphics() override;
    void CreateUIControls() override;
@@ -240,8 +238,8 @@ public:
    float GetPreferredWidth() const override;
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
 
-   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
-   void DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect) override;
+   void SetupCanvasPart(SongCanvasNote* element) override;
+   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
 
    bool mOnePulseMode{ false };
    void HandleRightClickDropdown(int optionValue) override;
@@ -269,10 +267,10 @@ public:
    std::string GetFlowGridElementType() const override { return "partmodenvelope"; };
    static IDrawableModule* Create() { return new SongCanvasRackModEnvelope("Part", nullptr); }
    SongCanvasRackModEnvelope(const std::string& partName, SongCanvas* songCanvas);
-   void OnEnter(SongCanvas_CanvasElement* element) override{};
-   void OnExit(SongCanvas_CanvasElement* element) override{};
+   void OnEnter(SongCanvasNote* element) override{};
+   void OnExit(SongCanvasNote* element) override{};
 
-   void SetupCanvasPart(SongCanvas_CanvasElement* element) override;
+   void SetupCanvasPart(SongCanvasNote* element) override;
 
    void DrawRackGraphics() override{};
    void SaveState(FileStreamOut& out) override;
@@ -300,8 +298,8 @@ public:
 
 private:
    PatchCableSource* mKeyerCable{ nullptr };
-   void OnEnter(SongCanvas_CanvasElement* element) override{};
-   void OnExit(SongCanvas_CanvasElement* element) override{};
+   void OnEnter(SongCanvasNote* element) override{};
+   void OnExit(SongCanvasNote* element) override{};
    void DrawRackGraphics() override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

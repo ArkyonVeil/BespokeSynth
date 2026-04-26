@@ -43,14 +43,14 @@
 #include "ClickButton.h"
 #include "DropdownList.h"
 #include "IAudioProcessor.h"
-#include "SongCanvas_CanvasElement.h"
+#include "SongCanvasNote.h"
 #include "TextEntry.h"
 #include "FlowGrid.h"
 #include "SongCanvasRackElement.h"
 
 
 class SongCanvasMixer;
-class SongCanvas_CanvasElement;
+class SongCanvasNote;
 class SongCanvasRackElement;
 class SongCanvasAudioRackElement;
 class SongCanvas : public IAudioSource,
@@ -111,10 +111,10 @@ public:
       mCanvasElementIndex++;
       return mCanvasElementIndex;
    }
-   void SetupCanvasElement(SongCanvas_CanvasElement* element) const;
+   void SetupCanvasElement(SongCanvasNote* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
-   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
-   std::vector<SongCanvas_CanvasElement*> GetAllCanvasElementsOfLayer(int layerIndex) const;
+   std::vector<SongCanvasNote*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
+   std::vector<SongCanvasNote*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    int GetMeasureCount() const { return mMeasureCount; }
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
@@ -257,7 +257,7 @@ private:
    void AddNewLayer(int index, SongCanvasLayer layer);
    void DeleteLayer(int index);
    void MoveLayerTo(int oldIndex, int newIndex);
-   bool IsCanvasElementActive(SongCanvas_CanvasElement* element) const;
+   bool IsCanvasElementActive(SongCanvasNote* element) const;
    void ElementRemoved(CanvasElement* element) override;
    void ReloadHeader();
 
@@ -370,10 +370,10 @@ private:
 
 
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongCanvas_CanvasElement*> mCanvasChunkList[201];
+   std::vector<SongCanvasNote*> mCanvasChunkList[201];
    int mChunkAmount{ 10 };
 
-   std::vector<SongCanvas_CanvasElement*> mActiveElements{};
+   std::vector<SongCanvasNote*> mActiveElements{};
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
    std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
@@ -457,6 +457,7 @@ private:
    bool mScheduleMixerSort{ false };
    int mHighlightHintMixerId { -1 };
    float mMixerDrawCompression { 1.0f };//0, width 0, 1
+   float mLastTempo = -1;
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};

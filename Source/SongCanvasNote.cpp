@@ -1,22 +1,22 @@
-#include "SongCanvas_CanvasElement.h"
+#include "SongCanvasNote.h"
 #include "CanvasElement.h"
 #include "SongCanvas.h"
 
-SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length)
+SongCanvasNote::SongCanvasNote(Canvas* canvas, int col, int row, float offset, float length)
 : CanvasElement(canvas, col, row, offset, length)
 {
    mLength *= 4;
    mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
    mSongCanvas->SetupCanvasElement(this);
 }
-SongCanvas_CanvasElement::SongCanvas_CanvasElement(Canvas* canvas)
+SongCanvasNote::SongCanvasNote(Canvas* canvas)
 : CanvasElement(canvas, 0, 0, 0, 4)
 {
    mLength *= 4;
    mSongCanvas = static_cast<SongCanvas*>(canvas->GetListener());
 }
 
-void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
+void SongCanvasNote::SetupBase(SongCanvasRackElement* templateElement)
 {
    mName = templateElement->GetName();
    mNameCache = *mName;
@@ -26,13 +26,13 @@ void SongCanvas_CanvasElement::SetupBase(SongCanvasRackElement* templateElement)
    mIndex = mSongCanvas->GetNewCanvasElementId();
 }
 
-CanvasElement* SongCanvas_CanvasElement::CreateDuplicate() const
+CanvasElement* SongCanvasNote::CreateDuplicate() const
 {
-   SongCanvas_CanvasElement* element = new SongCanvas_CanvasElement(mCanvas, mCol, mRow, mOffset, mLength / 4);
+   SongCanvasNote* element = new SongCanvasNote(mCanvas, mCol, mRow, mOffset, mLength / 4);
    return element;
 }
 
-void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
+void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 {
    ofPushStyle();
    ofFill();
@@ -122,7 +122,7 @@ void SongCanvas_CanvasElement::DrawContents(bool clamp, bool wrapped, ofVec2f of
    ofPopStyle();
 }
 
-void SongCanvas_CanvasElement::SaveState(FileStreamOut& out)
+void SongCanvasNote::SaveState(FileStreamOut& out)
 {
    out << mRow;
    out << mCol;
@@ -133,7 +133,7 @@ void SongCanvas_CanvasElement::SaveState(FileStreamOut& out)
    mRackPart->SaveCanvasPart(this, out);
 }
 
-void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
+void SongCanvasNote::LoadState(FileStreamIn& in)
 {
    in >> mRow;
    in >> mCol;
@@ -147,5 +147,5 @@ void SongCanvas_CanvasElement::LoadState(FileStreamIn& in)
    SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
    mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }
-bool SongCanvas_CanvasElement::UseCustomPosQuantization() {return mRackPart->UseCustomCanvasElementQuantization();}
-float SongCanvas_CanvasElement::GetCustomPosQuantization(float input, int context) {return mRackPart->GetCustomCanvasElementQuantization(this,input,context);}
+bool SongCanvasNote::UseCustomPosQuantization() {return mRackPart->UseCustomCanvasElementQuantization();}
+float SongCanvasNote::GetCustomPosQuantization(float input, int context) {return mRackPart->GetCustomCanvasElementQuantization(this,input,context);}

@@ -104,7 +104,7 @@ void SongCanvas::CreateUIControls()
    //Default measure count.
    mMeasureCount = 12;
    int cSize = mStandardMeasureSize * mDefaultMeasureSpawnAmount;
-   mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, mMeasureCount, 5, mMeasureCount * 4, &SongCanvas_CanvasElement::Create);
+   mCanvas = new Canvas(this, mStartCanvasXOffset, mOffsetFromTopSpacing, cSize, layerBuffer.size() * StandardRowSize, mMeasureCount, 5, mMeasureCount * 4, &SongCanvasNote::Create);
    AddUIControl(mCanvas);
    mCanvas->SetListener(this);
 
@@ -823,7 +823,7 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
          }
          for (int y = cStart; y <= cEnd; ++y)
          {
-            mCanvasChunkList[y].push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
+            mCanvasChunkList[y].push_back(dynamic_cast<SongCanvasNote*>(elms[i]));
          }
       }
    }
@@ -1000,7 +1000,7 @@ void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
    }
 }
 
-bool SongCanvas::IsCanvasElementActive(SongCanvas_CanvasElement* element) const
+bool SongCanvas::IsCanvasElementActive(SongCanvasNote* element) const
 {
    for (int i = 0; i < mActiveElements.size(); ++i)
    {
@@ -1353,7 +1353,7 @@ void SongCanvas::MouseReleased()
    mRackGrid->MouseReleased();
 }
 
-void SongCanvas::SetupCanvasElement(SongCanvas_CanvasElement* element) const
+void SongCanvas::SetupCanvasElement(SongCanvasNote* element) const
 {
    element->SetupBase(GetSelectedRackPart());
 }
@@ -1364,7 +1364,7 @@ void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 //Incoming event from a note bring removed from the base Canvas
 void SongCanvas::ElementRemoved(CanvasElement* element)
 {
-   SongCanvas_CanvasElement* sElement = dynamic_cast<SongCanvas_CanvasElement*>(element);
+   SongCanvasNote* sElement = dynamic_cast<SongCanvasNote*>(element);
    //If any of them are playing, we send notes off.
    for (int i = 0; i < mActiveElements.size(); ++i)
    {
@@ -1379,27 +1379,27 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
 }
 
 //Gets all the canvas elements which have said rack as a parent.
-std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
+std::vector<SongCanvasNote*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
 {
    auto elms = mCanvas->GetElements();
-   std::vector<SongCanvas_CanvasElement*> output;
+   std::vector<SongCanvasNote*> output;
    for (int i = 0; i < elms.size(); ++i)
    {
-      auto celm = dynamic_cast<SongCanvas_CanvasElement*>(elms[i]);
+      auto celm = dynamic_cast<SongCanvasNote*>(elms[i]);
       if (celm->GetRackElement() == element)
          output.push_back(celm);
    }
    return output;
 }
-std::vector<SongCanvas_CanvasElement*> SongCanvas::GetAllCanvasElementsOfLayer(const int layerIndex) const
+std::vector<SongCanvasNote*> SongCanvas::GetAllCanvasElementsOfLayer(const int layerIndex) const
 {
    auto elms = mCanvas->GetElements();
-   std::vector<SongCanvas_CanvasElement*> output;
+   std::vector<SongCanvasNote*> output;
    for (int i = 0; i < elms.size(); ++i)
    {
       if (elms[i]->mRow == layerIndex)
       {
-         output.push_back(dynamic_cast<SongCanvas_CanvasElement*>(elms[i]));
+         output.push_back(dynamic_cast<SongCanvasNote*>(elms[i]));
       }
    }
    return output;
@@ -1716,7 +1716,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << (int)cvs.size();
    for (int i = 0; i < cvs.size(); ++i)
    {
-      auto ce = static_cast<SongCanvas_CanvasElement*>(cvs[i]);
+      auto ce = static_cast<SongCanvasNote*>(cvs[i]);
 
       ce->SaveState(out);
    }
@@ -1817,11 +1817,11 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    in >> mFlowGridRows;
 
    //Load the canvas elements...
-   std::vector<SongCanvas_CanvasElement*> celms;
+   std::vector<SongCanvasNote*> celms;
    in >> i1;
    for (int i = 0; i < i1; ++i)
    {
-      SongCanvas_CanvasElement* celm = new SongCanvas_CanvasElement(mCanvas);
+      SongCanvasNote* celm = new SongCanvasNote(mCanvas);
       celm->LoadState(in);
       mCanvas->AddElement(celm);
    }
@@ -2092,6 +2092,16 @@ void SongCanvas::Process(double time)
       RemoveFromVector(d, mMixers);
       delete d;
       mMixerDisposalQueue.pop_back();
+   }
+
+   //Are we having fun with the Tempo? Update it here:
+   if (mLastTempo != TheTransport->GetTempo())
+   {
+      mLastTempo = TheTransport->GetTempo();
+      for (int i = 0; i < mAudioRacks.size(); ++i)
+      {
+         mAudioRacks[i]->OnTempoUpdated();
+      }
    }
 
    //Process the audio making racks

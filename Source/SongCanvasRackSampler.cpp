@@ -52,7 +52,7 @@ void SongCanvasRackSampler::CreateUIControls()
    mADSRDisplay->SetHoldCableWhileHidden(true);
 }
 
-void SongCanvasRackSampler::OnEnter(SongCanvas_CanvasElement* element)
+void SongCanvasRackSampler::OnEnter(SongCanvasNote* element)
 {
    if (mSample)
    {
@@ -63,12 +63,12 @@ void SongCanvasRackSampler::OnEnter(SongCanvas_CanvasElement* element)
       }
    }
 }
-void SongCanvasRackSampler::OnExit(SongCanvas_CanvasElement* element)
+void SongCanvasRackSampler::OnExit(SongCanvasNote* element)
 {
    //TODO
 }
 
-int SongCanvasRackSampler::GetPitchFromCanvasElement(SongCanvas_CanvasElement* element)
+int SongCanvasRackSampler::GetPitchFromCanvasElement(SongCanvasNote* element)
 {
    if (!element)
       return 48;
@@ -103,7 +103,7 @@ float SongCanvasRackSampler::GetCanvasElementSizeFromPitch(int notePitch)
 }
 
 //Updates a sample length visually based on the pitch reflected in its size.
-void SongCanvasRackSampler::UpdateSampleLength(SongCanvas_CanvasElement* element)
+void SongCanvasRackSampler::UpdateSampleLength(SongCanvasNote* element)
 {
 }
 
@@ -584,7 +584,7 @@ void SongCanvasRackSampler::ReloadAudioOptions()
    UpdateRow();
 }
 
-void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
+void SongCanvasRackSampler::SetupCanvasPart(SongCanvasNote* element)
 {
    element->mCurrentColor = mCanvasSamplerColor;
    element->mCurrentColorGrad = mCanvasSamplerColor2;
@@ -594,7 +594,7 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvas_CanvasElement* element)
       element->SetEnd(element->GetStart() + sampleLength);
    }
 }
-void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
 {
    SongCanvasAudioRackElement::DrawCanvasPartGraphics(element, rect);
 
@@ -719,7 +719,7 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* ele
 }
 
 
-float SongCanvasRackSampler::GetCustomCanvasElementQuantization(SongCanvas_CanvasElement* element, float input, int context)
+float SongCanvasRackSampler::GetCustomCanvasElementQuantization(SongCanvasNote* element, float input, int context)
 {
    //Goal is to evenly snap these to pitch.
    int side = context; //0 = Left side dragging, 1 = Right side dragging.
@@ -755,6 +755,17 @@ float SongCanvasRackSampler::GetCustomCanvasElementQuantization(SongCanvas_Canva
       return end - pitchSize;
    else
       return start + pitchSize;
+}
+void SongCanvasRackSampler::OnTempoUpdated()
+{
+   SongCanvasAudioRackElement::OnTempoUpdated();
+
+   //If this happens, we need to update all of our samples, since they will no longer align with the time.
+   auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
+   for (int i = 0; i < r.size(); ++i)
+   {
+      UpdateSampleLength(r[i]);
+   }
 }
 
 
@@ -1036,3 +1047,6 @@ void SongCanvasRackSampler::RackSampleButton::SetRect(float x, float y, float wi
 
    mDragButtonRect = ofRectangle(width - 18, miniButtonY, 16, 12);
 }
+
+
+//

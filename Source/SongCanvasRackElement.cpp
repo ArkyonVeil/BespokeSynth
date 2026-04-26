@@ -147,6 +147,10 @@ void SongCanvasRackElement::LoadState(FileStreamIn& in, int rev)
    }
    UpdatePartNameData();
 }
+void SongCanvasRackElement::DeletedCanvasPart(SongCanvasNote* element)
+{
+   //TODO clean up the data structure used by this element.
+}
 void SongCanvasRackElement::OnClicked(float x, float y, bool right)
 {
    FlowGridElement::OnClicked(x, y, right);
@@ -376,7 +380,7 @@ void SongCanvasRackEnabler::CreateUIControls()
 }
 
 
-void SongCanvasRackEnabler::OnEnter(SongCanvas_CanvasElement* element)
+void SongCanvasRackEnabler::OnEnter(SongCanvasNote* element)
 {
    double time = NextBufferTime(mSongCanvas);
 
@@ -393,7 +397,7 @@ void SongCanvasRackEnabler::OnEnter(SongCanvas_CanvasElement* element)
       }
    }
 }
-void SongCanvasRackEnabler::OnExit(SongCanvas_CanvasElement* element)
+void SongCanvasRackEnabler::OnExit(SongCanvasNote* element)
 {
    double time = NextBufferTime(mSongCanvas);
    mEnablerCable->AddHistoryEvent(time, false, 0);
@@ -448,7 +452,7 @@ void SongCanvasRackEnabler::OnPostResize()
    mEnablerCable->SetManualPosition(GetOutputPos());
 }
 
-void SongCanvasRackEnabler::SetupCanvasPart(SongCanvas_CanvasElement* element)
+void SongCanvasRackEnabler::SetupCanvasPart(SongCanvasNote* element)
 {
    if (mEnablerInverted)
    {
@@ -464,7 +468,7 @@ void SongCanvasRackEnabler::SetupCanvasPart(SongCanvas_CanvasElement* element)
       element->mTextDrawYOffset = 0;
    }
 }
-void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
 {
    if (mEnablerInverted)
    {
@@ -540,7 +544,7 @@ void SongCanvasRackPulser::OnPostResize()
    }
 }
 
-void SongCanvasRackPulser::OnEnter(SongCanvas_CanvasElement* element)
+void SongCanvasRackPulser::OnEnter(SongCanvasNote* element)
 {
    if (mOnePulseMode)
    {
@@ -553,7 +557,7 @@ void SongCanvasRackPulser::OnEnter(SongCanvas_CanvasElement* element)
          receiver->OnPulse(time, 1, 0);
    }
 }
-void SongCanvasRackPulser::OnExit(SongCanvas_CanvasElement* element)
+void SongCanvasRackPulser::OnExit(SongCanvasNote* element)
 {
 }
 
@@ -581,7 +585,7 @@ float SongCanvasRackPulser::GetPreferredWidth() const
    return val;
 }
 
-void SongCanvasRackPulser::SetupCanvasPart(SongCanvas_CanvasElement* element)
+void SongCanvasRackPulser::SetupCanvasPart(SongCanvasNote* element)
 {
    if (!mOnePulseMode) //Interval mode
    {
@@ -601,7 +605,7 @@ void SongCanvasRackPulser::SetupCanvasPart(SongCanvas_CanvasElement* element)
       MAX(0, element->mCurrentColor.b - 30));
    }
 }
-void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvas_CanvasElement* element, ofRectangle rect)
+void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
 {
    if (mOnePulseMode)
    {
@@ -761,7 +765,7 @@ SongCanvasRackModEnvelope::SongCanvasRackModEnvelope(const std::string& partName
 {
    //TODO
 }
-void SongCanvasRackModEnvelope::SetupCanvasPart(SongCanvas_CanvasElement* element)
+void SongCanvasRackModEnvelope::SetupCanvasPart(SongCanvasNote* element)
 {
    element->mCurrentColor = mCanvasLFOColor;
 }

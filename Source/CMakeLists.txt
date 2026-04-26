@@ -684,8 +684,8 @@ target_sources(BespokeSynth PRIVATE
     SongBuilder.h
     SongCanvas.cpp
     SongCanvas.h
-    SongCanvas_CanvasElement.cpp
-    SongCanvas_CanvasElement.h
+    SongCanvasNote.cpp
+    SongCanvasNote.h
     SongCanvasRackElement.cpp
     SongCanvasRackElement.h
     SongCanvasRackSampler.cpp

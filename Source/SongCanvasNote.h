@@ -3,13 +3,13 @@
 
 class SongCanvas;
 class SongCanvasRackElement;
-class SongCanvas_CanvasElement : public CanvasElement
+class SongCanvasNote : public CanvasElement
 {
 public:
-   SongCanvas_CanvasElement(Canvas* canvas, int col, int row, float offset, float length);
-   explicit SongCanvas_CanvasElement(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
+   SongCanvasNote(Canvas* canvas, int col, int row, float offset, float length);
+   explicit SongCanvasNote(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
    void SetupBase(SongCanvasRackElement* templateElement);
-   static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvas_CanvasElement(canvas, col, row, 0, 1); }
+   static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvasNote(canvas, col, row, 0, 1); }
 
    CanvasElement* CreateDuplicate() const override;
 
