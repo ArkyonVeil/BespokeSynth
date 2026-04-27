@@ -832,7 +832,7 @@ void FlowGrid::AddRow()
 //Removes the last row. Any flow elements in it WILL be deleted.
 void FlowGrid::PopRow()
 {
-   if (mRows.size() == 0)
+   if (mRows.size() == 0 || mRows.size() <= mMinRows)
       return;
 
    for (int i = 0; i < mRows.back().elements.size(); ++i)
