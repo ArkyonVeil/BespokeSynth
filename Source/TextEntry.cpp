@@ -480,7 +480,10 @@ void TextEntry::UpdateDisplayString()
       StringCopy(mString, ofToString(*mVarInt).c_str(), MAX_TEXTENTRY_LENGTH);
    if (mVarFloat)
    {
-      StringCopy(mString, ofToString(*mVarFloat, mDecimalCount).c_str(), MAX_TEXTENTRY_LENGTH);
+      if (mDecimalCount == -1)
+         StringCopy(mString, ofToString(*mVarFloat).c_str(), MAX_TEXTENTRY_LENGTH);
+      else
+         StringCopy(mString, ofToString(*mVarFloat,MAX(0,mDecimalCount)).c_str(), MAX_TEXTENTRY_LENGTH);
    }
 }
 
