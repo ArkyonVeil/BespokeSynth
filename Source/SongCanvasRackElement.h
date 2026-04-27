@@ -63,7 +63,7 @@ public:
    virtual void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvasNote* element){};
    virtual void DeletedCanvasPart(SongCanvasNote* element){};
-   virtual float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) { return 0; }
+   virtual float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) { return -1; }
 
 
 

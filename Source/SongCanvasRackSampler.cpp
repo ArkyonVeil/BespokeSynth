@@ -742,7 +742,7 @@ float SongCanvasRackSampler::GetNotePosQuantizationOverride(SongCanvasNote* elem
    //We will set our snap alignment to the opposite side to the side being dragged.
    float size;
 
-   //We also need to know the ends, thankfully they have already been normalized.
+   //We also need to know the ends, thankfully they come pre-normalized.
    float start = element->GetStart();
    float end = element->GetEnd();
 

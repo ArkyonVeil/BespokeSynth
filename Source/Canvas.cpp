@@ -379,6 +379,10 @@ bool Canvas::MouseMoved(float x, float y)
                         start = QuantizeToGridMin(start);
                   }
                }
+               else
+               {
+                  start = quantOver;
+               }
                element->SetStart(start, false);
             }
          }
@@ -403,6 +407,10 @@ bool Canvas::MouseMoved(float x, float y)
                      if (!freeRescale)
                         end = QuantizeToGridMin(end);
                   }
+               }
+               else
+               {
+                  end = quantOver;
                }
                element->SetEnd(end);
             }
