@@ -1984,13 +1984,13 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
       mCanvas->RemoveElement(re);
    }
    //If an audio element, we'll have to do some extra disposal.
-   SongCanvasAudioRackElement* audioElement = dynamic_cast<SongCanvasAudioRackElement*>(element);
-   if (audioElement)
+   if (auto* audioElement = dynamic_cast<SongCanvasAudioRackElement*>(element))
    {
       ScheduleRackDisposal(audioElement);
    }
    else
       mRackGrid->DeleteFlowElement(element);
+
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {
@@ -2087,7 +2087,7 @@ void SongCanvas::Process(double time)
    if (!mEnabled)
       return;
    //Dead racks? Have at it!
-   int cleans = mRackGrid->Cleanup();
+   int cleans = mRackGrid->DisposeScheduled();
    if (cleans > 0)
    {
       mScheduleMixerSort = true;

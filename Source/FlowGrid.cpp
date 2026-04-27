@@ -401,6 +401,7 @@ bool FlowGrid::IsRowOverfilled(int row)
    return false;
 }
 
+
 //Please check with TryGetSlot to see if it's possible to add first, or it WILL crash.
 void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
 {
@@ -763,6 +764,19 @@ void FlowGrid::RecalculateFlowGrid()
 }
 void FlowGrid::ScheduleDeletion(FlowGridElement* element)
 {
+   DeregisterElement(element);
+   mDisposalQueue.push_back(element);//Schedule for annihilation.
+}
+void FlowGrid::DeleteFlowElement(FlowGridElement* element)
+{
+   if (!element->IsDeleted())
+   {
+      DeregisterElement(element);
+   }
+   delete element;
+}
+void FlowGrid::DeregisterElement(FlowGridElement* element)
+{
    element->MarkAsDeleted();
    bool erased = false;
    for (auto& r : mRows)
@@ -781,17 +795,10 @@ void FlowGrid::ScheduleDeletion(FlowGridElement* element)
    }
    mElementList.erase(std::find(mElementList.begin(), mElementList.end(), element));
    mOwner->RemoveChild(element);
-   mDisposalQueue.push_back(element);//Schedule for annihilation.
    RecalculateFlowGrid();
    CheckCleanupRows();
 }
-void FlowGrid::DeleteFlowElement(FlowGridElement* element)
-{
-   if (!element->IsDeleted())
-      ScheduleDeletion(element);
-   delete element;
-}
-int FlowGrid::Cleanup()
+int FlowGrid::DisposeScheduled()
 {
    int cleans = 0;
    while (!mDisposalQueue.empty())
@@ -916,6 +923,11 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
    in >> elementCount;
    for (int i = 0; i < elementCount; ++i)
    {
+      int revCheck;
+      int rev = 0;
+      in.Peek(&revCheck, sizeof(int));
+      if (revCheck != 0)//Rev 0 FGE's did not manually save, resulting in a double extraction desync.
+         in >> rev;
       std::string type;
       in >> type;
       auto el = factory->Create(type);
@@ -925,12 +937,7 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       el->CreateUIControls();
       el->Init();
       AddFlowElement(el, true);
-      int revCheck;
-      in.Peek(&revCheck, sizeof(int));
-      if (revCheck == 0)//Rev 0 FGE's did not manually save, resulting in a double extraction desync.
-         el->LoadState(in, 0);
-      else
-         el->LoadState(in, el->LoadModuleSaveStateRev(in));
+      el->LoadState(in, rev);
    }
    delete factory;
 }

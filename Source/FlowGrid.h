@@ -74,7 +74,7 @@ public:
    //ScheduleDeletion() first, then Delete or Cleanup in the audio thread.
    void DeleteFlowElement(FlowGridElement* element);
    void ScheduleDeletion(FlowGridElement* element);//Schedules a rack module for deletion. Removes it from call chains and readies it for Cleanup.
-   int Cleanup();//Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
+   int DisposeScheduled();//Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
@@ -117,6 +117,9 @@ protected:
    std::vector<FlowNameRecord> mFlowNameRecords;
 
 private:
+
+   void DeregisterElement(FlowGridElement*);
+
    enum FlowGridDirection
    {
       Left,

@@ -32,7 +32,7 @@ CanvasElement* SongCanvasNote::Create(Canvas* canvas, int col, int row, int args
    switch (args)
    {
       case 0:
-         return nullptr;
+         return new SongCanvasNote(canvas, col, row, 0, 1);
       case 1:
          return new SongCanvasNoteSampler(canvas, col, row, 0, 1);
       default:;
