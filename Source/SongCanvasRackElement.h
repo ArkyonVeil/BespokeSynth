@@ -55,10 +55,6 @@ public:
    void LoadState(FileStreamIn& in, int rev) override;
    virtual void OnLoadFinish(){}; //Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
 
-   //Save/load unique canvas part data.
-   virtual void SaveCanvasPart(SongCanvasNote* obj, FileStreamOut& out){};
-   virtual void LoadCanvasPart(SongCanvasNote* obj, FileStreamIn& in, int rev){};
-
    //Canvas stuff
    virtual void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvasNote* element){};

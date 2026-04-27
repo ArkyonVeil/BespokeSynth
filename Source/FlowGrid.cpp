@@ -926,8 +926,8 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       int revCheck;
       int rev = 0;
       in.Peek(&revCheck, sizeof(int));
-      if (revCheck != 0)//Rev 0 FGE's did not manually save, resulting in a double extraction desync.
-         in >> rev;
+      if (revCheck != 0)//Rev 0 FGE's did not manually save the revision.
+         in >> rev; //So we need to manually extract the revision so it lines up later.
       std::string type;
       in >> type;
       auto el = factory->Create(type);

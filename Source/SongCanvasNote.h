@@ -32,6 +32,7 @@ public:
    ofColor mCurrentColor;
    ofColor mCurrentColorGrad;
 
+   void CopyTo(CanvasElement* to) const override;
 
 private:
    void DrawContents(bool clamp, bool wrapped, ofVec2f offset) override;

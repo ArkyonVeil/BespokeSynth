@@ -46,6 +46,14 @@ CanvasElement* SongCanvasNote::CreateDuplicate() const
    return element;
 }
 
+void SongCanvasNote::CopyTo(CanvasElement* to) const
+{
+   CanvasElement::CopyTo(to);
+   auto toNew = dynamic_cast<SongCanvasNote*>(to);
+
+   toNew->mRackParentID = mRackParentID;
+   toNew->SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
+}
 void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 {
    ofPushStyle();
@@ -144,7 +152,6 @@ void SongCanvasNote::SaveState(FileStreamOut& out)
    out << GetStart();
    out << GetEnd();
    out << mRackParentID;
-   mRackPart->SaveCanvasPart(this, out);
 }
 
 void SongCanvasNote::LoadState(FileStreamIn& in)
@@ -159,6 +166,5 @@ void SongCanvasNote::LoadState(FileStreamIn& in)
    SetEnd(val);
    in >> mRackParentID;
    SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
-   mRackPart->LoadCanvasPart(this, in, mRackPart->GetModuleSaveStateRev());
 }
 float SongCanvasNote::DragQuantizationOverride(float input, int context) {return mRackPart->GetNotePosQuantizationOverride(this,input,context);}

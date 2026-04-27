@@ -1707,29 +1707,12 @@ void SongCanvas::SaveState(FileStreamOut& out)
 
 
    //now the racks.
+   out << mFlowGridRows;
    out << mInternalRackIDCounter; //We have to save this increment, so we don't get bugs where racks get assigned duplicate ids.
    mRackGrid->SaveElements(out);
 
    //Let's save the canvas states now.
-   out << mCanvas->GetNumRows();
-   out << mCanvas->GetNumCols();
-
-   out << mCanvas->GetLength();
-   out << mWidth;
-   out << mHeight;
-
-   out << mFlowGridRows;
-
-   auto cvs = mCanvas->GetElements();
-   out << (int)cvs.size();
-   for (int i = 0; i < cvs.size(); ++i)
-   {
-      auto ce = static_cast<SongCanvasNote*>(cvs[i]);
-
-      ce->SaveState(out);
-   }
-   out << mCanvas->mViewStart;
-   out << mCanvas->mViewEnd;
+   mCanvas->SaveState(out);
 
    //More misc stuff
    out << mPartNameCount;
@@ -1801,50 +1784,50 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
    }
 
    //now load our real rack.
+   if (rev >= 9)
+      in >> mFlowGridRows;
    in >> mInternalRackIDCounter;
    mRackGrid->LoadElements(new SongCanvasRackFactory(this), in);
 
    //time to set up our Canvas and scaling now
-
-   int i1;
-   float f1;
-   float f2;
-   in >> i1;
-   mCanvas->SetNumRows(i1);
-   in >> i1;
-   //mCanvas->SetNumCols(i1);no longer used
-   in >> f1;
-   mCanvas->SetLength(f1);
-   in >> f1;
-   in >> f2;
-
-   mWidth = f1;
-   mHeight = f2;
-
-
-   in >> mFlowGridRows;
-
-   //Load the canvas elements...
-   std::vector<SongCanvasNote*> celms;
-   in >> i1;
-   for (int i = 0; i < i1; ++i)
+   //OLD CANVAS LOADING
+   if (rev <= 8)
    {
-      SongCanvasNote* celm = new SongCanvasNote(mCanvas);
-      celm->LoadState(in);
-      mCanvas->AddElement(celm);
-   }
+      int i1;
+      float f1;
+      float f2;
+      in >> i1;
+      mCanvas->SetNumRows(i1);
+      in >> i1;
+      //mCanvas->SetNumCols(i1);no longer used
+      in >> f1;
+      mCanvas->SetLength(f1);
+      in >> f1;
+      in >> f2;
+      mWidth = f1;
+      mHeight = f2;
+      in >> mFlowGridRows;
+      //Load the canvas elements...
+      std::vector<SongCanvasNote*> celms;
+      in >> i1;
+      for (int i = 0; i < i1; ++i)
+      {
+         SongCanvasNote* celm = new SongCanvasNote(mCanvas);
+         celm->LoadState(in);
+         celm = ConvertLegacyElement(celm);
+         mCanvas->AddElement(celm);
+      }
 
-   float vS = 0;
-   float vE = 0;
-   in >> vS;
-   in >> vE;
-   if (rev < 3)
-   {
-      vS *= 12;
-      vE *= 12;
+      float vStart, vEnd;
+      in >> vStart;
+      in >> vEnd;
+      mCanvas->mViewStart = vStart;
+      mCanvas->mViewEnd = vEnd;
    }
-   mCanvas->mViewStart = vS;
-   mCanvas->mViewEnd = vE;
+   else//NEW CANVAS LOADING
+   {
+      mCanvas->LoadState(in);
+   }
 
    CanvasUpdated(mCanvas);
    //More misc stuff.
@@ -1904,6 +1887,20 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       rack->OnLoadFinish();
    }
 }
+
+SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
+{
+   auto parent = element->GetRackElement();
+   if (dynamic_cast<SongCanvasRackSampler*>(parent) != nullptr)//Legacy Sampler, let's actually return the correct type.
+   {
+      auto nElem = new SongCanvasNoteSampler(mCanvas);
+      element->CopyTo(nElem);
+      delete element;//Dispose our old element. We will no longer be using it.
+      return nElem;
+   }
+   return element;
+}
+
 /////////////////////
 ///RACK MANAGEMENT///
 /////////////////////
@@ -1990,7 +1987,6 @@ void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
    }
    else
       mRackGrid->DeleteFlowElement(element);
-
 }
 std::vector<SongCanvasRackElement*> SongCanvas::GetAllRackElements() const
 {

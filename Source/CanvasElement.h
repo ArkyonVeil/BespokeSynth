@@ -83,6 +83,8 @@ public:
    virtual void SaveState(FileStreamOut& out);
    virtual void LoadState(FileStreamIn& in);
 
+   virtual void CopyTo (CanvasElement* to) const;
+
    int mRow;
    int mCol;
    float mOffset;

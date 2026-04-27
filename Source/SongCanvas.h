@@ -83,7 +83,8 @@ public:
    void SaveLayout(ofxJSONElement& moduleInfo) override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
-   int GetModuleSaveStateRev() const override { return 8; }
+   SongCanvasNote* ConvertLegacyElement(SongCanvasNote* element) const;
+   int GetModuleSaveStateRev() const override { return 9; }
 
    //Input
    bool MouseMoved(float x, float y) override;

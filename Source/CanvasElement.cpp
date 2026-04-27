@@ -336,6 +336,14 @@ void CanvasElement::ButtonClicked(std::string label, double time)
 {
 }
 
+void CanvasElement::CopyTo(CanvasElement* to) const
+{
+   to->mRow = mRow;
+   to->mCol = mCol;
+   to->mLength = mLength;
+   to->mOffset = mOffset;
+}
+
 namespace
 {
    const int kCESaveStateRev = 1;
@@ -363,6 +371,7 @@ void CanvasElement::LoadState(FileStreamIn& in)
    in >> mOffset;
    in >> mLength;
 }
+
 
 ////////////////////
 
