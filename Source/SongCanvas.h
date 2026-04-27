@@ -98,6 +98,7 @@ public:
    void TextEntryComplete(TextEntry* entry) override;
    void OnElementLoaded(FlowGridElement* element) override;
    void FeatureResize(int extraW, int extraH);
+   int GetElementFactoryArgs() override;
 
    ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
    void ReloadMeasures(bool overrideAutoFit);

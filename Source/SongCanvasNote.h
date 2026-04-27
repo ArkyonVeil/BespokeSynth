@@ -9,7 +9,7 @@ public:
    SongCanvasNote(Canvas* canvas, int col, int row, float offset, float length);
    explicit SongCanvasNote(Canvas* canvas); //Simplified constructor, uses default values and skips the setup based on selected call. For loading.
    void SetupBase(SongCanvasRackElement* templateElement);
-   static CanvasElement* Create(Canvas* canvas, int col, int row) { return new SongCanvasNote(canvas, col, row, 0, 1); }
+   static CanvasElement* Create(Canvas* canvas, int col, int row, int args);
 
    CanvasElement* CreateDuplicate() const override;
 

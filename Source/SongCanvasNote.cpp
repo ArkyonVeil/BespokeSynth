@@ -1,6 +1,7 @@
 #include "SongCanvasNote.h"
 #include "CanvasElement.h"
 #include "SongCanvas.h"
+#include "SongCanvasRackSampler.h"
 
 SongCanvasNote::SongCanvasNote(Canvas* canvas, int col, int row, float offset, float length)
 : CanvasElement(canvas, col, row, offset, length)
@@ -24,6 +25,19 @@ void SongCanvasNote::SetupBase(SongCanvasRackElement* templateElement)
    mRackParentID = mRackPart->mInternalRackID;
    mRackPart->SetupCanvasPart(this);
    mIndex = mSongCanvas->GetNewCanvasElementId();
+}
+//Factory!
+CanvasElement* SongCanvasNote::Create(Canvas* canvas, int col, int row, int args)
+{
+   switch (args)
+   {
+      case 0:
+         return nullptr;
+      case 1:
+         return new SongCanvasNoteSampler(canvas, col, row, 0, 1);
+      default:;
+         return new SongCanvasNote(canvas, col, row, 0, 1);
+   }
 }
 
 CanvasElement* SongCanvasNote::CreateDuplicate() const

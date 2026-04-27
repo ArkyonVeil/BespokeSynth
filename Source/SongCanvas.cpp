@@ -834,6 +834,14 @@ void SongCanvas::FeatureResize(int extraW, int extraH)
    float w = mWidth;
    Resize(w + extraW, h + extraH);
 }
+int SongCanvas::GetElementFactoryArgs()
+{
+   if (GetSelectedRackPart())
+   {
+      return GetSelectedRackPart()->GetRackNoteFactoryId();
+   }
+   return 0;
+}
 void SongCanvas::Resize(float w, float h)
 {
    int xEndRackSpacing = 46;
@@ -902,7 +910,7 @@ void SongCanvas::Resize(float w, float h)
    mRackAddNewButton->SetDimensions(28, mRackGrid->GetHeight());
 
    //Mixers!
-   mMixerDrawCompression = MIN(1.0f,(mWidth-mMixerStartingXOffset*2)/mMixers.size()*kMixerPreferredWidth);
+   mMixerDrawCompression = MIN(1.0f, (mWidth - mMixerStartingXOffset * 2) / mMixers.size() * kMixerPreferredWidth);
 
 
    ReloadHeader();

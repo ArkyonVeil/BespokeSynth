@@ -147,10 +147,6 @@ void SongCanvasRackElement::LoadState(FileStreamIn& in, int rev)
    }
    UpdatePartNameData();
 }
-void SongCanvasRackElement::DeletedCanvasPart(SongCanvasNote* element)
-{
-   //TODO clean up the data structure used by this element.
-}
 void SongCanvasRackElement::OnClicked(float x, float y, bool right)
 {
    FlowGridElement::OnClicked(x, y, right);

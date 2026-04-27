@@ -11,6 +11,8 @@
 #include "SampleVoice.h"
 #include "SongCanvasRackElement.h"
 
+
+class SongCanvasNoteSampler;
 class SongCanvasRackSampler : public SongCanvasAudioRackElement, public IFloatSliderListener, public IIntSliderListener
 {
 public:
@@ -26,7 +28,7 @@ public:
    int GetPitchFromCanvasElementSize(float size);
    float GetCanvasElementSizeFromPitch(int notePitch);
    void LoadFileSample();
-   void UpdateSampleLength(SongCanvasNote* element);
+   void UpdateSampleLength(SongCanvasNoteSampler* element);
    float GetPreferredWidth() const override;
    void ButtonClicked(ClickButton* button, double time) override;
    bool MouseMoved(float x, float y) override;
@@ -54,6 +56,7 @@ public:
    void SetupCanvasPart(SongCanvasNote* element) override;
    void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
    float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) override;
+   int GetRackNoteFactoryId() override {return 1;};
 
    void OnTempoUpdated() override;
 
@@ -133,6 +136,9 @@ private:
    float const kOptionsPadding { 4 };
    float const kExpandPropertiesButtonWidthPref { 10 };
 
+   int mCachedPitch { -1 };
+   float mCachedSize { -1 };
+
    float mExpandPropertiesWidth { 0 };
    ofVec2f mExpandPropertiesTrianglePos {0,0};
    ChannelBuffer mWriteBuffer;
@@ -141,4 +147,14 @@ private:
    SampleVoiceParams mVoiceParams{};
    float mSampleDisplayNameWidth{ 0 };
    const float mSampleDisplayNameWidthDefault{ 55 };
+};
+
+class SongCanvasNoteSampler : public SongCanvasNote
+{
+public:
+   using SongCanvasNote::SongCanvasNote;//Inherit the constructors. Nothing else needed here.
+   void SaveState(FileStreamOut& out) override;
+   void LoadState(FileStreamIn& in) override;
+
+   int mPitch { 48 };
 };

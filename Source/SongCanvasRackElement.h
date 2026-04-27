@@ -62,7 +62,7 @@ public:
    //Canvas stuff
    virtual void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvasNote* element){};
-   virtual void DeletedCanvasPart(SongCanvasNote* element);
+   virtual void DeletedCanvasPart(SongCanvasNote* element){};
    virtual float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) { return 0; }
 
 
@@ -82,6 +82,7 @@ public:
    bool IsRackEnabled() const { return mRackEnabled;}
    virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled;}
 
+   virtual int GetRackNoteFactoryId() { return 0; }
    virtual void SongCanvasOptionsUpdated(){};
 
    int mInternalRackID;
@@ -139,7 +140,6 @@ private:
 
    float mRackNameStringPreferredWidth{ 0 };
    bool mBufferQuickRename = false;
-
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;

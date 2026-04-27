@@ -103,8 +103,21 @@ float SongCanvasRackSampler::GetCanvasElementSizeFromPitch(int notePitch)
 }
 
 //Updates a sample length visually based on the pitch reflected in its size.
-void SongCanvasRackSampler::UpdateSampleLength(SongCanvasNote* element)
+void SongCanvasRackSampler::UpdateSampleLength(SongCanvasNoteSampler* element)
 {
+   //Position of a canvas element. 0 -> measure 0. 1 -> measure max.
+   float sampleLength;
+   if (element->mPitch != mCachedPitch)
+   {
+      sampleLength = GetSampleLengthForCanvasInPitchBase();
+      mCachedPitch = element->mPitch;
+      mCachedSize = sampleLength;
+   }
+   else
+      sampleLength = mCachedSize;
+
+   float start = element->GetStart();
+   element->SetEnd(start + sampleLength);
 }
 
 void SongCanvasRackSampler::LoadFileSample()
@@ -151,6 +164,7 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
       delete mSample;
    mSample = sample;
    mVoiceParams.mSample = mSample;
+   mCachedPitch = -1;
 
    sample->SetPlayPosition(0);
    mSampleDisplayNameWidth = mSampleDisplayNameWidthDefault;
@@ -210,12 +224,9 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
          auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
 
          //Position of a canvas element. 0 -> measure 0. 1 -> measure max.
-         float sampleLength = GetSampleLengthForCanvasInPitchBase();
          for (auto e : r)
          {
-            float start = e->GetStart();
-            e->SetEnd(start + sampleLength);
-            //e->
+            UpdateSampleLength(dynamic_cast<SongCanvasNoteSampler*>(e));
          }
       }
    }
@@ -631,7 +642,7 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
                case SongCanvas::EnumSamplerAudioResizeText::Percent:
                {
                   float pitchDifference = 48 - pitch;
-                  float percent = roundf(powf( 2,pitchDifference / 12.0f) * 100.0f);
+                  float percent = roundf(powf(2, pitchDifference / 12.0f) * 100.0f);
                   sizeText = ofToString(percent) + "%";
                   break;
                }
@@ -639,7 +650,7 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
                {
                   float sampleLength = mSample->LengthInSeconds();
                   float pitchDifference = 48 - pitch;
-                  float percent = powf( 2,pitchDifference / 12.0f);
+                  float percent = powf(2, pitchDifference / 12.0f);
                   sizeText = ofGetSecondsToTimeMMSS(sampleLength * percent, false, false, true);
                   break;
                }
@@ -648,19 +659,19 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
                   renderAll = true;
 
                   float pitchDifference = 48 - pitch;
-                  float percent = powf( 2,pitchDifference / 12.0f);
+                  float percent = powf(2, pitchDifference / 12.0f);
                   float sampleLength = mSample->LengthInSeconds();
                   sizeText = NoteName(pitch, false, true);
 
                   std::string txS1, txS2;
-                  txS1 = ofToString(roundf(percent*100)) + "%";
+                  txS1 = ofToString(roundf(percent * 100)) + "%";
                   txS2 = ofGetSecondsToTimeMMSS(sampleLength * percent, false, false, true);
 
-                  allMaxWidth = MAX(gFont.GetStringWidth(txS1, fontSize),gFont.GetStringWidth(txS2, fontSize));
+                  allMaxWidth = MAX(gFont.GetStringWidth(txS1, fontSize), gFont.GetStringWidth(txS2, fontSize));
 
-                  sizeText += "\n"+ofToString(pitch);
-                  sizeText += "\n"+txS1;
-                  sizeText += "\n"+txS2;
+                  sizeText += "\n" + ofToString(pitch);
+                  sizeText += "\n" + txS1;
+                  sizeText += "\n" + txS2;
                }
                break;
             }
@@ -670,8 +681,8 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
             if (renderAll)
             {
                offsetY += 13;
-               backHeight = gFont.GetStringHeight(sizeText,fontSize)*4+3;
-               textWidth = allMaxWidth+2.0f;
+               backHeight = gFont.GetStringHeight(sizeText, fontSize) * 4 + 3;
+               textWidth = allMaxWidth + 2.0f;
                allExtraYOffset -= 2.0f;
             }
             else
@@ -707,7 +718,7 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
                   if (!renderAll)
                      DrawTextRightJustify(sizeText, rect.width - 2, offsetY, fontSize);
                   else
-                     DrawTextNormal(sizeText, rect.width - textWidth -1, offsetY, fontSize);
+                     DrawTextNormal(sizeText, rect.width - textWidth - 1, offsetY, fontSize);
                }
                ofPopStyle();
             }
@@ -753,6 +764,8 @@ float SongCanvasRackSampler::GetNotePosQuantizationOverride(SongCanvasNote* elem
    float pitchSize = GetCanvasElementSizeFromPitch(elPitch);
    pitchSize = CLAMP(pitchSize, minPitchSize, maxPitchSize);
 
+   dynamic_cast<SongCanvasNoteSampler*>(element)->mPitch = elPitch;//Write our pitch!
+
    //Now we have everything we need. Let's calculate the snap position.
    if (side == 0)
       return end - pitchSize;
@@ -762,12 +775,13 @@ float SongCanvasRackSampler::GetNotePosQuantizationOverride(SongCanvasNote* elem
 void SongCanvasRackSampler::OnTempoUpdated()
 {
    SongCanvasAudioRackElement::OnTempoUpdated();
+   mCachedPitch = -1;
 
    //If this happens, we need to update all of our samples, since they will no longer align with the time.
    auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
    for (int i = 0; i < r.size(); ++i)
    {
-      UpdateSampleLength(r[i]);
+      UpdateSampleLength(dynamic_cast<SongCanvasNoteSampler*>(r[i]));
    }
 }
 
@@ -1050,6 +1064,13 @@ void SongCanvasRackSampler::RackSampleButton::SetRect(float x, float y, float wi
 
    mDragButtonRect = ofRectangle(width - 18, miniButtonY, 16, 12);
 }
-
-
-//
+void SongCanvasNoteSampler::SaveState(FileStreamOut& out)
+{
+   SongCanvasNote::SaveState(out);
+   out << mPitch;
+}
+void SongCanvasNoteSampler::LoadState(FileStreamIn& in)
+{
+   SongCanvasNote::LoadState(in);
+   in >> mPitch;
+}
