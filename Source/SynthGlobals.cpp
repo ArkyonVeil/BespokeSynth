@@ -578,8 +578,8 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
       if (keyIndex != -1)
       {
          //Make our priority strings and main strings separate.
-         std::string prio = text.substr(keyIndex,text.size()-keyIndex);
-         std::string base = text.substr(0,keyIndex);
+         std::string prio = text.substr(keyIndex, text.size() - keyIndex);
+         std::string base = text.substr(0, keyIndex);
 
          stringLength = base.size();
          //Approach 1, grid down base until there's nothing left.

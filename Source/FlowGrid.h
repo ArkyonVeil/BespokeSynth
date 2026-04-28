@@ -73,8 +73,8 @@ public:
    //Removes and deletes the Flow Element. If the element is multithreaded (also on the audio thread) call
    //ScheduleDeletion() first, then Delete or Cleanup in the audio thread.
    void DeleteFlowElement(FlowGridElement* element);
-   void ScheduleDeletion(FlowGridElement* element);//Schedules a rack module for deletion. Removes it from call chains and readies it for Cleanup.
-   int DisposeScheduled();//Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
+   void ScheduleDeletion(FlowGridElement* element); //Schedules a rack module for deletion. Removes it from call chains and readies it for Cleanup.
+   int DisposeScheduled(); //Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
    void SetSelectedGridElement(FlowGridElement* element);
@@ -117,7 +117,6 @@ protected:
    std::vector<FlowNameRecord> mFlowNameRecords;
 
 private:
-
    void DeregisterElement(FlowGridElement*);
 
    enum FlowGridDirection
@@ -164,7 +163,7 @@ private:
    int mDragElementRow;
    ofVec2f mStartDragElementPos;
    IDrawableModule* mOwner;
-   bool mSkipGridRecalculation { false };
+   bool mSkipGridRecalculation{ false };
 
    ofVec2f mDragSnapIndicatorPos{ -5, 0 };
    int mMaxRows = 201;
@@ -172,7 +171,7 @@ private:
    int mDebugIter = 0;
    int mRowCountOnDragStart = -1;
    bool mSuggestedRowActive = false;
-   float mMinOverfilledSize { 0 };
+   float mMinOverfilledSize{ 0 };
 
    float mWidth = 0;
    float mHeight = 0;

@@ -126,7 +126,7 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 
       if (!mRackPart->IsRackEnabled())
       {
-         ofSetColor(0,0,0,125);
+         ofSetColor(0, 0, 0, 125);
          ofFill();
          ofRect(rect, 2);
       }
@@ -159,4 +159,4 @@ void SongCanvasNote::LoadState(FileStreamIn& in)
    in >> mRackParentID;
    SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
 }
-float SongCanvasNote::DragQuantizationOverride(float input, int context) {return mRackPart->GetNotePosQuantizationOverride(this,input,context);}
+float SongCanvasNote::DragQuantizationOverride(float input, int context) { return mRackPart->GetNotePosQuantizationOverride(this, input, context); }

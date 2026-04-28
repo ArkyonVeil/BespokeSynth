@@ -149,11 +149,11 @@ void IClickable::SetTextTruncationSettings(TextTruncationSettings newSettings)
    mTruncationSettings = newSettings;
    if (mHasOverrideDisplayName)
    {
-      mCachedName = TruncateString(mOverrideDisplayName,mMaxTextDisplayWidth, mTruncationSettings);
+      mCachedName = TruncateString(mOverrideDisplayName, mMaxTextDisplayWidth, mTruncationSettings);
    }
    else
    {
-      mCachedName = TruncateString(mName, mMaxTextDisplayWidth,mTruncationSettings);
+      mCachedName = TruncateString(mName, mMaxTextDisplayWidth, mTruncationSettings);
    }
 }
 

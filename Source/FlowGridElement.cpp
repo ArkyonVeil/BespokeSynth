@@ -64,14 +64,14 @@ bool FlowGridElement::TestIntercepts(float x, float y, bool right)
    auto cables = GetPatchCableSources();
    for (auto source : cables)
    {
-      if (source->TestClick(x,y,right,true))
+      if (source->TestClick(x, y, right, true))
          return true;
    }
 
    auto iUIs = GetUIControls();
    for (auto source : iUIs)
    {
-      if (source->TestClick(x,y,right,true))
+      if (source->TestClick(x, y, right, true))
          return true;
    }
 

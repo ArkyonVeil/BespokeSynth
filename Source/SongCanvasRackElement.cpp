@@ -91,7 +91,7 @@ float SongCanvasRackElement::GetReservedPrefLeftWidth() const
 }
 float SongCanvasRackElement::GetLeftReservedToTextEnd() const
 {
-   return kLeftWidthPadding + MAX(GetRenameSpaceUsed(),GetStringWidth(mDisplayPartName));
+   return kLeftWidthPadding + MAX(GetRenameSpaceUsed(), GetStringWidth(mDisplayPartName));
 }
 float SongCanvasRackElement::GetRenameSpaceUsed() const
 {
@@ -243,7 +243,7 @@ void SongCanvasRackElement::DrawModule()
    if (!mRackEnabled)
    {
       ofFill();
-      ofSetColor({0,0,0,125});
+      ofSetColor({ 0, 0, 0, 125 });
       ofRect(GetRectLocal());
    }
 
@@ -327,7 +327,7 @@ void SongCanvasAudioRackElement::OnPostResize()
 }
 bool SongCanvasAudioRackElement::MouseMoved(float x, float y)
 {
-   if (mChannelPicker->GetRect(true).grow(2).contains(x,y))
+   if (mChannelPicker->GetRect(true).grow(2).contains(x, y))
       mSongCanvas->SetMixerIdHighlight(mMixerIndex);
    return SongCanvasRackElement::MouseMoved(x, y);
 }

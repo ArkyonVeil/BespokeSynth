@@ -68,7 +68,7 @@ void ModuleContainer::GetAllModulesAndChildren(std::vector<IDrawableModule*>& ou
       mModules[i]->GetChildrenNested(children);
       if (!children.empty())
       {
-         out.insert(out.begin(),children.begin(),children.end());
+         out.insert(out.begin(), children.begin(), children.end());
       }
 
       if (mModules[i]->GetContainer())

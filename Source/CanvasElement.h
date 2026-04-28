@@ -56,9 +56,9 @@ public:
    void SetHighlight(bool highlight) { mHighlighted = highlight; }
    bool GetHighlighted() const { return mHighlighted; }
    ofRectangle GetRect(bool clamp, bool wrapped, ofVec2f offset = ofVec2f(0, 0)) const;
-   float GetStart() const;//Normalized, 0 to 1, relative to the Canvas
+   float GetStart() const; //Normalized, 0 to 1, relative to the Canvas
    void SetStart(float start, bool preserveLength);
-   virtual float GetEnd() const;//Normalized, 0 to 1, relative to the Canvas
+   virtual float GetEnd() const; //Normalized, 0 to 1, relative to the Canvas
    void SetEnd(float end);
    std::vector<IUIControl*>& GetUIControls() { return mUIControls; }
    void MoveElementByDrag(ofVec2f dragOffset);
@@ -72,7 +72,7 @@ public:
    // Allows the definition of custom quantization/snapping rules
    // Expects a range of 0-1. 0 being column 0, and 1 the last column on the canvas.
    // Return -1 to ignore.
-   virtual float DragQuantizationOverride(float input, int context) {return -1;};
+   virtual float DragQuantizationOverride(float input, int context) { return -1; };
 
    virtual void CheckboxUpdated(std::string label, bool value, double time);
    virtual void FloatSliderUpdated(std::string label, float oldVal, float newVal, double time);
@@ -87,7 +87,7 @@ public:
    float mOffset;
    float mLength;
 
-   int mFactoryArgs { 0 };
+   int mFactoryArgs{ 0 };
 
 protected:
    virtual void DrawContents(bool clamp, bool wrapped, ofVec2f offset) = 0;

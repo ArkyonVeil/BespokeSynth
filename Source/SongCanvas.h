@@ -163,8 +163,8 @@ public:
    SongCanvasMixer* GetMixer(int index);
    SongCanvasMixer* GetMixerRef(int index) const;
    void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
-   float GetMixerSpaceAvailable() const { return kMixerPreferredWidth*mMixerDrawCompression;};
-   float GetMixerCompression() const {return mMixerDrawCompression;}
+   float GetMixerSpaceAvailable() const { return kMixerPreferredWidth * mMixerDrawCompression; };
+   float GetMixerCompression() const { return mMixerDrawCompression; }
 
    //Animation
    float RescaleAnimationSpeedDelta() { return ofGetDeltaTime() * 96 * mDeltaAnimSpeedMultiplier; }
@@ -180,8 +180,8 @@ public:
    void SampleDropped(int x, int y, Sample* sample) override;
    void FilesDropped(std::vector<std::string> files, int x, int y) override;
    bool CanDropSample() const override { return true; }
-   void SetMixerIdHighlight(int id) { mHighlightHintMixerId = id;}
-   int GetMixerIdHighlight() {return mHighlightHintMixerId;}
+   void SetMixerIdHighlight(int id) { mHighlightHintMixerId = id; }
+   int GetMixerIdHighlight() { return mHighlightHintMixerId; }
 
    //Garbage Disposal
    void DisposeElement(IClickable* element);
@@ -440,7 +440,7 @@ private:
    LayerDropDownOptions mLayerDropDownOptions;
    int mLayerDropdownOptionButtonIndex;
 
-   float mDeltaAnimSpeedMultiplier { 1 };
+   float mDeltaAnimSpeedMultiplier{ 1 };
 
    //Audio Handling
    float mMixerStartingXOffset{ 26 };
@@ -458,8 +458,8 @@ private:
    ofVec2f mMixerOrphanSourceCoord{ 0, 0 };
    float mSelectedMixerX; //Temp mixer cords, not updated if no mixer is selected.
    bool mScheduleMixerSort{ false };
-   int mHighlightHintMixerId { -1 };
-   float mMixerDrawCompression { 1.0f };//0, width 0, 1
+   int mHighlightHintMixerId{ -1 };
+   float mMixerDrawCompression{ 1.0f }; //0, width 0, 1
    float mLastTempo = -1;
 
    std::vector<SongCanvasMixer*> mMixers{};

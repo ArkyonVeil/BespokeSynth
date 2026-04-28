@@ -38,7 +38,7 @@ public:
    void OnPostResize() override;
    void OnClicked(float x, float y, bool right) override;
    void SongCanvasOptionsUpdated() override;
-    bool TestIntercepts(float x, float y, bool right) override;
+   bool TestIntercepts(float x, float y, bool right) override;
    void FilesDropped(std::vector<std::string> files, int x, int y) override;
    void SampleDropped(int x, int y, Sample* sample) override;
    bool CanDropSample() const override { return true; }
@@ -50,13 +50,13 @@ public:
    void ReloadAudioOptions();
 
    ChannelBuffer* GetBuffer() { return &mWriteBuffer; }
-   int GetActiveOptions() const { return mVolumeEnabled + mADSREnabled;}
+   int GetActiveOptions() const { return mVolumeEnabled + mADSREnabled; }
 
    //Canvas Stuff
    void SetupCanvasPart(SongCanvasNote* element) override;
    void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
    float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) override;
-   int GetRackNoteFactoryArgs() override {return 1;};
+   int GetRackNoteFactoryArgs() override { return 1; };
 
    void OnTempoUpdated() override;
 
@@ -67,8 +67,8 @@ public:
    void DrawRackGraphics() override;
    void SetRackEnabled(bool enabled) override;
 
-   void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override {mMemVolume = slider->GetValue();};
-   void IntSliderUpdated(IntSlider* slider, int oldVal, double time) override {};
+   void FloatSliderUpdated(FloatSlider* slider, float oldVal, double time) override { mMemVolume = slider->GetValue(); };
+   void IntSliderUpdated(IntSlider* slider, int oldVal, double time) override{};
 
    DrawAudioBufferSettings mDrawAudioBufferSettings;
 
@@ -106,40 +106,40 @@ public:
    RackSampleButton mSampleButton;
 
 protected:
-   float GetMinTextSpace() const override{ return 35;}
+   float GetMinTextSpace() const override { return 35; }
 
 private:
    Sample* mSample{ nullptr };
    bool mLongSample{ false };
    bool mSCLoadingDone{ true };
-   float mSampleBaseTimeDuration { -1.0f };
-   float mSampleBaseOldTimeDuration { -1.0f };
+   float mSampleBaseTimeDuration{ -1.0f };
+   float mSampleBaseOldTimeDuration{ -1.0f };
 
-   bool mExpandProperties { true };
-   bool mExpandPropertiesButtonHovered { false };
+   bool mExpandProperties{ true };
+   bool mExpandPropertiesButtonHovered{ false };
 
-   bool mVolumeEnabled { false };
-   bool mADSREnabled { false };
+   bool mVolumeEnabled{ false };
+   bool mADSREnabled{ false };
 
-   FloatSlider* mVolumeSlider { nullptr };
-   ADSRDisplay* mADSRDisplay { nullptr };
+   FloatSlider* mVolumeSlider{ nullptr };
+   ADSRDisplay* mADSRDisplay{ nullptr };
 
-   ofColor const kOptionNameColour{101,198,101,255};
+   ofColor const kOptionNameColour{ 101, 198, 101, 255 };
 
-   float mMemVolume { 0.5f };
+   float mMemVolume{ 0.5f };
    ADSR mMemADSR;
 
    float const kSamplerButtonWidthPref{ 76 };
-   float const kSliderWidthPref { 40 };
-   float const kADSRWidthPref { 45 };
-   float const kOptionsPadding { 4 };
-   float const kExpandPropertiesButtonWidthPref { 10 };
+   float const kSliderWidthPref{ 40 };
+   float const kADSRWidthPref{ 45 };
+   float const kOptionsPadding{ 4 };
+   float const kExpandPropertiesButtonWidthPref{ 10 };
 
-   int mCachedPitch { -1 };
-   float mCachedSize { -1 };
+   int mCachedPitch{ -1 };
+   float mCachedSize{ -1 };
 
-   float mExpandPropertiesWidth { 0 };
-   ofVec2f mExpandPropertiesTrianglePos {0,0};
+   float mExpandPropertiesWidth{ 0 };
+   ofVec2f mExpandPropertiesTrianglePos{ 0, 0 };
    ChannelBuffer mWriteBuffer;
    int mSamplesPlaying{ 0 };
    PolyphonyMgr mPolyMgr;
@@ -151,9 +151,9 @@ private:
 class SongCanvasNoteSampler : public SongCanvasNote
 {
 public:
-   using SongCanvasNote::SongCanvasNote;//Inherit the constructors. Nothing else needed here.
+   using SongCanvasNote::SongCanvasNote; //Inherit the constructors. Nothing else needed here.
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
 
-   int mPitch { 48 };
+   int mPitch{ 48 };
 };

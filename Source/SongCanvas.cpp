@@ -1830,7 +1830,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       mCanvas->mViewStart = vStart;
       mCanvas->mViewEnd = vEnd;
    }
-   else//NEW CANVAS LOADING
+   else //NEW CANVAS LOADING
    {
       mCanvas->LoadState(in);
    }
@@ -1898,7 +1898,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
 {
    auto parent = element->GetRackElement();
-   if (dynamic_cast<SongCanvasRackSampler*>(parent) != nullptr)//Legacy Sampler, let's actually return the correct type.
+   if (dynamic_cast<SongCanvasRackSampler*>(parent) != nullptr) //Legacy Sampler, let's actually return the correct type.
    {
       auto nElem = new SongCanvasNoteSampler(mCanvas);
       nElem->mCol = element->mCol;
@@ -1907,7 +1907,7 @@ SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
       nElem->mOffset = element->mOffset;
       nElem->mFactoryArgs = parent->GetRackNoteFactoryArgs();
       nElem->SetupBase(GetRackPartWithID(element->GetRackParentId()));
-      delete element;//Dispose our old element. We will no longer be using it.
+      delete element; //Dispose our old element. We will no longer be using it.
       return nElem;
    }
    return element;

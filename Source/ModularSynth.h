@@ -197,7 +197,7 @@ public:
    }
 
    void SetResizeModule(IDrawableModule* module) { mResizeModule = module; }
-   IDrawableModule* GetResizingModule() const { return mResizeModule;}
+   IDrawableModule* GetResizingModule() const { return mResizeModule; }
 
    void SetGroupSelectContext(ModuleContainer* context) { mGroupSelectContext = context; }
    bool IsGroupSelecting() const { return mGroupSelectContext != nullptr; }

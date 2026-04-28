@@ -765,7 +765,7 @@ void FlowGrid::RecalculateFlowGrid()
 void FlowGrid::ScheduleDeletion(FlowGridElement* element)
 {
    DeregisterElement(element);
-   mDisposalQueue.push_back(element);//Schedule for annihilation.
+   mDisposalQueue.push_back(element); //Schedule for annihilation.
 }
 void FlowGrid::DeleteFlowElement(FlowGridElement* element)
 {
@@ -928,7 +928,7 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
       in >> type;
       int rev = 0;
       in.Peek(&revCheck, sizeof(int));
-      if (revCheck != 0)//Rev 0 FGE's did not manually save the revision.
+      if (revCheck != 0) //Rev 0 FGE's did not manually save the revision.
          in >> rev; //So we need to manually extract the revision so it lines up later.
       auto el = factory->Create(type);
       mListener->OnElementLoaded(el);

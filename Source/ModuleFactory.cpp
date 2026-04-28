@@ -289,7 +289,6 @@
 #include <juce_core/juce_core.h>
 
 
-
 #define REGISTER(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, false, false, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());
 #define REGISTER_HIDDEN(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, true, false, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());
 #define REGISTER_EXPERIMENTAL(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, false, true, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());

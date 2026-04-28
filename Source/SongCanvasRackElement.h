@@ -62,7 +62,6 @@ public:
    virtual float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) { return -1; }
 
 
-
    std::string* GetName() { return mElementName; }
    void SetRenameState(bool newState) { mRenameActive = newState; }
    void OnTimeEvent(double time) override{};
@@ -71,12 +70,12 @@ public:
    void MouseReleased() override;
    void ButtonClicked(ClickButton* button, double time) override{};
    float GetCenteredElementY(IUIControl* element) const { return (mHeight - element->GetRect(true).height) / 2; }
-   float GetCompression() const { return MIN(1,mWidth/GetPreferredWidth());}//Returns the current scale, in comparison to the preferred size. 1->no comp. 0.5->half comp. 0->infinite comp
-   virtual ofVec2f GetOutputPos() const { return {mWidth-GetReservedRightWidth()/2,mHeight / 2};}
-   virtual void OnTempoUpdated() {};
+   float GetCompression() const { return MIN(1, mWidth / GetPreferredWidth()); } //Returns the current scale, in comparison to the preferred size. 1->no comp. 0.5->half comp. 0->infinite comp
+   virtual ofVec2f GetOutputPos() const { return { mWidth - GetReservedRightWidth() / 2, mHeight / 2 }; }
+   virtual void OnTempoUpdated(){};
 
-   bool IsRackEnabled() const { return mRackEnabled;}
-   virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled;}
+   bool IsRackEnabled() const { return mRackEnabled; }
+   virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled; }
 
    virtual int GetRackNoteFactoryArgs() { return 0; }
    virtual void SongCanvasOptionsUpdated(){};
@@ -84,30 +83,30 @@ public:
    int mInternalRackID;
 
 protected:
-   void DrawModule() override;//Reserved for base graphics.
+   void DrawModule() override; //Reserved for base graphics.
 
    virtual void DrawExtendedBaseGraphics(){};
 
-   virtual float GetMinTextSpace() const { return 55;}//Minimum space to reserve for text.
-   float const kMaxTextSize { 200 };//How much room part name text can occupy before we truncate the excess.
-   float const kLeftWidthPadding {8}; //Padding from left of rack to text
-   float const kPartNameToContentPadding { 8 };//Padding from text to content.
-   float const kGenericCableOutSpace { 32 };//Pixels reserved for outputs (usually cables). At right of panel.
-   float const kPartNameFontSize { 12 };
+   virtual float GetMinTextSpace() const { return 55; } //Minimum space to reserve for text.
+   float const kMaxTextSize{ 200 }; //How much room part name text can occupy before we truncate the excess.
+   float const kLeftWidthPadding{ 8 }; //Padding from left of rack to text
+   float const kPartNameToContentPadding{ 8 }; //Padding from text to content.
+   float const kGenericCableOutSpace{ 32 }; //Pixels reserved for outputs (usually cables). At right of panel.
+   float const kPartNameFontSize{ 12 };
 
    //Constants, for PreferredWidth Calculations
    //You're strongly discouraged from using these anywhere but GetPreferredWidth() checks.
    virtual float GetReservedPrefLeftWidth() const; //Reserved space for part name, plus padding.
-   virtual float GetReservedPrefRightWidth() const { return kGenericCableOutSpace; };//Generally the same but some base rack types may alter this.
+   virtual float GetReservedPrefRightWidth() const { return kGenericCableOutSpace; }; //Generally the same but some base rack types may alter this.
 
    //Dynamic, affected by compression and draw accurate.
-   virtual float GetReservedLeftWidth() const {return GetReservedPrefLeftWidth()*GetCompression();}//Affected by compression. Should place unique stuff after this.
-   virtual float GetReservedRightWidth() const {return GetReservedPrefRightWidth()*GetCompression();}//Affected by compression. Typically used for rack outputs.
+   virtual float GetReservedLeftWidth() const { return GetReservedPrefLeftWidth() * GetCompression(); } //Affected by compression. Should place unique stuff after this.
+   virtual float GetReservedRightWidth() const { return GetReservedPrefRightWidth() * GetCompression(); } //Affected by compression. Typically used for rack outputs.
    float GetLeftReservedToTextEnd() const;
 
    SongCanvas* mSongCanvas;
-   std::string* mElementName;//The true name of the rack.
-   std::string mDisplayPartName;//The displayed name of the rack.
+   std::string* mElementName; //The true name of the rack.
+   std::string mDisplayPartName; //The displayed name of the rack.
 
    //Canvas part colours here for consistency and ease of comparison.
    const ofColor mCanvasEnablerColor = ofColor(180, 180, 180);
@@ -123,7 +122,6 @@ protected:
    TextTruncationSettings mPartNameTruncationSettings;
 
 private:
-
    float GetRenameSpaceUsed() const;
    bool mRenameActive = false;
    bool mRackEnabled;
@@ -132,14 +130,13 @@ private:
    float mExciteDrag{ 0 };
    float mExciteConstant{ 0 };
    double mLastClickTime{ 0 };
-   float mLastRenameSize { -1 };
+   float mLastRenameSize{ -1 };
 
    float mRackNameStringPreferredWidth{ 0 };
    bool mBufferQuickRename = false;
 
    int mDebugClick{ 0 };
    TextEntry* mElementRenameTextBox;
-
 };
 
 //Rack elements that produce sound should inherit this for consistent support and convenience methods such as channel assigment.
@@ -168,7 +165,7 @@ public:
 
 protected:
    void SwapMixers(int newIndex);
-   float GetReservedPrefRightWidth() const override { return 34;};
+   float GetReservedPrefRightWidth() const override { return 34; };
    int mMixerIndex{ -1 };
 
 private:
@@ -243,8 +240,14 @@ public:
    void UpdateMode();
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
+
 protected:
-   float GetMinTextSpace() const override{ if (mOnePulseMode) return 55; return 45;}
+   float GetMinTextSpace() const override
+   {
+      if (mOnePulseMode)
+         return 55;
+      return 45;
+   }
 
 private:
    DropdownList* mIntervalSelector{ nullptr };

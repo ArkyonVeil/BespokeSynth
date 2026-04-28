@@ -51,8 +51,10 @@ Canvas::Canvas(IDrawableModule* parent, int x, int y, int w, int h, float length
       mRowColors[i] = ofColor(200, 200, 200, 70);
 }
 Canvas::Canvas(ICanvasListener* parent, int x, int y, int w, int h, float length, int rows, int cols, CreateCanvasElementFnWithArgs elementCreator)
-: Canvas(dynamic_cast<IDrawableModule*>(parent), x, y, w, h, length, rows, cols, static_cast<CreateCanvasElementFn>(nullptr))//Ark: Casting a nullptr to a function is peak C++ and I love it.
-{ mElementCreatorWArgs = elementCreator; }
+: Canvas(dynamic_cast<IDrawableModule*>(parent), x, y, w, h, length, rows, cols, static_cast<CreateCanvasElementFn>(nullptr)) //Ark: Casting a nullptr to a function is peak C++ and I love it.
+{
+   mElementCreatorWArgs = elementCreator;
+}
 
 Canvas::~Canvas()
 {
@@ -289,7 +291,7 @@ void Canvas::OnClicked(float x, float y, bool right)
                {
                   int args = 0;
                   args = mListener->GetElementFactoryArgs();
-                  assert(args!=-1);//An extended factory requires a non-default argument for safety (save/load) related reasons.
+                  assert(args != -1); //An extended factory requires a non-default argument for safety (save/load) related reasons.
                   element = CreateElement(coord.col, coord.row, args);
                   element->mFactoryArgs = args;
                }

@@ -946,7 +946,7 @@ void IDrawableModule::KeyPressed(int key, bool isRepeat)
    auto children = GetChildren();
    for (auto child : children)
    {
-      child->KeyPressed(key,isRepeat);
+      child->KeyPressed(key, isRepeat);
    }
 }
 

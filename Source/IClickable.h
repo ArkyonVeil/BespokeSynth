@@ -67,7 +67,7 @@ public:
    {
       if (mName != name)
          StringCopy(mName, name, MAX_TEXTENTRY_LENGTH);
-      mCachedName = TruncateString(mName, mMaxTextDisplayWidth,mTruncationSettings);
+      mCachedName = TruncateString(mName, mMaxTextDisplayWidth, mTruncationSettings);
    }
    const char* Name() const { return mName; }
    char* NameMutable() { return mName; }
@@ -94,14 +94,14 @@ public:
    void ClearOverridePatchCableInputDirection() { mOverridePatchCableDir = ofVec2f(0, 0), mHasOverridePatchCableDir = false; };
    ofVec2f GetOverridePatchCableInputDirection() const { return mOverridePatchCableDir; }
    bool HasOverridePatchCableInputDirection() const { return mHasOverridePatchCableDir; }
-   void SetHoldCableWhileHidden(const bool value) {mHoldCableWhileHidden = value;}
+   void SetHoldCableWhileHidden(const bool value) { mHoldCableWhileHidden = value; }
 
    //Naming and Overrides
    void SetOverrideDisplayName(std::string name)
    {
       mHasOverrideDisplayName = true;
       mOverrideDisplayName = name;
-      mCachedName = TruncateString(mOverrideDisplayName, mMaxTextDisplayWidth,mTruncationSettings);
+      mCachedName = TruncateString(mOverrideDisplayName, mMaxTextDisplayWidth, mTruncationSettings);
       UpdateWidth();
    }
    void SetMaxDisplayNameWidth(float width)
@@ -135,7 +135,7 @@ protected:
    float mY{ 0 };
    IClickable* mParent{ nullptr };
    bool mShowing{ true };
-   bool mHoldCableWhileHidden { false };
+   bool mHoldCableWhileHidden{ false };
 
 private:
    char mName[MAX_TEXTENTRY_LENGTH]{};
@@ -143,7 +143,7 @@ private:
    bool mHasOverrideDisplayName{ false };
    ofVec2f mOverridePatchCableDir;
    bool mHasOverridePatchCableDir{ false };
-   float mMaxTextDisplayWidth { 999 };
+   float mMaxTextDisplayWidth{ 999 };
    TextTruncationSettings mTruncationSettings{};
    std::string mOverrideDisplayName{ "" };
    std::string mCachedName{ "" };
