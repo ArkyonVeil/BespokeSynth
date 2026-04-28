@@ -838,7 +838,7 @@ int SongCanvas::GetElementFactoryArgs()
 {
    if (GetSelectedRackPart())
    {
-      return GetSelectedRackPart()->GetRackNoteFactoryId();
+      return GetSelectedRackPart()->GetRackNoteFactoryArgs();
    }
    return 0;
 }
@@ -1363,7 +1363,12 @@ void SongCanvas::MouseReleased()
 
 void SongCanvas::SetupCanvasElement(SongCanvasNote* element) const
 {
-   element->SetupBase(GetSelectedRackPart());
+   if (GetSelectedRackPart())
+      element->SetupBase(GetSelectedRackPart());
+   else
+   {
+      assert(mIsLoading);
+   }
 }
 void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 {
@@ -1412,7 +1417,7 @@ std::vector<SongCanvasNote*> SongCanvas::GetAllCanvasElementsOfLayer(const int l
    }
    return output;
 }
-SongCanvasRackElement* SongCanvas::GetRackPartWithID(int id)
+SongCanvasRackElement* SongCanvas::GetRackPartWithID(int id) const
 {
    auto RE = GetAllRackElements();
    for (int i = 0; i < RE.size(); ++i)
@@ -1740,6 +1745,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
+   mIsLoading = true;
    int canvasLayerCount;
 
    //restore our canvas
@@ -1886,6 +1892,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       auto rack = dynamic_cast<SongCanvasRackElement*>(elm);
       rack->OnLoadFinish();
    }
+   mIsLoading = false;
 }
 
 SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
@@ -1894,7 +1901,12 @@ SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
    if (dynamic_cast<SongCanvasRackSampler*>(parent) != nullptr)//Legacy Sampler, let's actually return the correct type.
    {
       auto nElem = new SongCanvasNoteSampler(mCanvas);
-      element->CopyTo(nElem);
+      nElem->mCol = element->mCol;
+      nElem->mLength = element->mLength;
+      nElem->mRow = element->mRow;
+      nElem->mOffset = element->mOffset;
+      nElem->mFactoryArgs = parent->GetRackNoteFactoryArgs();
+      nElem->SetupBase(GetRackPartWithID(element->GetRackParentId()));
       delete element;//Dispose our old element. We will no longer be using it.
       return nElem;
    }

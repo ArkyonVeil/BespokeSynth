@@ -78,7 +78,7 @@ public:
    bool IsRackEnabled() const { return mRackEnabled;}
    virtual void SetRackEnabled(bool enabled) { mRackEnabled = enabled;}
 
-   virtual int GetRackNoteFactoryId() { return 0; }
+   virtual int GetRackNoteFactoryArgs() { return 0; }
    virtual void SongCanvasOptionsUpdated(){};
 
    int mInternalRackID;

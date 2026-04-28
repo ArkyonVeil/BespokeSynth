@@ -49,8 +49,8 @@ public:
    virtual void CanvasElementAdditionSuppressed(float posX, float posY){};
 
    //Called just before the placement of an element. Used as argument for element factory setup.
-   //Initialize the canvas with a CreateCanvasElementFnWithArgs() to use.
-   virtual int GetElementFactoryArgs() {return 0;}
+   //Only used if canvas is built with (CreateCanvasElementFnWithArgs). If so, it MUST be overwritten. Otherwise ignored.
+   virtual int GetElementFactoryArgs() {return -1;}
 };
 
 struct CanvasCoord

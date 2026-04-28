@@ -56,7 +56,7 @@ public:
    void SetupCanvasPart(SongCanvasNote* element) override;
    void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
    float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) override;
-   int GetRackNoteFactoryId() override {return 1;};
+   int GetRackNoteFactoryArgs() override {return 1;};
 
    void OnTempoUpdated() override;
 

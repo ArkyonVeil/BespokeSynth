@@ -287,9 +287,11 @@ void Canvas::OnClicked(float x, float y, bool right)
                CanvasElement* element;
                if (mElementCreatorWArgs)
                {
-                  int arg = 0;
-                  arg = mListener->GetElementFactoryArgs();
-                  element = CreateElement(coord.col, coord.row, arg);
+                  int args = 0;
+                  args = mListener->GetElementFactoryArgs();
+                  assert(args!=-1);//An extended factory requires a non-default argument for safety (save/load) related reasons.
+                  element = CreateElement(coord.col, coord.row, args);
+                  element->mFactoryArgs = args;
                }
                else
                {
@@ -797,7 +799,7 @@ void Canvas::SaveState(FileStreamOut& out)
    {
       out << mElements[i]->mCol;
       out << mElements[i]->mRow;
-      out << mElements[i]->GetFactoryArgs();
+      out << mElements[i]->mFactoryArgs;
       mElements[i]->SaveState(out);
    }
 }
@@ -843,7 +845,10 @@ void Canvas::LoadState(FileStreamIn& in, bool shouldSetValue)
       if (mElementCreator)
          element = mElementCreator(this, col, row);
       else
+      {
          element = mElementCreatorWArgs(this, col, row, args);
+         element->mFactoryArgs = args;
+      }
       element->LoadState(in);
       mElements.push_back(element);
    }

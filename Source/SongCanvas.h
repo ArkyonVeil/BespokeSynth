@@ -128,7 +128,7 @@ public:
    void DeleteRackElement(SongCanvasRackElement* element);
    std::vector<SongCanvasRackElement*> GetAllRackElements() const; //These arrays are not cached, do not abuse.
    void OpenRightClickRackMenu(SongCanvasRackElement* element);
-   SongCanvasRackElement* GetRackPartWithID(int id);
+   SongCanvasRackElement* GetRackPartWithID(int id) const;
    SongCanvasRackElement* GetSelectedRackPart() const;
    float GetModuleMinWidth()
    {
@@ -329,6 +329,7 @@ private:
    bool mLocalSynced{ true }; //Used in local mode's on end loop
    bool mLocalStopped{ false };
    bool mAlteredIntervalFlag{ false };
+   bool mIsLoading{ false };
 
    bool mShowRealTime{ false };
 

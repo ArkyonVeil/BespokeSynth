@@ -46,14 +46,6 @@ CanvasElement* SongCanvasNote::CreateDuplicate() const
    return element;
 }
 
-void SongCanvasNote::CopyTo(CanvasElement* to) const
-{
-   CanvasElement::CopyTo(to);
-   auto toNew = dynamic_cast<SongCanvasNote*>(to);
-
-   toNew->mRackParentID = mRackParentID;
-   toNew->SetupBase(mSongCanvas->GetRackPartWithID(mRackParentID));
-}
 void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 {
    ofPushStyle();

@@ -68,7 +68,6 @@ public:
 
    virtual bool IsResizable() const { return true; }
    virtual CanvasElement* CreateDuplicate() const = 0;
-   virtual int GetFactoryArgs() { return 0; }
 
    // Allows the definition of custom quantization/snapping rules
    // Expects a range of 0-1. 0 being column 0, and 1 the last column on the canvas.
@@ -83,12 +82,12 @@ public:
    virtual void SaveState(FileStreamOut& out);
    virtual void LoadState(FileStreamIn& in);
 
-   virtual void CopyTo (CanvasElement* to) const;
-
    int mRow;
    int mCol;
    float mOffset;
    float mLength;
+
+   int mFactoryArgs { 0 };
 
 protected:
    virtual void DrawContents(bool clamp, bool wrapped, ofVec2f offset) = 0;

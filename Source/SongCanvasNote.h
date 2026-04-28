@@ -22,7 +22,7 @@ public:
    Canvas* GetCanvas() const { return mCanvas; }
    float DragQuantizationOverride(float input, int context) override;
 
-   int GetRackElementId() const { return mRackParentID; }
+   int GetRackParentId() const { return mRackParentID; }
    //float GetMinLength() override { return 0.25f; }
 
    //Added offsets to the current ones.
@@ -31,8 +31,6 @@ public:
 
    ofColor mCurrentColor;
    ofColor mCurrentColorGrad;
-
-   void CopyTo(CanvasElement* to) const override;
 
 private:
    void DrawContents(bool clamp, bool wrapped, ofVec2f offset) override;
