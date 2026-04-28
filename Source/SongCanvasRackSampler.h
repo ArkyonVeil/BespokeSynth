@@ -111,7 +111,6 @@ protected:
 private:
    Sample* mSample{ nullptr };
    bool mLongSample{ false };
-   PatchCableSource* mSamplerCable{ nullptr };
    bool mSCLoadingDone{ true };
    float mSampleBaseTimeDuration { -1.0f };
    float mSampleBaseOldTimeDuration { -1.0f };

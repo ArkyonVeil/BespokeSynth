@@ -260,16 +260,18 @@ void SongCanvasRackSampler::Process(double time)
          break;
       }
    }
+
+   int numChannels = 2;
+
+   //We have to manually sync our buffer with the mixer's. Otherwise we trip over a crash in the Load() process over a missing cable.
+   //It also looks bad if we don't.
+   GetMixerBuffer()->SetNumActiveChannels(numChannels);
+
    if (!anyActive)
       return;
 
-   ComputeSliders(0);
-
-   int numChannels = 2;
    int bufferSize = GetMixerBuffer()->BufferSize();
-
-   //We have to manually sync our buffer with the mixer's. Otherwise we trip over a crash in the Load() process over a missing cable.
-   GetMixerBuffer()->SetNumActiveChannels(MAX(numChannels, GetMixerBuffer()->NumActiveChannels()));
+   ComputeSliders(0);
 
    //Cleanup
    mWriteBuffer.SetNumActiveChannels(numChannels);
@@ -764,7 +766,7 @@ float SongCanvasRackSampler::GetNotePosQuantizationOverride(SongCanvasNote* elem
    float pitchSize = GetCanvasElementSizeFromPitch(elPitch);
    pitchSize = CLAMP(pitchSize, minPitchSize, maxPitchSize);
 
-   dynamic_cast<SongCanvasNoteSampler*>(element)->mPitch = elPitch;//Write our pitch!
+   dynamic_cast<SongCanvasNoteSampler*>(element)->mPitch = elPitch; //Write our pitch!
 
    //Now we have everything we need. Let's calculate the snap position.
    if (side == 0)
@@ -829,6 +831,11 @@ void SongCanvasRackSampler::LoadState(FileStreamIn& in, int rev)
       mMemADSR.LoadState(in);
    }
 
+   //Forces mixers into stereo. Until mono samplers are a thing... eventually.
+   if (GetMixerBuffer())
+   {
+      GetMixerBuffer()->SetMaxAllowedChannels(2);
+   }
    ReloadAudioOptions();
 }
 void SongCanvasRackSampler::OnLoadFinish()

@@ -14,7 +14,7 @@ public:
    void AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord);
 
    void CreateUIControls();
-   ChannelBuffer* GetBuffer() { return mAudioBuffer; }; //Gets this mixer's audio buffer. Useful for patching in internal sampler data.
+   ChannelBuffer* GetBuffer() const { return mAudioBuffer; }; //Gets this mixer's audio buffer. Useful for patching in internal sampler data.
    void Process(); //Process the audio data.
    void Draw(float x, float y); //Draws the object. X,Y refers to the cable origin. Based on SongCanvas coords.
    void DrawMixerControls(float x, float y);

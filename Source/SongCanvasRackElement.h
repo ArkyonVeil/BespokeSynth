@@ -151,8 +151,8 @@ public:
    {}
    ~SongCanvasAudioRackElement();
 
-   SongCanvasMixer* GetMixer() { return mMixer; };
-   ChannelBuffer* GetMixerBuffer() { return mMixerBuffer; };
+   SongCanvasMixer* GetMixer() const { return mMixer; };
+   ChannelBuffer* GetMixerBuffer() const { return mMixerBuffer; };
    int GetMixerIndex() { return mMixerIndex; }
    void CreateUIControls() override;
    void SetMixer(SongCanvasMixer* mixer);

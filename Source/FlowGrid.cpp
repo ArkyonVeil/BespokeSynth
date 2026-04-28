@@ -910,8 +910,8 @@ void FlowGrid::SaveElements(FileStreamOut& out)
       //a double extract. If this promise is not kept, expect corruption/load exceptions being thrown.
       //This is why most >0 modules save the rev at the start of the SaveState(). Even though calling IDrawable's SaveState() already saves the rev.
       //TL DR: When saving, ALSO save the module's rev on your own.
-      out << el->GetModuleSaveStateRev();
       out << el->GetFlowGridElementType();
+      out << el->GetModuleSaveStateRev();
       el->SaveState(out);
    }
 }
@@ -924,12 +924,12 @@ void FlowGrid::LoadElements(FlowGridElementFactory* factory, FileStreamIn& in)
    for (int i = 0; i < elementCount; ++i)
    {
       int revCheck;
+      std::string type;
+      in >> type;
       int rev = 0;
       in.Peek(&revCheck, sizeof(int));
       if (revCheck != 0)//Rev 0 FGE's did not manually save the revision.
          in >> rev; //So we need to manually extract the revision so it lines up later.
-      std::string type;
-      in >> type;
       auto el = factory->Create(type);
       mListener->OnElementLoaded(el);
       el->SetName(el->mElementTypeName.c_str());

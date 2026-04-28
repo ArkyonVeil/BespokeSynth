@@ -142,7 +142,7 @@ void SongCanvasMixer::Draw(float x, float y)
    mCableOut->SetManualPosition(x, y);
    ofPushStyle();
    ofPushMatrix();
-   ofTranslate(x,y);
+   ofTranslate(x, y);
 
    comp = mOwner->GetMixerCompression();
 
@@ -158,7 +158,7 @@ void SongCanvasMixer::Draw(float x, float y)
       ofSetColor(ofColor::cyan);
    else
       ofSetColor(ofColor::grey);
-   DrawTextNormal(ofToString(mMixerIndex), rectX+2, -kRectBounds.height - 1.0f, 10); //Channel name
+   DrawTextNormal(ofToString(mMixerIndex), rectX + 2, -kRectBounds.height - 1.0f, 10); //Channel name
    //Hover title overlay
    if (mHoverName)
    {
@@ -176,7 +176,7 @@ void SongCanvasMixer::Draw(float x, float y)
    //Background
    float offsetX;
    float offsetY = -12;
-   float barSize = 42.0f*comp;
+   float barSize = 42.0f * comp;
 
    offsetX = -barSize / 2;
 
@@ -228,18 +228,18 @@ void SongCanvasMixer::Draw(float x, float y)
    {
       ofNoFill();
       ofSetColor(ofColor::cyan);
-      ofRect(rectX,kRectBounds.y, rectWidth, kRectBounds.height + 5);
+      ofRect(rectX, kRectBounds.y, rectWidth, kRectBounds.height + 5);
    }
    if (mMixerIndex == mOwner->GetMixerIdHighlight())
    {
       ofNoFill();
       ofSetColor(ofColor::yellow);
-      ofRect(rectX,kRectBounds.y, rectWidth, kRectBounds.height + 5);
+      ofRect(rectX, kRectBounds.y, rectWidth, kRectBounds.height + 5);
    }
    if (!IsSelected())
    {
       float miniPosX, miniPosY;
-      miniPosX = 20.0f*comp;
+      miniPosX = 20.0f * comp;
       miniPosY = 2;
       mPanSlider->SetPosition(miniPosX, miniPosY);
       mVolumeSlider->SetPosition(miniPosX, miniPosY);
@@ -284,6 +284,10 @@ void SongCanvasMixer::Load(FileStreamIn& in)
    in >> mVolume;
    in >> mPan;
    mCableOut->LoadState(in);
+   if (mCableOut->GetTarget())
+   {
+      mTarget = dynamic_cast<IAudioReceiver*>(mCableOut->GetTarget());
+   }
 }
 void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
 {
@@ -308,8 +312,8 @@ void SongCanvasMixer::MouseMove(float x, float y)
 
    comp = mOwner->GetMixerCompression();
 
-   mHovered = GetRect().contains(x,y);
-   mHoverName = GetNameRect().contains(x,y);
+   mHovered = GetRect().contains(x, y);
+   mHoverName = GetNameRect().contains(x, y);
 }
 
 //Its Relative-> 0,0 on cable location.
