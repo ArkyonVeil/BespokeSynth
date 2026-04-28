@@ -57,9 +57,11 @@ public:
    void Poll() override;
    bool IsResizable() const override { return true; /*mDisplayMode == DisplayMode::Grid;*/ }
    void Resize(float w, float h) override;
+   void DumpDebugData(std::string input, juce::FileOutputStream& out) override;
 
    bool HasSnapshot(int index) const;
    int GetCurrentSnapshot() const { return mCurrentSnapshot; }
+   int* GetCurrentSnapshotVar() { return &mCurrentSnapshot; }
    bool IsTargetingModule(IDrawableModule* module) const;
    void AddSnapshotTarget(IDrawableModule* target);
    void SetSnapshot(int idx, double time);
@@ -95,7 +97,7 @@ public:
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
    bool LoadOldControl(FileStreamIn& in, std::string& oldName) override;
-   int GetModuleSaveStateRev() const override { return 5; }
+   int GetModuleSaveStateRev() const override { return 6; }
    std::vector<IUIControl*> ControlsToNotSetDuringLoadState() const override;
    void UpdateOldControlName(std::string& oldName) override;
 
@@ -155,6 +157,7 @@ private:
    struct SnapshotModuleData
    {
       SnapshotModuleData(IDrawableModule* module, int snapshotIndex);
+      SnapshotModuleData() {}
       std::string mModulePath;
       std::string mData;
    };

@@ -1,4 +1,5 @@
 #include "ModularSynth.h"
+#include "FileUtils.h"
 #include "IAudioSource.h"
 #include "OpenFrameworksPort.h"
 #include "SynthGlobals.h"
@@ -98,7 +99,11 @@ ModularSynth::ModularSynth()
    mAudioPluginFormatManager = std::make_unique<juce::AudioPluginFormatManager>();
    mKnownPluginList = std::make_unique<juce::KnownPluginList>();
 
+#if JUCE_VERSION < ((8 << 16) + (0 << 8) + 11) // member-function replaced in 8.0.11
    mAudioPluginFormatManager->addDefaultFormats();
+#else
+   juce::addDefaultFormatsToManager(*mAudioPluginFormatManager);
+#endif
 }
 
 ModularSynth::~ModularSynth()
@@ -3157,19 +3162,19 @@ juce::Component* ModularSynth::GetFileChooserParent() const
 void ModularSynth::SaveStatePopup()
 {
    File targetFile;
-   String savestateDirPath = ofToDataPath("savestate/");
    String templateName = "";
    String date = ofGetTimestampString("%Y-%m-%d");
    if (IsCurrentSaveStateATemplate())
       templateName = File(mCurrentSaveStatePath).getFileNameWithoutExtension().toStdString() + "_";
 
+   String savestateDirPath = getDirectoryOrDefault(mCurrentSaveStatePath, "savestate/");
    int counter = 0;
    do
    {
       if (counter == 0)
-         targetFile = File(savestateDirPath + templateName + date + ".bsk");
+         targetFile = File(savestateDirPath).getChildFile(templateName + date + ".bsk");
       else
-         targetFile = File(savestateDirPath + templateName + date + "_" + ofToString(counter) + ".bsk");
+         targetFile = File(savestateDirPath).getChildFile(templateName + date + "_" + ofToString(counter) + ".bsk");
       ++counter;
    } while (targetFile.existsAsFile());
 
@@ -3185,14 +3190,21 @@ void ModularSynth::LoadStatePopup()
 
 void ModularSynth::LoadStatePopupImp()
 {
-   FileChooser chooser("Load state", File(ofToDataPath("savestate")), "*.bsk;*.bskt", true, false, GetFileChooserParent());
+   String defaultDirectoryOrFile;
+   if (!mCurrentSaveStatePath.empty())
+      defaultDirectoryOrFile = ofToDataPath(mCurrentSaveStatePath);
+   else
+      defaultDirectoryOrFile = ofToDataPath("savestate/");
+
+   FileChooser chooser("Load state", File(defaultDirectoryOrFile), "*.bsk;*.bskt", true, false, GetFileChooserParent());
    if (chooser.browseForFileToOpen())
       LoadState(chooser.getResult().getFullPathName().toStdString());
 }
 
 void ModularSynth::SaveState(std::string file, bool autosave)
 {
-   AddRecentFile(file, true);
+   if (!autosave)
+      AddRecentFile(file, true);
 
    mQueuedSaveStateInfo.mFile = file;
    mQueuedSaveStateInfo.mAutosave = autosave;
@@ -3593,6 +3605,26 @@ void ModularSynth::OnConsoleInput(std::string command /* = "" */)
       {
          mWelcomeScreen->Show();
       }
+      else if (tokens[0] == "dump" && tokens.size() >= 2)
+      {
+         IDrawableModule* module = mModuleContainer.FindModule(tokens[1]);
+         if (module)
+         {
+            FileOutputStream output(File(ofToDataPath("dump_" + tokens[1] + "_" + ofGetTimestampString("%Y-%m-%d_%H-%M") + ".txt")));
+
+            if (output.openedOk())
+            {
+               output.setNewLineString("\n");
+
+               std::string param = "";
+               if (tokens.size() >= 3)
+                  param = tokens[2];
+               module->DumpDebugData(param, output);
+
+               output.flush();
+            }
+         }
+      }
       else
       {
          ofLog() << "Creating: " << mConsoleText;
@@ -3820,7 +3852,7 @@ void ModularSynth::SaveOutput()
    auto outputTo = outputFile.createOutputStream();
    assert(outputTo != nullptr);
    bool b1{ false };
-   auto writer = std::unique_ptr<juce::AudioFormatWriter>(wavFormat->createWriterFor(outputTo.release(), gSampleRate, channels, 16, b1, 0));
+   auto writer = std::unique_ptr<juce::AudioFormatWriter>(wavFormat->createWriterFor(outputTo.release(), gSampleRate, channels, UserPrefs.output_wav_bit_depth.Get(), b1, 0));
 
    int samplesRemaining = mRecordingLength;
    const int chunkSize = 256;

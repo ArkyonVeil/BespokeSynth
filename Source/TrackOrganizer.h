@@ -30,6 +30,7 @@
 #include "TextEntry.h"
 #include "DropdownList.h"
 #include "ClickButton.h"
+#include "IModuleDecorator.h"
 
 class Snapshots;
 class IAbletonGridController;
@@ -37,7 +38,7 @@ class IInputRecordable;
 class Amplifier;
 class AudioSend;
 
-class TrackOrganizer : public IDrawableModule, public ITextEntryListener, public IDropdownListener, public IButtonListener
+class TrackOrganizer : public IDrawableModule, public ITextEntryListener, public IDropdownListener, public IButtonListener, public IModuleDecorator
 {
 public:
    TrackOrganizer();
@@ -65,16 +66,23 @@ public:
    IAbletonGridController* GetCurrentGridInterface() const;
    Snapshots* GetSnapshots() const;
    IUIControl* GetSoundSelector() const;
+   IUIControl* GetEnabledControl() const;
+   bool IsTrackEnabled() const;
+   void SetTrackEnabled(bool enabled);
    int GetNumPages() const { return (int)mControlModuleCables.size(); }
    std::vector<IDrawableModule*> GetControlModules() const;
    std::vector<IAbletonGridController*> GetGridInterfaces() const;
    IInputRecordable* GetRecorder() const;
    Amplifier* GetGain() const;
    AudioSend* GetSend() const;
+   ofColor GetColor() const;
    int GetColorIndex() const { return mColorIndex; }
    std::string GetTrackName() const { return mTrackName; }
    ofRectangle GetBoundingRect();
    void GatherModules(const std::vector<IDrawableModule*>& modulesToAdd);
+
+   //IModuleDecorator
+   void DrawModuleDecoration(IDrawableModule* module) override;
 
    void TextEntryComplete(TextEntry* entry) override {}
    void DropdownUpdated(DropdownList* list, int oldVal, double time) override {}
@@ -104,6 +112,7 @@ private:
    PatchCableSource* mGainCable{ nullptr };
    PatchCableSource* mSendCable{ nullptr };
    PatchCableSource* mOtherTrackModulesCable{ nullptr };
+   PatchCableSource* mEnabledCable{ nullptr };
    int mModuleIndex{ 0 };
    float mModuleViewOffset{ 0.0f };
    bool mSelectModulesOnMouseRelease{ false };
@@ -115,4 +124,6 @@ private:
    DropdownList* mColorSelector{ nullptr };
    int mColorIndex{ 0 };
    ClickButton* mSelectModulesButton{ nullptr };
+
+   std::list<IDrawableModule*> mAllModules;
 };

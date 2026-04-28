@@ -42,6 +42,11 @@ class PatchCable;
 class PatchCableSource;
 class ModuleContainer;
 class UIGrid;
+class IModuleDecorator;
+namespace juce
+{
+   class FileOutputStream;
+}
 
 enum ModuleCategory
 {
@@ -174,6 +179,8 @@ public:
    bool CanReceiveNotes() { return mCanReceiveNotes; }
    bool CanReceivePulses() { return mCanReceivePulses; }
    virtual bool ShouldSuppressAutomaticOutputCable() { return false; }
+   void AddModuleDecorator(IModuleDecorator* decorator);
+   void RemoveModuleDecorator(IModuleDecorator* decorator);
 
    virtual void CheckboxUpdated(Checkbox* checkbox, double time) {}
 
@@ -202,6 +209,7 @@ public:
    virtual bool HasPush2OverrideControls() const { return false; }
    virtual void GetPush2OverrideControls(std::vector<IUIControl*>& controls) const {}
    virtual bool DrawToPush2Screen() { return false; }
+   virtual void DumpDebugData(std::string input, juce::FileOutputStream& file) {}
 
    //IPatchable
    PatchCableSource* GetPatchCableSource(int index = 0) override
@@ -279,6 +287,7 @@ private:
    bool mCanReceiveNotes{ false };
    bool mCanReceivePulses{ false };
    IKeyboardFocusListener* mKeyboardFocusListener{ nullptr };
+   std::list<IModuleDecorator*> mModuleDecorators;
 
    ofMutex mSliderMutex;
 

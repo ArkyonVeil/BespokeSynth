@@ -113,7 +113,6 @@
 #include "ComboGridController.h"
 #include "StutterControl.h"
 #include "CircleSequencer.h"
-#include "SongCanvasRackElement.h"
 #ifdef BESPOKE_MAC
 #include "KompleteKontrol.h"
 #endif
@@ -280,14 +279,15 @@
 #include "ModulatorBinaryValue.h"
 #include "VelocityToDuration.h"
 #include "TapTempo.h"
-
-#include <juce_core/juce_core.h>
-
+#include "ZeroCrossRate.h"
+#include "SessionOrganizer.h"
 #include "PulseRouter.h"
 #include "SongCanvas.h"
+#include "SongCanvasRackElement.h"
 #include "SongCanvasRackSampler.h"
 
 #include <juce_core/juce_core.h>
+
 
 
 #define REGISTER(class, name, type) Register(#name, &(class ::Create), &(class ::CanCreate), type, false, false, class ::AcceptsAudio(), class ::AcceptsNotes(), class ::AcceptsPulses());
@@ -520,7 +520,8 @@ ModuleFactory::ModuleFactory()
    REGISTER(VelocityToDuration, velocitytoduration, kModuleCategory_Note);
    REGISTER(TapTempo, taptempo, kModuleCategory_Other);
    REGISTER(SongCanvas, songcanvas, kModuleCategory_Other);
-
+   REGISTER(ZeroCrossRate, zerocrossrate, kModuleCategory_Modulator);
+   REGISTER(SessionOrganizer, sessionorganizer, kModuleCategory_Other);
 
    //REGISTER_EXPERIMENTAL(MidiPlayer, midiplayer, kModuleCategory_Instrument);
    REGISTER_HIDDEN(Autotalent, autotalent, kModuleCategory_Audio);
@@ -603,6 +604,7 @@ std::vector<ModuleFactory::Spawnable> ModuleFactory::GetSpawnableModules(ModuleC
       }
    }
 
+   // Put effect modules at the end of the Audio category
    if (moduleCategory == kModuleCategory_Audio)
    {
       std::vector<std::string> effects = TheSynth->GetEffectFactory()->GetSpawnableEffects();
@@ -818,6 +820,7 @@ void ModuleFactory::GetPrefabs(std::vector<ModuleFactory::Spawnable>& prefabs)
          prefabs.push_back(spawnable);
       }
    }
+   std::sort(prefabs.begin(), prefabs.end(), Spawnable::CompareAlphabetical);
 }
 
 //static

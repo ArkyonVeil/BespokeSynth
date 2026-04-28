@@ -259,6 +259,7 @@ target_sources(BespokeSynth PRIVATE
     IMidiVoice.h
     IModulator.cpp
     IModulator.h
+    IModuleDecorator.h
     INonstandardController.h
     INoteReceiver.cpp
     INoteReceiver.h
@@ -513,6 +514,8 @@ target_sources(BespokeSynth PRIVATE
     PSMoveMgr.h
     PanicButton.cpp
     PanicButton.h
+    FileUtils.cpp
+    FileUtils.h
     Panner.cpp
     Panner.h
     PatchCable.cpp
@@ -662,12 +665,15 @@ target_sources(BespokeSynth PRIVATE
     ScriptStatus.h
     SeaOfGrain.cpp
     SeaOfGrain.h
+    SessionOrganizer.cpp
+    SessionOrganizer.h
     Selector.cpp
     Selector.h
     SignalClamp.cpp
     SignalClamp.h
     SignalGenerator.cpp
     SignalGenerator.h
+    SimplexFont.h
     SingleOscillator.cpp
     SingleOscillator.h
     SingleOscillatorVoice.cpp
@@ -800,6 +806,8 @@ target_sources(BespokeSynth PRIVATE
     WhiteKeys.cpp
     WhiteKeys.h
     WindowCloseListener.h
+    ZeroCrossRate.cpp
+    ZeroCrossRate.h
     ofxJSONElement.cpp
     ofxJSONElement.h
     )
@@ -927,6 +935,7 @@ endif ()
 
 target_link_libraries(BespokeSynth PRIVATE
     exprtk::exprtk
+    bespoke::abletonmove
     bespoke::freeverb
     $<IF:$<STREQUAL:${BESPOKE_SYSTEM_JSONCPP},OFF>,bespoke::json,jsoncpp>
     bespoke::leathers

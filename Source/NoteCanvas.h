@@ -60,6 +60,7 @@ public:
    bool IsResizable() const override { return true; }
    void Resize(float w, float h) override;
    void KeyPressed(int key, bool isRepeat) override;
+   void DumpDebugData(std::string input, juce::FileOutputStream& out) override;
 
    void PlayNote(NoteMessage note) override;
    void SendCC(int control, int value, int voiceIdx = -1) override {}
@@ -77,10 +78,10 @@ public:
    void CanvasUpdated(Canvas* canvas) override;
 
    //IAbletonGridController
+   bool OnAbletonGridControl_InputThread(IAbletonGridDevice* abletonGrid, int controlIndex, float midiValue) override;
    bool OnAbletonGridControl(IAbletonGridDevice* abletonGrid, int controlIndex, float midiValue) override;
    void UpdateAbletonGridLeds(IAbletonGridDevice* abletonGrid) override;
-   bool UpdateAbletonMoveScreen(IAbletonGridDevice* abletonGrid, AbletonMoveLCD* lcd) override;
-   bool HasHighPriorityAbletonMoveScreenUpdate(IAbletonGridDevice* abletonGrid) override;
+   bool UpdateAbletonMoveScreen(IAbletonGridDevice* abletonGrid, AbletonMoveLCD* lcd, LCDDrawPass drawPass) override;
 
    //IInputRecordable
    void SetRecording(bool record) override;
@@ -145,7 +146,7 @@ private:
    bool mRecord{ false };
    Checkbox* mRecordCheckbox{ nullptr };
    bool mStopQueued{ false };
-   NoteInterval mInterval{ NoteInterval::kInterval_8n };
+   NoteInterval mInterval{ NoteInterval::kInterval_16n };
    DropdownList* mIntervalSelector{ nullptr };
    bool mFreeRecord{ false };
    Checkbox* mFreeRecordCheckbox{ nullptr };

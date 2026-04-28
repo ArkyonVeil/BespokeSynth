@@ -32,7 +32,10 @@
 IAudioReceiver* IAudioSource::GetTarget(int index)
 {
    assert(index < GetNumTargets());
-   return GetPatchCableSource(index)->GetAudioReceiver();
+   PatchCableSource* cable = GetPatchCableSource(index);
+   if (cable != nullptr)
+      return cable->GetAudioReceiver();
+   return nullptr;
 }
 
 

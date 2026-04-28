@@ -554,7 +554,7 @@ void NoteStepSequencer::GetPush2Layout(AbletonDeviceType deviceType, int& sequen
    pitchRows = (mNoteRange - 1) / pitchCols + 1;
 }
 
-bool NoteStepSequencer::OnAbletonGridControl(IAbletonGridDevice* abletonGrid, int controlIndex, float midiValue)
+bool NoteStepSequencer::OnAbletonGridControl_InputThread(IAbletonGridDevice* abletonGrid, int controlIndex, float midiValue)
 {
    if (mPush2GridDisplayMode == Push2GridDisplayMode::PerStep)
    {
@@ -911,13 +911,16 @@ void NoteStepSequencer::UpdateAbletonGridLeds(IAbletonGridDevice* abletonGrid)
       abletonGrid->SetLed(AbletonDevice::kMoveDeleteButton, 127);
 }
 
-bool NoteStepSequencer::UpdateAbletonMoveScreen(IAbletonGridDevice* abletonGrid, AbletonMoveLCD* lcd)
+bool NoteStepSequencer::UpdateAbletonMoveScreen(IAbletonGridDevice* abletonGrid, AbletonMoveLCD* lcd, LCDDrawPass drawPass)
 {
-   /*if (abletonGrid->GetButtonState(kMidiMessage_Note, AbletonDevice::kVolumeEncoderTouch))
+   if (drawPass == LCDDrawPass::Normal)
    {
-      lcd->DrawText(("view offset: " + ofToString(mGridControlOffsetX)).c_str(), 5, 13, LCDFONT_STYLE_REGULAR);
-      return true;
-   }*/
+      /*if (abletonGrid->GetButtonState(kMidiMessage_Note, AbletonDevice::kVolumeEncoderTouch))
+      {
+         lcd->DrawText(("view offset: " + ofToString(mGridControlOffsetX)).c_str(), 5, 13, LCDFONT_STYLE_REGULAR);
+         return true;
+      }*/
+   }
    return false;
 }
 
