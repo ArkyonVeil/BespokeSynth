@@ -123,8 +123,8 @@ protected:
 
 private:
    float GetRenameSpaceUsed() const;
-   bool mRenameActive = false;
-   bool mRackEnabled;
+   bool mRenameActive { false };
+   bool mRackEnabled { true };
    float mExcitePower{ 0 };
    float mExciteWiggle{ 0 };
    float mExciteDrag{ 0 };
