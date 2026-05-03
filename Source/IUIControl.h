@@ -113,6 +113,7 @@ public:
    static void SetNewManualHoverViaArrow(ofVec2f direction);
    static bool WasLastHoverSetManually() { return sLastUIHoverWasSetManually; }
    static bool IsInactiveValue(std::string valueLabel);
+   virtual std::string CustomTooltipAddress() {return "";}//Point to another control
 
    static void DestroyCablesTargetingControls(std::vector<IUIControl*> controls);
 

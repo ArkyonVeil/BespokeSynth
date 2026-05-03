@@ -209,6 +209,9 @@ public:
    virtual bool DrawToPush2Screen() { return false; }
    virtual void DumpDebugData(std::string input, juce::FileOutputStream& file) {}
 
+   virtual void OptionsCustomRenderPreDrawLayer(ofRectangle rect){}
+   virtual std::string GetMakerCredits() {return "";}
+
    //IPatchable
    PatchCableSource* GetPatchCableSource(int index = 0) override
    {

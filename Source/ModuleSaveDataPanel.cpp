@@ -103,16 +103,16 @@ void ModuleSaveDataPanel::ReloadSaveData()
    float y = 5 + kItemSpacing;
 
    mNameEntry = new TextEntry(this, "", x, y, 27, mSaveModule->NameMutable());
-   mNameEntry->SetNoHover(true);
+   mNameEntry->SetCableTargetable(false);
    mSaveDataControls.push_back(mNameEntry);
    y += kItemSpacing;
 
    mPresetFileSelector = new DropdownList(this, "preset", x, y, &mPresetFileIndex, 150);
-   mPresetFileSelector->SetNoHover(true);
+   mPresetFileSelector->SetCableTargetable(false);
    mPresetFileSelector->SetUnknownItemString("[none]");
    mSaveDataControls.push_back(mPresetFileSelector);
    mSavePresetAsButton = new ClickButton(this, "save as", mPresetFileSelector, kAnchor_Right);
-   mSavePresetAsButton->SetNoHover(true);
+   mSavePresetAsButton->SetCableTargetable(false);
    mSaveDataControls.push_back(mSavePresetAsButton);
    y += kItemSpacing;
 
@@ -176,19 +176,19 @@ void ModuleSaveDataPanel::ReloadSaveData()
       }
 
       if (control != nullptr)
-         control->SetNoHover(true);
+         control->SetCableTargetable(false);
       mSaveDataControls.push_back(control);
       y += kItemSpacing;
    }
 
    y += 6;
    mApplyButton = new ClickButton(this, "apply", x, y);
-   mApplyButton->SetNoHover(true);
+   mApplyButton->SetCableTargetable(false);
    mSaveDataControls.push_back(mApplyButton);
    if (mSaveModule->CanBeDeleted())
    {
       mDeleteButton = new ClickButton(this, "delete module", x + 50, y);
-      mDeleteButton->SetNoHover(true);
+      mDeleteButton->SetCableTargetable(false);
       mSaveDataControls.push_back(mDeleteButton);
    }
    y += kItemSpacing;
@@ -262,6 +262,8 @@ void ModuleSaveDataPanel::DrawModule()
       DrawTextRightJustify(*iter, x, y + 12);
       y += kItemSpacing;
    }
+
+   mSaveModule->OptionsCustomRenderPreDrawLayer({0,0,mWidth, static_cast<float>(mHeight)});
 
    for (auto iter = mSaveDataControls.begin(); iter != mSaveDataControls.end(); ++iter)
       (*iter)->Draw();
