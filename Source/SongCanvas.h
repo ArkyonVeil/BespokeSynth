@@ -47,7 +47,7 @@
 #include "TextEntry.h"
 #include "FlowGrid.h"
 #include "SongCanvasRackElement.h"
-
+#include "SyncVariables.h"
 
 class SongCanvasMixer;
 class SongCanvasNote;
@@ -63,7 +63,8 @@ class SongCanvas : public IAudioSource,
                    public IAudioPoller,
                    public IFlowGridListener,
                    public ITimeListener,
-                   public ICanvasTimelineListener
+                   public ICanvasTimelineListener,
+                   public ISyncVarsHandler
 {
 public:
    SongCanvas();
@@ -105,6 +106,8 @@ public:
    void ReloadMeasures(bool overrideAutoFit);
    void ProcessRackElementRightClickDropdown(DropdownList* list);
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
+
+   syncVector<int> syncTest { syncVector<int>(this) };
 
    //Canvas
    void CanvasUpdated(Canvas* canvas) override;
@@ -467,7 +470,7 @@ private:
 
    //Need to destroy a multithreaded object, dump it here!
    std::vector<SongCanvasMixer*> mMixerDisposalQueue{};
-   std::vector<SongCanvasRackElement*> mRackDisposalQueue{}; //
+   std::vector<SongCanvasRackElement*> mRackDisposalQueue{}; //Audio racks
 
    //Expert variables (Unused)
    bool expertPanelEnabled{ false };

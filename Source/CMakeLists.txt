@@ -714,6 +714,7 @@ target_sources(BespokeSynth PRIVATE
     SustainPedal.h
     SwitchAndRamp.cpp
     SwitchAndRamp.h
+    SyncVariables.h
     SynthGlobals.cpp
     SynthGlobals.h
     TakeRecorder.cpp

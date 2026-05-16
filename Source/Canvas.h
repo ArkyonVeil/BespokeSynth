@@ -46,6 +46,7 @@ public:
    virtual ~ICanvasListener() {}
    virtual void CanvasUpdated(Canvas* canvas) = 0;
    virtual void ElementRemoved(CanvasElement* element) {}
+   virtual void ElementSelected(std::vector<CanvasElement*> elements){};
    virtual void CanvasElementAdditionSuppressed(float posX, float posY){};
 
    //Called just before the placement of an element. Used as argument for element factory setup.

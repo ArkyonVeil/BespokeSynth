@@ -850,11 +850,12 @@ void SongCanvas::Resize(float w, float h)
    w = MAX(w, getModuleMinWidth);
    h = MAX(h, GetModuleMinHeight());
 
+   /*
    if (TheSynth->GetResizingModule() == this)
    {
       mUserPreferredWidth = w;
       mUserPreferredHeight = h;
-   }
+   }*/
 
    if (mMeasureSize == 0)
    {
@@ -2101,6 +2102,7 @@ void SongCanvas::Process(double time)
       mScheduleMixerSort = true;
    }
 
+
    //Check if there's mixers in need of dumping.
    while (!mMixerDisposalQueue.empty())
    {
@@ -2307,5 +2309,6 @@ void SongCanvas::ScheduleMixerDisposal(SongCanvasMixer* mixer)
 }
 void SongCanvas::ScheduleRackDisposal(SongCanvasRackElement* rack)
 {
+   RemoveFromVector(dynamic_cast<SongCanvasAudioRackElement*>(rack), mAudioRacks);
    mRackGrid->ScheduleDeletion(rack);
 }
