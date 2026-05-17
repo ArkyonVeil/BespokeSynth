@@ -13,12 +13,12 @@
 /// WHAT IS THIS?
 ///
 /// SyncVariables are a form of variables designed for multicThreaded work.
-/// One cThread writes/reads, another just reads. The ISyncVarsHandler ensures they remain
+/// One thread writes/reads, another just reads. The ISyncVarsHandler ensures they remain
 /// synced without race-condition dangers.
 
 /// To use:
 /// 1. Inherit ISyncVarsHandler
-/// 2. Call Sync() ONCE in the Draw cThread, and Sync() ONCE in the Audio cThread
+/// 2. Call Sync() ONCE in the Draw thread, and Sync() ONCE in the Audio thread
 /// 3. That's it. Your syncVars<T> should be okay now. Have fun!
 /// -Ark
 
@@ -29,107 +29,110 @@
 #define rule(x) ((void)0)
 #endif
 
-#define cThread IsAudioThread() ? 1 : 0
 
-enum OperationType
+namespace isv
 {
-   opWrite = 0,
-   opPush = 1,
-   opPop = 2,
-   opInsert = 3,
-   opClear = 4,
-   opSnapshot = 5,
-   opErase = 6
-};
+   inline char threadId() { return IsAudioThread() ? 1 : 0; }
+   enum OperationType
+   {
+      opWrite = 0,
+      opPush = 1,
+      opPop = 2,
+      opInsert = 3,
+      opClear = 4,
+      opSnapshot = 5,
+      opErase = 6
+   };
 
-class ISyncVarsHandler;
+   class ISyncVarsHandler;
+   template <typename T>
+   struct syncOperation
+   {
+      syncOperation(OperationType opType, T value, int idx = 0)
+      {
+         mOpType = opType;
+         mValue = value;
+         mIdx = idx;
+      }
+      syncOperation(std::vector<T>& snapshot)
+      {
+         mOpType = opSnapshot;
+         mSnapshot = snapshot;
+      }
+
+      OperationType mOpType{ opWrite };
+      int mIdx{ 0 };
+      T mValue;
+      std::vector<T> mSnapshot;
+   };
+
+   //Thread 0 = Main/UI , 1 = Audio
+   class ISyncVarBase
+   {
+   public:
+      explicit ISyncVarBase(ISyncVarsHandler* handler, char threadOwner = 0)
+      : mThreadOwner(threadOwner)
+      {}
+      std::atomic<bool> hasCommits{ false };
+      std::atomic<bool> hasQueue{ false };
+      bool ThreadOwnsVar() const { return threadId() == mThreadOwner; }
+      virtual ~ISyncVarBase() = default;
+      virtual void CommitChanges() = 0; //Moves changes from the queue to commits.
+      virtual void MergeChanges() = 0; //Formalizes merged changes.
+      virtual void FlushCommits() = 0;
+
+   protected:
+      char mThreadOwner;
+   };
+
+   template <typename T>
+   class ISyncVarType : public ISyncVarBase
+   {
+   public:
+      ISyncVarType(ISyncVarsHandler* handler, char threadOwner)
+      : ISyncVarBase(handler, threadOwner)
+      {
+         static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use smart pointers instead.");
+         handler->InternalSyncVariableRegister(this);
+         mThreadOwner = threadOwner;
+      }
+      void SetChange(syncOperation<T> change)
+      {
+         rule(mThreadOwner == threadId()); //Writing to a synced var from the non owning thread is a contractual violation.
+         if (queuedChanges.size() != 1)
+            queuedChanges.resize(1);
+         queuedChanges[0] = change;
+         hasQueue = true;
+      }
+      void QueueChange(T value)
+      {
+         rule(mThreadOwner == threadId()); //Thou must only write in the owning thread.
+         queuedChanges.push_back(value);
+         hasQueue = true;
+      }
+
+      void CommitChanges() override { committedChanges = std::move(queuedChanges); }
+      void FlushCommits() override { committedChanges.clear(); };
+
+   protected:
+      std::vector<syncOperation<T>> queuedChanges;
+      std::vector<syncOperation<T>> committedChanges;
+   };
+}
+
 template <typename T>
-struct syncOperation
-{
-   syncOperation(OperationType opType, T value, int idx = 0)
-   {
-      mOpType = opType;
-      mValue = value;
-      mIdx = idx;
-   }
-   syncOperation(std::vector<T>& snapshot)
-   {
-      mOpType = opSnapshot;
-      mSnapshot = snapshot;
-   }
-
-   OperationType mOpType{ opWrite };
-   int mIdx{ 0 };
-   T mValue;
-   std::vector<T> mSnapshot;
-};
-
-//Thread 0 = Main/UI , 1 = Audio
-class ISyncVarBase
-{
-public:
-   explicit ISyncVarBase(ISyncVarsHandler* handler, char threadOwner = 0)
-   : mThreadOwner(threadOwner)
-   {}
-   std::atomic<bool> hasCommits{ false };
-   std::atomic<bool> hasQueue{ false };
-   bool ThreadOwnsVar() const { return cThread == mThreadOwner; }
-   virtual ~ISyncVarBase() = default;
-   virtual void CommitChanges() = 0; //Moves changes from the queue to commits.
-   virtual void MergeChanges() = 0; //Formalizes merged changes.
-   virtual void FlushCommits() = 0;
-
-protected:
-   char mThreadOwner;
-};
-
-template <typename T>
-class ISyncVarType : public ISyncVarBase
-{
-public:
-   ISyncVarType(ISyncVarsHandler* handler, char threadOwner)
-   : ISyncVarBase(handler, threadOwner)
-   {
-      static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use smart pointers instead.");
-      handler->InternalSyncVariableRegister(this);
-      mThreadOwner = threadOwner;
-   }
-   void SetChange(syncOperation<T> change)
-   {
-      rule(mThreadOwner == cThread); //Writing to a synced var from the non owning cThread is a contractual violation.
-      if (queuedChanges.size() != 1)
-         queuedChanges.resize(1);
-      queuedChanges[0] = change;
-      hasQueue = true;
-   }
-   void QueueChange(T value)
-   {
-      rule(mThreadOwner == cThread); //Thou must only write in the owning cThread.
-      queuedChanges.push_back(value);
-      hasQueue = true;
-   }
-
-   void CommitChanges() override { committedChanges = std::move(queuedChanges); }
-   void FlushCommits() override { committedChanges.clear(); };
-
-protected:
-   std::vector<syncOperation<T>> queuedChanges;
-   std::vector<syncOperation<T>> committedChanges;
-};
-
-template <typename T>
-class syncVariable : public ISyncVarType<T>
+class syncVariable : public isv::ISyncVarType<T>
 {
 public:
    T operator=(const T& value)
    {
-      this->SetChange(syncOperation<T>(opWrite, value));
-      var[cThread] = value;
-      return var[cThread];
+      this->SetChange(syncOperation<T>(isv::opWrite, value));
+      var[isv::threadId()] = value;
+      return var[isv::threadId()];
    };
-   operator T() const { return *var[cThread]; }
+   operator T() const { return *var[isv::threadId()]; }
 
-   void MergeChanges() override { var[!cThread] = this->committedChanges[0].mValue; }
+   void MergeChanges() override { var[!isv::threadId()] = this->committedChanges[0].mValue; }
 
 private:
    T mMainVar;
@@ -138,58 +141,58 @@ private:
 };
 
 template <typename T>
-class syncVector : public ISyncVarType<T>
+class syncVector : public isv::ISyncVarType<T>
 {
 public:
-   syncVector(ISyncVarsHandler* handler, char threadOwner = 0)
-   : ISyncVarType<T>(handler, threadOwner)
+   syncVector(isv::ISyncVarsHandler* handler, char threadOwner = 0)
+   : isv::ISyncVarType<T>(handler, threadOwner)
    {}
 
    //Direct access is blocked to avoid misuse. Use get/set
    T& operator[](size_t i) = delete;
 
-   size_t size() { return vec[cThread]->size(); };
-   bool empty() { return vec[cThread]->empty(); };
+   size_t size() { return vec[isv::threadId()]->size(); };
+   bool empty() { return vec[isv::threadId()]->empty(); };
 
    void push_back(T var)
    {
-      vec[cThread]->push_back(var);
-      this->QueueChange(opPush, var);
+      vec[isv::threadId()]->push_back(var);
+      this->QueueChange(isv::opPush, var);
    }
    void pop_back()
    {
-      vec[cThread]->pop_back();
-      this->QueueChange(opPop, nullptr);
+      vec[isv::threadId()]->pop_back();
+      this->QueueChange(isv::opPop, nullptr);
    }
    void clear()
    {
-      vec[cThread]->clear();
-      this->QueueChange(opClear, nullptr);
+      vec[isv::threadId()]->clear();
+      this->QueueChange(isv::opClear, nullptr);
    }
    void insert(size_t i, T var)
    {
-      auto& v = vec[cThread];
+      auto& v = vec[isv::threadId()];
       auto pos = v->begin();
       v->insert(pos + i, var);
-      this->QueueChange(opInsert, var, i);
+      this->QueueChange(isv::opInsert, var, i);
    }
    void erase(size_t i)
    {
-      auto& v = vec[cThread];
+      auto& v = vec[isv::threadId()];
       auto pos = v->begin();
       v->erase(pos + i);
-      this->QueueChange(opErase, nullptr, i);
+      this->QueueChange(isv::opErase, nullptr, i);
    }
    //Implementation of the handy RemoveFromVector(), insert a type, if it matches, its removed from the vector.
    bool removeFrom(T& match)
    {
-      auto& v = vec[cThread];
+      auto& v = vec[isv::threadId()];
       for (int i = 0; i < v->size(); ++i)
       {
          if (v[i] == match)
          {
             v->erase(v->begin() + i);
-            this->QueueChange(opErase, nullptr, i);
+            this->QueueChange(isv::opErase, nullptr, i);
             return true;
          }
       }
@@ -197,12 +200,12 @@ public:
    }
    T& get(size_t i)
    {
-      return vec[cThread][i];
+      return vec[isv::threadId()][i];
    }
    void set(size_t i, T value)
    {
-      vec[cThread][i] = value;
-      this->QueueChange(opWrite, value, i);
+      vec[isv::threadId()][i] = value;
+      this->QueueChange(isv::opWrite, value, i);
    }
 
    template <typename T>
@@ -212,7 +215,7 @@ public:
       : mData(data)
       , mOwner(owner)
       {
-         rule(mOwner ? (mOwner->mThreadOwner == cThread) : true); //Can only borrow on owning thread.
+         rule(mOwner ? (mOwner->mThreadOwner == isv::threadId()) : true); //Can only borrow on owning thread.
       }
       std::vector<T>* mData;
       syncVector* mOwner;
@@ -234,37 +237,41 @@ public:
       const T& operator[](size_t i) const { return (*mData)[i]; }
    };
 
-   //Get the internal vector for batch operations.
-   //Automatically returned at scope end.
-   borrowedVector<T> borrow() { return borrowedVector<T>(vec[cThread], this); } //Only allowed on owning thread,
-   borrowedVector<T> borrowRead() const { return borrowedVector<T>(vec[cThread], nullptr); } //Allowed on any thread.
+   //Get the internal vector for batch operations. Both Read and Write.
+   //Changes are automatically handled on scope end.
+   //Only allowed on owning thread,
+   borrowedVector<T> borrow() { return borrowedVector<T>(vec[isv::threadId()], this); }
+   //Get the internal vector for batch operations. Only Read.
+   //No sync overhead.
+   //Allowed on any thread,
+   borrowedVector<T> borrowRead() const { return borrowedVector<T>(vec[isv::threadId()], nullptr); }
 
    void MergeChanges() override
    {
-      auto& merge = *vec[!cThread];
+      auto& merge = *vec[!isv::threadId()];
       for (auto& op : this->committedChanges)
       {
          switch (op.mOpType)
          {
-            case opWrite:
+            case isv::opWrite:
                merge[op.mIdx] = op.mValue;
                break;
-            case opClear:
+            case isv::opClear:
                merge.clear();
                break;
-            case opInsert:
+            case isv::opInsert:
                merge.insert(merge.begin() + op.mIdx, op.mValue);
                break;
-            case opPush:
+            case isv::opPush:
                merge.push_back(op.mValue);
                break;
-            case opPop:
+            case isv::opPop:
                merge.pop_back();
                break;
-            case opSnapshot:
+            case isv::opSnapshot:
                merge = std::move(op.mSnapshot);
                break;
-            case opErase:
+            case isv::opErase:
                merge.erase(merge.begin() + op.mIdx);
                break;
             default:
@@ -279,7 +286,7 @@ private:
    std::vector<T>* vec[2]{ &mMainVector, &mAudioVector };
 };
 
-//To use, make sure to call Sync() once on the Draw cThread, and once on the Process() cThread.
+//To use, make sure to call Sync() once on the Draw thread, and once on the Process() thread.
 //Everything else is handled.
 class ISyncVarsHandler
 {
@@ -317,13 +324,13 @@ public:
    }
 
    //Done automatically, calling this is a bug.
-   void InternalSyncVariableRegister(ISyncVarBase* var)
+   void InternalSyncVariableRegister(isv::ISyncVarBase* var)
    {
       mManagedVariables.push_back(var);
    }
 
 private:
-   std::vector<ISyncVarBase*> mManagedVariables;
+   std::vector<isv::ISyncVarBase*> mManagedVariables;
 };
 
 /*
