@@ -842,6 +842,11 @@ int SongCanvas::GetElementFactoryArgs()
    }
    return 0;
 }
+//Runs every frame regardless if hidden.
+void SongCanvas::Poll()
+{
+   SyncVars();
+}
 void SongCanvas::Resize(float w, float h)
 {
    int xEndRackSpacing = 46;
@@ -2095,6 +2100,8 @@ void SongCanvas::Process(double time)
 
    if (!mEnabled)
       return;
+   SyncVars();
+
    //Dead racks? Have at it!
    int cleans = mRackGrid->DisposeScheduled();
    if (cleans > 0)

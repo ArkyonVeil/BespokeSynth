@@ -40,8 +40,8 @@ public:
    : mVizBuffer(VIZ_BUFFER_SECONDS * gSampleRate) //Initialize the visual buffer.
    {}
    virtual ~IAudioSource() {}
-   //Called by the Audio Processing thread to do audio work. Here, work is done resetting audio buffers, writing to attached modules's buffers, applying effects to samples, etc.
-   //At a rate of 48000hz/48k samples per second, and a default buffer size of 960. Expect this to run 50 times per second.
+   //Called by the Audio Processing thread to do audio work. Here, work is done resetting audio buffers, writing to attached modules buffers, applying effects to samples, etc.
+   //At a rate of 48000hz/48k samples per second, and a default buffer size of 256. Expect this to run 187.5 times per second.
    virtual void Process(double time) = 0;
    IAudioReceiver* GetTarget(int index = 0);
    virtual int GetNumTargets() { return 1; }

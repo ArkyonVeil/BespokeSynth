@@ -101,13 +101,12 @@ public:
    void OnElementLoaded(FlowGridElement* element) override;
    void FeatureResize(int extraW, int extraH);
    int GetElementFactoryArgs() override;
+   void Poll() override;
 
    ofColor GetRowColor(int row) const { return mRowColors[row % mRowColors.size()]; };
    void ReloadMeasures(bool overrideAutoFit);
    void ProcessRackElementRightClickDropdown(DropdownList* list);
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
-
-   syncVector<int> syncTest { this };
 
    //Canvas
    void CanvasUpdated(Canvas* canvas) override;

@@ -35,7 +35,7 @@
 
 //Constructor
 //AudioSplitter inherits from IAudioProcessor, which itself inherits from both IAudioSource and IAudioReceiver
-//gBufferSize is a global required to initialize audio capable elements. By default, 960, but can be changed by the user.
+//gBufferSize is a global required to initialize audio capable elements. By default, 256, but can be changed by the user.
 //Refers to the size of the buffers in each audio processing step.
 //Larger buffers batch more processing per call, thus more efficient. But since they take longer to fill up, audio latency is increased.
 AudioSplitter::AudioSplitter()

@@ -18,7 +18,7 @@
 
 /// HOW TO USE:
 /// 1. Module inherits ISyncVarsHandler
-/// 2. Call SyncVars() ONCE in the Draw thread every frame, and SyncVars() ONCE in the Audio thread every cycle.
+/// 2. Call SyncVars() in Poll(), and SyncVars() in Process(). So they run once every frame. (Don't use Process()? See table below)
 /// 3. That's it. Your synced variables should be okay now. Have fun!
 /// -Ark
 
@@ -41,6 +41,15 @@
 ///
 /// Anyway, this is meant to make your life much easier but writing off a ton of pain from syncing (and forgetting to sync)
 /// stuff manually. Cheers -ArkyonVeil
+
+
+/// Common Methods for Sync table
+/// Main thread.
+/// - Poll(): runs every frame, even offscreen.
+/// Audio thread.
+/// - Process(): every buffer tick, about 187.5 times per sec on default 48kh/256(buffer size).
+/// - OnTimeEvent(): developer's choice.
+/// - OnTransportAdvanced(): same as Process()
 
 
 //Debug only guards.
@@ -309,12 +318,12 @@ private:
    std::vector<T>* vec[2]{ &mMainVector, &mAudioVector };
 };
 
-//To use, make sure to call SyncVars() once on the Draw thread, and once on the Process() thread.
+//To use, make sure to call SyncVars() once on the Poll() method, and once on the Process() thread.
 //Everything else is handled.
 class ISyncVarsHandler
 {
 public:
-   //Call twice, once on the Draw() and another on Process()
+   //Call twice, once on Poll() and another on Process()
    void SyncVars() const
    {
       for (const auto var : mManagedVariables)
