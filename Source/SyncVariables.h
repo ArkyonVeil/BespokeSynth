@@ -69,14 +69,16 @@ class ISyncVarBase
 {
 public:
    explicit ISyncVarBase(ISyncVarsHandler* handler, char threadOwner = 0)
-       : mThreadOwner(threadOwner) { }
+   : mThreadOwner(threadOwner)
+   {}
    std::atomic<bool> hasCommits{ false };
-   bool hasQueue{ false };
+   std::atomic<bool> hasQueue{ false };
    bool ThreadOwnsVar() const { return cThread == mThreadOwner; }
    virtual ~ISyncVarBase() = default;
    virtual void CommitChanges() = 0; //Moves changes from the queue to commits.
    virtual void MergeChanges() = 0; //Formalizes merged changes.
    virtual void FlushCommits() = 0;
+
 protected:
    char mThreadOwner;
 };
@@ -108,7 +110,7 @@ public:
    }
 
    void CommitChanges() override { committedChanges = std::move(queuedChanges); }
-   void FlushCommits() override {committedChanges.clear();};
+   void FlushCommits() override { committedChanges.clear(); };
 
 protected:
    std::vector<syncOperation<T>> queuedChanges;
@@ -119,11 +121,11 @@ template <typename T>
 class syncVariable : public ISyncVarType<T>
 {
 public:
-   T& operator=(const T& value)
+   T operator=(const T& value)
    {
       this->SetChange(syncOperation<T>(opWrite, value));
       var[cThread] = value;
-      return *var[cThread];
+      return var[cThread];
    };
    operator T() const { return *var[cThread]; }
 
@@ -140,7 +142,8 @@ class syncVector : public ISyncVarType<T>
 {
 public:
    syncVector(ISyncVarsHandler* handler, char threadOwner = 0)
-: ISyncVarType<T>(handler, threadOwner){ }
+   : ISyncVarType<T>(handler, threadOwner)
+   {}
 
    //Direct access is blocked to avoid misuse. Use get/set
    T& operator[](size_t i) = delete;
@@ -167,14 +170,14 @@ public:
    {
       auto& v = vec[cThread];
       auto pos = v->begin();
-      v->insert(pos+i,var);
+      v->insert(pos + i, var);
       this->QueueChange(opInsert, var, i);
    }
    void erase(size_t i)
    {
       auto& v = vec[cThread];
       auto pos = v->begin();
-      v->erase(pos+i);
+      v->erase(pos + i);
       this->QueueChange(opErase, nullptr, i);
    }
    //Implementation of the handy RemoveFromVector(), insert a type, if it matches, its removed from the vector.
@@ -185,8 +188,8 @@ public:
       {
          if (v[i] == match)
          {
-            v->erase(v->begin()+i);
-            this->QueueChange(opErase,nullptr,i);
+            v->erase(v->begin() + i);
+            this->QueueChange(opErase, nullptr, i);
             return true;
          }
       }
@@ -206,27 +209,35 @@ public:
    class borrowedVector
    {
       borrowedVector(std::vector<T>* data, syncVector* owner)
+      : mData(data)
+      , mOwner(owner)
       {
-         mData = data;
-         mOwner = owner;
-      };
+         rule(mOwner ? (mOwner->mThreadOwner == cThread) : true); //Can only borrow on owning thread.
+      }
       std::vector<T>* mData;
       syncVector* mOwner;
 
    public:
       ~borrowedVector()
       {
+         if (!mOwner)
+            return;
          this->mOwner->SetChange(syncOperation<T>(std::vector<T>(mData)));
       }
       auto begin() { return mData->begin(); }
       auto end() { return mData->end(); }
       T& operator[](size_t i) { return (*mData)[i]; }
       size_t size() const { return mData->size(); }
+
+      auto begin() const { return mData->begin(); }
+      auto end() const { return mData->end(); }
+      const T& operator[](size_t i) const { return (*mData)[i]; }
    };
 
    //Get the internal vector for batch operations.
    //Automatically returned at scope end.
-   borrowedVector<T>& borrow() { return borrowedVector<T>(vec[cThread]); }
+   borrowedVector<T> borrow() { return borrowedVector<T>(vec[cThread], this); } //Only allowed on owning thread,
+   borrowedVector<T> borrowRead() const { return borrowedVector<T>(vec[cThread], nullptr); } //Allowed on any thread.
 
    void MergeChanges() override
    {
@@ -242,7 +253,7 @@ public:
                merge.clear();
                break;
             case opInsert:
-               merge.insert(merge.begin()+op.mIdx,op.mValue);
+               merge.insert(merge.begin() + op.mIdx, op.mValue);
                break;
             case opPush:
                merge.push_back(op.mValue);
@@ -254,10 +265,10 @@ public:
                merge = std::move(op.mSnapshot);
                break;
             case opErase:
-               merge.erase(merge.begin()+op.mIdx);
+               merge.erase(merge.begin() + op.mIdx);
                break;
             default:
-               rule(false);//Unsupported
+               rule(false); //Unsupported
          }
       }
    }
@@ -312,7 +323,6 @@ public:
    }
 
 private:
-   std::atomic<bool> isDirty{ false };
    std::vector<ISyncVarBase*> mManagedVariables;
 };
 
