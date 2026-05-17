@@ -4,7 +4,7 @@
 
 // Created by ArkyonVeil on 15/05/2026.
 //
-//Who knew C++ multicThreaded programming could be so safe.
+//Who knew C++ multithreaded programming could be so safe.
 
 #pragma once
 #include <vector>
@@ -12,15 +12,36 @@
 
 /// WHAT IS THIS?
 ///
-/// SyncVariables are a form of variables designed for multicThreaded work.
+/// SyncVariables are a variable wrapper designed for multithreaded work.
 /// One thread writes/reads, another just reads. The ISyncVarsHandler ensures they remain
 /// synced without race-condition dangers.
 
-/// To use:
-/// 1. Inherit ISyncVarsHandler
-/// 2. Call Sync() ONCE in the Draw thread, and Sync() ONCE in the Audio thread
-/// 3. That's it. Your syncVars<T> should be okay now. Have fun!
+/// HOW TO USE:
+/// 1. Module inherits ISyncVarsHandler
+/// 2. Call SyncVars() ONCE in the Draw thread every frame, and SyncVars() ONCE in the Audio thread every cycle.
+/// 3. That's it. Your synced variables should be okay now. Have fun!
 /// -Ark
+
+
+/// DETAILS FOR NERDS:
+/// synced variables are assigned to a handler (usually a module) on creation and internally keep two copies.
+/// One is the authoritative copy, the other is the reader copy. SyncVars() calls propagate changes across threads
+/// while ensuring that threads never stall for this sharing of information.
+/// This is useful for avoiding data-races, common in multithreaded work. And this implementation should
+/// cause less stalls than mutexes.
+///
+/// However, due the way it works. SyncVars() is recommended to be called at most once per frame.
+/// This is because it batches changes, and commits them at a SyncVars() call. The pipe is considered "full" at this point
+/// and must be drained first by the other thread for new changes to be committed. (This avoids mutex stalls)
+/// Do not worry about this though, changes are still queued even with a full pipe. They'll only be propagated a cycle
+/// later.
+///
+/// This pipe check-in, check-out cycle is also why changes across threads, while fast, aren't instant. Multithreaded work
+/// is messy, sorry.
+///
+/// Anyway, this is meant to make your life much easier but writing off a ton of pain from syncing (and forgetting to sync)
+/// stuff manually. Cheers -ArkyonVeil
+
 
 //Debug only guards.
 #if DEBUG || BESPOKE_NIGHTLY
@@ -30,6 +51,7 @@
 #endif
 
 
+class ISyncVarsHandler;
 namespace isv
 {
    inline char threadId() { return IsAudioThread() ? 1 : 0; }
@@ -44,7 +66,6 @@ namespace isv
       opErase = 6
    };
 
-   class ISyncVarsHandler;
    template <typename T>
    struct syncOperation
    {
@@ -104,10 +125,10 @@ namespace isv
          queuedChanges[0] = change;
          hasQueue = true;
       }
-      void QueueChange(T value)
+      void QueueChange(syncOperation<T> change)
       {
-         rule(mThreadOwner == threadId()); //Thou must only write in the owning thread.
-         queuedChanges.push_back(value);
+         rule(mThreadOwner == threadId()); //Thou can only write in the owning thread.
+         queuedChanges.push_back(change);
          hasQueue = true;
       }
 
@@ -124,6 +145,9 @@ template <typename T>
 class syncVariable : public isv::ISyncVarType<T>
 {
 public:
+   syncVariable(ISyncVarsHandler* handler, char threadOwner)
+   : isv::ISyncVarType<T>(handler, threadOwner)
+   {}
    T operator=(const T& value)
    {
       this->SetChange(syncOperation<T>(isv::opWrite, value));
@@ -144,7 +168,7 @@ template <typename T>
 class syncVector : public isv::ISyncVarType<T>
 {
 public:
-   syncVector(isv::ISyncVarsHandler* handler, char threadOwner = 0)
+   syncVector(ISyncVarsHandler* handler, char threadOwner = 0)
    : isv::ISyncVarType<T>(handler, threadOwner)
    {}
 
@@ -162,12 +186,12 @@ public:
    void pop_back()
    {
       vec[isv::threadId()]->pop_back();
-      this->QueueChange(isv::opPop, nullptr);
+      this->QueueChange(isv::opPop, {});
    }
    void clear()
    {
       vec[isv::threadId()]->clear();
-      this->QueueChange(isv::opClear, nullptr);
+      this->QueueChange(isv::opClear, {});
    }
    void insert(size_t i, T var)
    {
@@ -181,7 +205,7 @@ public:
       auto& v = vec[isv::threadId()];
       auto pos = v->begin();
       v->erase(pos + i);
-      this->QueueChange(isv::opErase, nullptr, i);
+      this->QueueChange(isv::opErase, {}, i);
    }
    //Implementation of the handy RemoveFromVector(), insert a type, if it matches, its removed from the vector.
    bool removeFrom(T& match)
@@ -192,7 +216,7 @@ public:
          if (v[i] == match)
          {
             v->erase(v->begin() + i);
-            this->QueueChange(isv::opErase, nullptr, i);
+            this->QueueChange(isv::opErase, {}, i);
             return true;
          }
       }
@@ -208,7 +232,6 @@ public:
       this->QueueChange(isv::opWrite, value, i);
    }
 
-   template <typename T>
    class borrowedVector
    {
       borrowedVector(std::vector<T>* data, syncVector* owner)
@@ -240,11 +263,11 @@ public:
    //Get the internal vector for batch operations. Both Read and Write.
    //Changes are automatically handled on scope end.
    //Only allowed on owning thread,
-   borrowedVector<T> borrow() { return borrowedVector<T>(vec[isv::threadId()], this); }
+   borrowedVector borrow() { return borrowedVector(vec[isv::threadId()], this); }
    //Get the internal vector for batch operations. Only Read.
    //No sync overhead.
    //Allowed on any thread,
-   borrowedVector<T> borrowRead() const { return borrowedVector<T>(vec[isv::threadId()], nullptr); }
+   borrowedVector borrowRead() const { return borrowedVector(vec[isv::threadId()], nullptr); }
 
    void MergeChanges() override
    {
@@ -286,13 +309,13 @@ private:
    std::vector<T>* vec[2]{ &mMainVector, &mAudioVector };
 };
 
-//To use, make sure to call Sync() once on the Draw thread, and once on the Process() thread.
+//To use, make sure to call SyncVars() once on the Draw thread, and once on the Process() thread.
 //Everything else is handled.
 class ISyncVarsHandler
 {
 public:
    //Call twice, once on the Draw() and another on Process()
-   void Sync() const
+   void SyncVars() const
    {
       for (const auto var : mManagedVariables)
       {
@@ -322,7 +345,6 @@ public:
       /// Sync()-reader - Reads commits, merges them.
       /// Flags pipe as ready for further changes.
    }
-
    //Done automatically, calling this is a bug.
    void InternalSyncVariableRegister(isv::ISyncVarBase* var)
    {
@@ -334,7 +356,7 @@ private:
 };
 
 /*
- * Kind of work In Progress, to be complete whenever Ark feels like it. (Probably never)
+ * Kind of a work in progress, to be complete whenever Ark feels like it. (Probably never)
  *
 template <typename T>
 class syncArray : public ISyncVarType<T>

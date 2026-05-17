@@ -107,7 +107,7 @@ public:
    void ProcessRackElementRightClickDropdown(DropdownList* list);
    void SetNewRackDropdownContext(SongCanvasRackElement* element);
 
-   syncVector<int> syncTest { syncVector<int>(this) };
+   syncVector<int> syncTest { this };
 
    //Canvas
    void CanvasUpdated(Canvas* canvas) override;
