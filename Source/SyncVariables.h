@@ -7,8 +7,12 @@
 //Who knew C++ multithreaded programming could be so safe.
 
 #pragma once
+#include "AbletonMoveControl.h"
+
+
 #include <vector>
 #include "SynthGlobals.h"
+#include <type_traits>
 
 /// WHAT IS THIS?
 ///
@@ -18,10 +22,18 @@
 
 /// HOW TO USE:
 /// 1. Module inherits ISyncVarsHandler
-/// 2. Call SyncVars() in Poll(), and SyncVars() in Process(). So they run once every frame. (Don't use Process()? See table below)
+/// 2. Call SyncVars() in Poll(), and SyncVars() in Process(). So they run once every frame. (Do you lack a Process() override? See table below)
 /// 3. That's it. Your synced variables should be okay now. Have fun!
 /// -Ark
 
+
+/// Methods for deploying SyncVars() calls.
+/// Main thread.
+/// - Poll(): runs every frame, even offscreen.
+/// Audio thread.
+/// - Process(): every buffer tick, about 187.5 times per sec on default 48kh/256(buffer size).
+/// - OnTimeEvent(): developer's choice.
+/// - OnTransportAdvanced(): same as Process()
 
 /// DETAILS FOR NERDS:
 /// synced variables are assigned to a handler (usually a module) on creation and internally keep two copies.
@@ -43,15 +55,6 @@
 /// stuff manually. Cheers -ArkyonVeil
 
 
-/// Common Methods for Sync table
-/// Main thread.
-/// - Poll(): runs every frame, even offscreen.
-/// Audio thread.
-/// - Process(): every buffer tick, about 187.5 times per sec on default 48kh/256(buffer size).
-/// - OnTimeEvent(): developer's choice.
-/// - OnTransportAdvanced(): same as Process()
-
-
 //Debug only guards.
 #if DEBUG || BESPOKE_NIGHTLY
 #define rule(x) assert(x)
@@ -63,6 +66,15 @@
 class ISyncVarsHandler;
 namespace isv
 {
+   template <typename>
+   struct is_unique_ptr : std::false_type
+   {
+   };
+   template <typename U, typename D>
+   struct is_unique_ptr<std::unique_ptr<U, D>> : std::true_type
+   {
+   };
+
    inline char threadId() { return IsAudioThread() ? 1 : 0; }
    enum OperationType
    {
@@ -96,6 +108,18 @@ namespace isv
       std::vector<T> mSnapshot;
    };
 
+   class ISyncPipeBase
+   {
+   public:
+      explicit ISyncPipeBase(ISyncVarsHandler* handler)
+      {
+         handler->InternalSyncVariableRegister(this);
+      }
+
+      volatile bool mPipeDirty{ false };
+      virtual void UpdatePipes() = 0;
+   };
+
    //Thread 0 = Main/UI , 1 = Audio
    class ISyncVarBase
    {
@@ -122,11 +146,14 @@ namespace isv
       ISyncVarType(ISyncVarsHandler* handler, char threadOwner)
       : ISyncVarBase(handler, threadOwner)
       {
-         static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use smart pointers instead.");
+         static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use shared_ptr instead.");
+         static_assert(!is_unique_ptr<std::remove_cv_t<std::remove_reference_t<T>>>::value,
+                       "unique_ptr is not supported in SyncVariables. Use shared_ptr instead.");
+         static_assert(std::is_copy_constructible_v<T>, "Non-copyable types are not supported in SyncVariables.");
          handler->InternalSyncVariableRegister(this);
          mThreadOwner = threadOwner;
       }
-      void SetChange(syncOperation<T> change)
+      void OverrideWithChanges(syncOperation<T> change)
       {
          rule(mThreadOwner == threadId()); //Writing to a synced var from the non owning thread is a contractual violation.
          if (queuedChanges.size() != 1)
@@ -136,7 +163,7 @@ namespace isv
       }
       void QueueChange(syncOperation<T> change)
       {
-         rule(mThreadOwner == threadId()); //Thou can only write in the owning thread.
+         rule(mThreadOwner == threadId()); //Writing to a synced var from the non owning thread is a contractual violation.
          queuedChanges.push_back(change);
          hasQueue = true;
       }
@@ -150,6 +177,15 @@ namespace isv
    };
 }
 
+/// Safely synced type across threads.
+/// Supports copy-constructible types. (ex: int, float, most classes)
+///
+/// Does not support T*(memory leaks), nor unique_ptr<T>(implementation quirks), if you need references use shared_ptr.
+///
+/// NOTE: shared_ptr objects ARE shared across threads. The shared_ptr itself is not. (ex: if you nullptr the shared_ptr, it will be null in owning thread
+/// and become nullptr next sync on the other thread)
+///
+/// Requires brief implementation setup. See the SyncVariables.h header.
 template <typename T>
 class syncVariable : public isv::ISyncVarType<T>
 {
@@ -173,6 +209,14 @@ private:
    T* var[2]{ &mMainVar, &mAudioVar };
 };
 
+/// Like a vector<T>, but safely synced across threads.
+/// Supports copy-constructible types. (ex: int, float, most classes)
+///
+/// Does not support T*(memory leaks), nor unique_ptr<T>(implementation quirks), if you need references use shared_ptr.
+///
+/// NOTE: shared_ptr objects ARE shared across threads, the vector is not.
+///
+/// Requires brief implementation setup. See the SyncVariables.h header.
 template <typename T>
 class syncVector : public isv::ISyncVarType<T>
 {
@@ -180,9 +224,6 @@ public:
    syncVector(ISyncVarsHandler* handler, char threadOwner = 0)
    : isv::ISyncVarType<T>(handler, threadOwner)
    {}
-
-   //Direct access is blocked to avoid misuse. Use get/set
-   T& operator[](size_t i) = delete;
 
    size_t size() { return vec[isv::threadId()]->size(); };
    bool empty() { return vec[isv::threadId()]->empty(); };
@@ -200,7 +241,7 @@ public:
    void clear()
    {
       vec[isv::threadId()]->clear();
-      this->QueueChange(isv::opClear, {});
+      this->OverrideWithChanges(isv::opClear, {});
    }
    void insert(size_t i, T var)
    {
@@ -217,7 +258,8 @@ public:
       this->QueueChange(isv::opErase, {}, i);
    }
    //Implementation of the handy RemoveFromVector(), insert a type, if it matches, its removed from the vector.
-   bool removeFrom(T& match)
+   //Returns true on success.
+   bool removeThis(T& match)
    {
       auto& v = vec[isv::threadId()];
       for (int i = 0; i < v->size(); ++i)
@@ -231,7 +273,7 @@ public:
       }
       return false;
    }
-   T& get(size_t i)
+   const T& get(size_t i)
    {
       return vec[isv::threadId()][i];
    }
@@ -243,27 +285,67 @@ public:
 
    class borrowedVector
    {
-      borrowedVector(std::vector<T>* data, syncVector* owner)
+      borrowedVector(std::vector<T>* data, syncVector* owner, bool batch)
       : mData(data)
       , mOwner(owner)
+      , mBatch(batch)
       {
-         rule(mOwner ? (mOwner->mThreadOwner == isv::threadId()) : true); //Can only borrow on owning thread.
+         rule(mOwner ? (mOwner->mThreadOwner == isv::threadId()) : true); //Can only borrow write on owning thread.
       }
       std::vector<T>* mData;
       syncVector* mOwner;
+      bool mBatch{ false };
 
    public:
       ~borrowedVector()
       {
          if (!mOwner)
             return;
-         this->mOwner->SetChange(syncOperation<T>(std::vector<T>(mData)));
+
+         this->mOwner->OverrideWithChanges(syncOperation<T>(std::vector<T>(mData)));
       }
       auto begin() { return mData->begin(); }
       auto end() { return mData->end(); }
-      T& operator[](size_t i) { return (*mData)[i]; }
+      const T& get(size_t i) const { return (*mData)[i]; }
+      void set(size_t i, T value)
+      {
+         mOwner->queuedChanges.push_back(isv::syncOperation<T>(isv::opWrite, value, i));
+         mData[i] = value;
+      }
       size_t size() const { return mData->size(); }
+      void push_back(T var)
+      {
+         mOwner->queuedChanges.push_back(isv::syncOperation<T>(isv::opPush, var));
+         mData->push_back(var);
+      }
+      void pop_back()
+      {
+         mOwner->queuedChanges.push_back(isv::syncOperation<T>(isv::opPop));
+         mData->pop_back();
+      }
+      void erase(size_t i)
+      {
+         mOwner->queuedChanges.push_back(isv::syncOperation<T>(isv::opErase, {}, i));
+         auto pos = mData->begin();
+         mData->erase(pos + i);
+      }
+      void clear()
+      {
+         mOwner->queuedChanges.resize(1);
+         mOwner->queuedChanges[0] = isv::syncOperation<T>(isv::opClear, {});
+         mData->clear();
+      }
 
+      //Fast, does not queue individual actions. Best for borrowBatch
+      void pop_back_f() { mData->pop_back(); }
+      //Fast, does not queue individual actions. Best for borrowBatch
+      void push_back_f(T var) { mData->push_back(var); }
+      //Fast, does not queue individual actions. Best for borrowBatch
+      void erase_f(size_t i) { mData->erase(mData->begin() + i); }
+      //Fast, does not queue individual actions. Best for borrowBatch
+      void set_f(size_t i, T value) { mData[i] = value; }
+
+      //Consts
       auto begin() const { return mData->begin(); }
       auto end() const { return mData->end(); }
       const T& operator[](size_t i) const { return (*mData)[i]; }
@@ -272,11 +354,19 @@ public:
    //Get the internal vector for batch operations. Both Read and Write.
    //Changes are automatically handled on scope end.
    //Only allowed on owning thread,
-   borrowedVector borrow() { return borrowedVector(vec[isv::threadId()], this); }
+   borrowedVector borrowWrite() { return borrowedVector(vec[isv::threadId()], this, false); }
+   //Get the internal vector for batch operations. Both Read and Write.
+   //Best for full vector rewrites and _f use function use. (Fully copies, rather than individual changes)
+   //Only allowed on owning thread,
+   borrowedVector borrowBatch() { return borrowedVector(vec[isv::threadId()], this, true); }
    //Get the internal vector for batch operations. Only Read.
    //No sync overhead.
-   //Allowed on any thread,
-   borrowedVector borrowRead() const { return borrowedVector(vec[isv::threadId()], nullptr); }
+   //Allowed on any thread.
+   //
+   //WARNING: C++ allows you to modify objects within a borrowRead via method calls.
+   //borrowRead() only protects against vector modifications. Object changes will NOT be synced, and
+   //writes in shared object variables may cause data-races. Be careful!
+   borrowedVector borrowRead() const { return borrowedVector(vec[isv::threadId()], nullptr, false); }
 
    void MergeChanges() override
    {
@@ -316,6 +406,104 @@ private:
    std::vector<T> mMainVector;
    std::vector<T> mAudioVector;
    std::vector<T>* vec[2]{ &mMainVector, &mAudioVector };
+};
+
+
+template <typename T>
+class syncPipe
+{
+   syncPipe(ISyncVarsHandler* owner)
+   {
+      mOwner = owner;
+      mOwner->Reg
+   }
+   ISyncVarsHandler* mOwner;
+
+   struct pipeMessage
+   {
+      pipeMessage(int destination, T var)
+      {
+         targetThread = destination;
+         message = var;
+      }
+      int targetThread;
+      T message;
+   };
+
+   //Insert a value into the pipe to be delivered async to the other thread.
+   //Inserting while its full, enqueues it and is delivered after the next sync.
+   void push(T value)
+   {
+      push(&value, !isv::threadId());
+   }
+   void push(T value, int destination)
+   {
+      if (!mPipeFull[destination])
+      {
+         mPipe[destination] = value;
+         mPipeFull[destination] = true;
+      }
+      else
+      {
+         mOutgoingQueue[destination].push_back(pipeMessage(destination, value));
+         mHasOutgoingQueue[isv::threadId()] = true;
+      }
+   }
+
+   //Checks to see if the pipe has any data going out.
+   //Sees queued outgoing variables.
+   bool hasContentOutgoing()
+   {
+      return mHasOutgoingQueue[isv::threadId()];
+   }
+   //Checks to see if the pipe has any data going in.
+   //Checks the content of the incoming pipe.
+   bool hasContentIncoming()
+   {
+      return mPipeFull[isv::threadId()];
+   }
+
+   //Returns the incoming data in the pipe as a pointer.
+   //Does not empty the pipe.
+   //Thread relative.
+   T* peek()
+   {
+      char thread = isv::threadId();
+      if (mPipeFull[thread])
+         return &mPipe[thread];
+      return nullptr;
+   }
+   //Returns the incoming data in the pipe as a copy.
+   //Empties the pipe.
+   //Thread relative.
+   std::optional<T> extract()
+   {
+      char thread = isv::threadId();
+      bool full = mPipeFull[thread].exchange(false, std::memory_order_relaxed);
+      return full ? std::make_optional(mPipe[thread]) : std::nullopt;
+   }
+   //Empties our side of the pipe.
+   //Disposes incoming pipe.
+   void flushIncoming()
+   {
+      mPipeFull[isv::threadId()] = false;
+   }
+   //Empties our side of the pipe.
+   //Disposes outgoing pipe and queues.
+   void flushOutgoing()
+   {
+      mOutgoingQueue[isv::threadId()].clear();
+      mHasOutgoingQueue[isv::threadId()] = false;
+   }
+
+   static constexpr int kThreads{ 2 }; //0 main, 1 audio.
+
+   std::atomic<bool> mPipeFull[kThreads]{ false };
+   std::atomic<bool> mHasOutgoingQueue[kThreads]{ false };
+
+   //They're kinda like mailboxes.
+   T mPipe[kThreads];
+   std::vector<pipeMessage> mOutgoingQueue[kThreads];
 };
 
 //To use, make sure to call SyncVars() once on the Poll() method, and once on the Process() thread.
@@ -359,9 +547,14 @@ public:
    {
       mManagedVariables.push_back(var);
    }
+   void InternalSyncVariableRegister(isv::ISyncPipeBase* var)
+   {
+      mManagedPipes.push_back(var);
+   }
 
 private:
    std::vector<isv::ISyncVarBase*> mManagedVariables;
+   std::vector<isv::ISyncPipeBase*> mManagedPipes;
 };
 
 /*

@@ -177,16 +177,13 @@ public:
       mMixerOrphanSourceCoord = cableSourceCoord;
    }
    void SetMixerControlsState(bool active, int mixerIndex);
-   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected; }
+   SongCanvasMixer* GetSelectedMixer() const { return mMixerControlsSelected.get(); }
    bool MixerControlsEnabled() { return mMixerControlsSelected != nullptr; };
    void SampleDropped(int x, int y, Sample* sample) override;
    void FilesDropped(std::vector<std::string> files, int x, int y) override;
    bool CanDropSample() const override { return true; }
    void SetMixerIdHighlight(int id) { mHighlightHintMixerId = id; }
    int GetMixerIdHighlight() { return mHighlightHintMixerId; }
-
-   //Garbage Disposal
-   void DisposeElement(IClickable* element);
 
    //IDrawable Misc
    int GetNumTargets() override { return 0; }
@@ -374,11 +371,14 @@ private:
    }
 
 
+
    //Chunkifies a large canvas into chunks in order to speed up part detection.
-   std::vector<SongCanvasNote*> mCanvasChunkList[201];
+   std::vector<SongCanvasNote*> mCanvasChunkList[100];
    int mChunkAmount{ 10 };
 
-   std::vector<SongCanvasNote*> mActiveElements{};
+
+   syncVector<std::shared_ptr<SongCanvasNote>> mActiveNotes{ this, 1 };
+   syncVector<std::shared_ptr<SongCanvasNote>> mActiveNoteRemovalQueue { this };
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
    std::array<Checkbox*, MaxLayers> mLayerEnableCheckbox = {};
@@ -446,10 +446,9 @@ private:
 
    //Audio Handling
    float mMixerStartingXOffset{ 26 };
-   SongCanvasMixer* mMixerControlsSelected{ nullptr };
+   std::shared_ptr<SongCanvasMixer> mMixerControlsSelected{ nullptr };
    void UpdateSongCanvasMixerYSpacing();
-   void ScheduleMixerDisposal(SongCanvasMixer* mixer);
-   void ScheduleRackDisposal(SongCanvasRackElement* rack);
+   void Dispose(std::shared_ptr<SongCanvasMixer> mixer);
    float const kMixerPreferredWidth{ 54 };
    float const kMixerControlsHeight{ 44 };
    float const kMixerControlsWidth{ 120 };
@@ -464,12 +463,8 @@ private:
    float mMixerDrawCompression{ 1.0f }; //0, width 0, 1
    float mLastTempo = -1;
 
-   std::vector<SongCanvasMixer*> mMixers{};
-   std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
-
-   //Need to destroy a multithreaded object, dump it here!
-   std::vector<SongCanvasMixer*> mMixerDisposalQueue{};
-   std::vector<SongCanvasRackElement*> mRackDisposalQueue{}; //Audio racks
+   syncVector<std::shared_ptr<SongCanvasMixer>> mMixers{ this };
+   syncVector<std::shared_ptr<SongCanvasAudioRackElement>> mAudioRacks{ this };
 
    //Expert variables (Unused)
    bool expertPanelEnabled{ false };
