@@ -88,6 +88,7 @@ namespace isv
    {
    };
 
+   //TODO investigate thread_local storage for a possible x50 performance increase
    inline char threadId() { return IsAudioThread() ? 1 : 0; }
    enum OperationType
    {
@@ -129,7 +130,7 @@ namespace isv
          if (handler)
             handler->InternalSyncVariableRegister(this);
       }
-      ISyncPipeBase() = default;//Can work unmanaged, but needs manual "pumping" via UpdatePipes to push queues along.
+      ISyncPipeBase() = default; //Can work unmanaged, but needs manual "pumping" via UpdatePipes to push queues along.
 
       std::atomic<bool> mNeedsUpdate{ false };
       virtual void UpdatePipes() = 0;
@@ -425,8 +426,8 @@ private:
 };
 
 /// Bidirectional set of pipes. Can easily, and safely transfer data from one thread to another and vise versa.
-/// Push stuff in, extract the other side.
-/// Can queue up multiple transfers. But extracts at most once per Sync.
+/// Push stuff in, extract the other side. First-In-First-Out
+/// Can queue up multiple transfers.
 ///
 /// TIP: If you need to move a lot of data, fill a vector and push it through.
 ///
@@ -453,31 +454,60 @@ public:
    void push(T value)
    {
       int destination = !isv::threadId();
+      char thread = isv::threadId();
 
-      if (!mPipeFull[destination])
+      if (!mHasIncoming[destination])
       {
-         mPipe[destination] = value;
-         mPipeFull[destination] = true;
+         if (mHasOutgoing[thread])
+         {
+            mOutgoing[thread].push_back(pipeMessage(destination, value));
+            UpdatePipes();
+         }
+         else
+         {
+            mIncoming[destination].push(value);
+            mHasIncoming[destination] = true;
+         }
       }
       else
       {
-         mOutgoingQueue[destination].push_back(pipeMessage(destination, value));
-         mHasOutgoingQueue[isv::threadId()] = true;
+         mOutgoing[thread].push_back(pipeMessage(destination, value));
+         mHasOutgoing[thread] = true;
          mNeedsUpdate = true;
       }
    }
+   //With no arguments, simply pushes the queue into the delivery pipe if empty.
+   void push()
+   {
+      UpdatePipes();
+   }
+   //Push into the pipe queue, without sending it.
+   //Do not forget to send it by calling push() later.
+   //
+   //TIP: If you need to send a lot of data at once, use vectors.
+   void queue(T value)
+   {
+      char thread = isv::threadId();
+      mOutgoing[thread].push_back(value);
+      mHasOutgoing[thread] = true;
+      mNeedsUpdate = true;
+   }
 
    //Checks to see if the pipe has any data going out.
-   //Sees queued outgoing variables.
+   //Sees queued outgoing content.
    bool hasContentOutgoing()
    {
-      return mHasOutgoingQueue[isv::threadId()];
+      return mHasOutgoing[isv::threadId()];
    }
    //Checks to see if the pipe has any data going in.
    //Checks the content of the incoming pipe.
-   bool hasContentIncoming()
+   //Returns the number of entries.
+   size_t hasContentIncoming()
    {
-      return mPipeFull[isv::threadId()];
+      char thread = isv::threadId();
+      if (!mHasIncoming[thread])
+         return 0;
+      return mIncoming[thread].size();
    }
 
    //Returns the incoming data in the pipe as a pointer.
@@ -486,49 +516,70 @@ public:
    T* peek()
    {
       char thread = isv::threadId();
-      if (mPipeFull[thread])
-         return &mPipe[thread];
+      if (mHasIncoming[thread])
+         return &mIncoming[thread].front();
       return nullptr;
    }
    //Returns the incoming data in the pipe as a copy.
-   //Empties the pipe.
+   //Empties the pipe by one. Returns nothing if empty.
    //Thread relative.
    std::optional<T> extract()
    {
       char thread = isv::threadId();
-      bool full = mPipeFull[thread].exchange(false, std::memory_order_relaxed);
-      return full ? std::make_optional(mPipe[thread]) : std::nullopt;
+      if (!mHasIncoming[thread])
+         return std::nullopt;
+
+      auto out = std::make_optional(mIncoming[thread]->front());
+      mIncoming[thread]->pop();
+      mHasIncoming[thread] = !mIncoming->empty();
+      return out;
    }
    //Empties our side of the pipe.
    //Disposes incoming pipe.
    void flushIncoming()
    {
-      mPipeFull[isv::threadId()] = false;
+      char thread = isv::threadId();
+      auto& pipe = mIncoming[thread];
+      const int sz = pipe.size();
+      for (int i = 0; i < sz; ++i)
+         pipe.pop();
+      mHasIncoming[thread] = false;
    }
    //Empties our side of the pipe.
    //Disposes outgoing pipe and queues.
    void flushOutgoing()
    {
-      mOutgoingQueue[isv::threadId()].clear();
-      mHasOutgoingQueue[isv::threadId()] = false;
+      mOutgoing[isv::threadId()].clear();
+      mHasOutgoing[isv::threadId()] = false;
    }
    //Push forward queues.
    void UpdatePipes() override
    {
       char thread = isv::threadId();
-      if (auto& hasQueue = mHasOutgoingQueue[thread])
+      if (auto& hasQueue = mHasOutgoing[thread])
       {
-         auto& outQueue = mOutgoingQueue[thread];
-         for (size_t i = 0; i < outQueue.size(); ++i) {
-            pipeMessage item = outQueue[i];
-            if (!mPipeFull[item.targetThread]) {
-               mPipe[item.targetThread] = item.message;
-               outQueue.erase(outQueue.begin() + i);
+         std::array<bool, kThreads> threadsToFlagFull{ false };
+         auto& queueVec = mOutgoing[thread];
+         for (size_t i = 0; i < queueVec.size(); ++i)
+         {
+            pipeMessage item = queueVec[i];
+            if (!mHasIncoming[item.targetThread])
+            {
+               mIncoming[item.targetThread].push(item.message);
+               threadsToFlagFull[item.targetThread] = true;
+               queueVec.erase(queueVec.begin() + i);
                --i;
-               if (outQueue.empty())
+               if (queueVec.empty())
+               {
                   hasQueue = false;
-               mPipeFull[item.targetThread] = true;
+                  break;
+               }
             }
+         }
+         for (int i = 0; i < kThreads; ++i)
+         {
+            if (threadsToFlagFull[i])
+               mHasIncoming[i] = true;
          }
       }
    }
@@ -536,7 +587,7 @@ public:
    {
       for (int i = 0; i < kThreads; ++i)
       {
-         if (mHasOutgoingQueue[i])
+         if (mHasOutgoing[i])
             return false;
       }
       mNeedsUpdate = true;
@@ -547,12 +598,12 @@ public:
 private:
    static constexpr int kThreads{ 2 }; //0 main, 1 audio.
 
-   std::atomic<bool> mPipeFull[kThreads]{ false };
-   std::atomic<bool> mHasOutgoingQueue[kThreads]{ false };
+   std::atomic<bool> mHasIncoming[kThreads]{ false };
+   std::atomic<bool> mHasOutgoing[kThreads]{ false };
 
    //They're kinda like mailboxes.
-   T mPipe[kThreads];
-   std::vector<pipeMessage> mOutgoingQueue[kThreads];
+   std::queue<T> mIncoming[kThreads];
+   std::vector<pipeMessage> mOutgoing[kThreads];
 };
 
 //To use, make sure to call SyncVars() once on the Poll() method, and once on the Process() thread.
