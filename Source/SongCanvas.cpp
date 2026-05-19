@@ -1030,7 +1030,7 @@ bool SongCanvas::IsCanvasElementActive(SongCanvasNote* element) const
 {
    for (auto& elem : mActiveNotes.borrowRead())
    {
-      if (elem.get() == element)
+      if (elem == element)
          return true;
    }
    return false;
@@ -1329,11 +1329,12 @@ void SongCanvas::OnClicked(float x, float y, bool right)
    {
       float offsetY = mHeight;
       float mixerPadding = GetMixerSpaceAvailable();
+      auto mixers = mMixers.borrowRead();
       for (int i = 0; i < mMixers.size(); ++i)
       {
          float mX = x - mMixerStartingXOffset - i * mixerPadding;
          float mY = y - offsetY;
-         mMixers[i]->MouseClick(mX, mY, right);
+         mixers[i]->MouseClick(mX, mY, right);
       }
    }
 }
@@ -1396,14 +1397,14 @@ void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 //Incoming event from a note bring removed from the base Canvas
 void SongCanvas::ElementRemoved(CanvasElement* element)
 {
-   SongCanvasNote* sElement = dynamic_cast<SongCanvasNote*>(element);
+   auto* sElement = dynamic_cast<SongCanvasNote*>(element);
    //If any of them are playing, we send notes off.
    int i = 0;
    for (auto& alem : mActiveNotes.borrowRead())
    {
-      if (alem.get() == sElement)
+      if (alem == sElement)
       {
-         mActiveNotes.erase(i);
+         mActiveNotesCancelPipe.push(alem);
       }
       i++;
    }
@@ -1412,7 +1413,7 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
 }
 
 //Gets all the canvas elements which have said rack as a parent.
-std::vector<SongCanvasNote*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
+std::vector<SongCanvasNote*> SongCanvas::GetAllNotesOfRack(const SongCanvasRackElement* element) const
 {
    auto elms = mCanvas->GetElements();
    std::vector<SongCanvasNote*> output;
@@ -1560,16 +1561,16 @@ void SongCanvas::OnTransportAdvanced(float amount)
          int readChunkNum = floor(mCanvasRelativeTime * mChunkAmount);
          if (readChunkNum < 0)
             readChunkNum = 0;
-         auto& cL = mCanvasChunkList[readChunkNum];
+         auto cL = mCanvasChunkList[readChunkNum];
 
          //Process the chunk, activating/processing as needed.
          for (int i = 0; i < mChunkAmount; ++i)
          {
             if (cL[i]->GetStart() < mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
             {
-               if (!IsCanvasElementActive(&cL[i]) & seqLayers[cL[i].mRow].enabled & cL[i].GetRackElement()->IsRackEnabled())
+               if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
                {
-                  actives.push_back(&cL[i]);
+                  actives.push_back(cL[i]);
                   cL[i]->GetRackElement()->OnEnter(cL[i]);
                }
                if (seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
@@ -1589,12 +1590,12 @@ void SongCanvas::OnTransportAdvanced(float amount)
          }
 
          //Now cull the unused ones.
-         for (int i = 0; i < mActiveNotes.size(); ++i)
+         for (int i = 0; i < actives.size(); ++i)
          {
-            if (mActiveNotes[i]->GetStart() > mCanvasRelativeTime || mActiveNotes[i]->GetEnd() < mCanvasRelativeTime)
+            if (actives[i]->GetStart() > mCanvasRelativeTime || actives[i]->GetEnd() < mCanvasRelativeTime)
             {
-               mActiveNotes[i]->GetRackElement()->OnExit(mActiveNotes[i]);
-               mActiveNotes.erase(mActiveNotes.begin() + i);
+               actives[i]->GetRackElement()->OnExit(actives[i]);
+               actives.erase(i);
                i--;
             }
          }
@@ -1602,11 +1603,12 @@ void SongCanvas::OnTransportAdvanced(float amount)
    }
    else
    {
+      auto actives = mActiveNotes.borrowWrite();
       //If we're disabled, clean up.
-      for (int i = 0; i < mActiveNotes.size(); ++i)
+      for (int i = 0; i < actives.size(); ++i)
       {
-         mActiveNotes[i]->GetRackElement()->OnExit(mActiveNotes[i]);
-         mActiveNotes.erase(mActiveNotes.begin() + i);
+         actives[i]->GetRackElement()->OnExit(actives[i]);
+         actives.erase(i);
          i--;
       }
    }
@@ -1723,7 +1725,7 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mixerCount;
    for (int i = 0; i < mixerCount; ++i)
    {
-      auto mixer = mMixers[i];
+      auto mixer = mMixers.get(i);
       out << mixer->mMixerIndex;
       mixer->Save(out);
    }
@@ -1793,7 +1795,7 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       {
          int mixerIdx;
          in >> mixerIdx;
-         auto mixer = new SongCanvasMixer(this, mixerIdx);
+         const auto mixer = std::make_shared<SongCanvasMixer>(this, mixerIdx);
          mixer->CreateUIControls();
          mixer->Load(in);
          mMixers.push_back(mixer);
@@ -2286,20 +2288,14 @@ void SongCanvas::Dispose(std::shared_ptr<SongCanvasMixer> mixer)
 }
 void SongCanvas::Dispose(std::shared_ptr<SongCanvasRackElement> element)
 {
-   if (element == mCurrentElementBeingRenamed)
+   if (element.get() == mCurrentElementBeingRenamed)
       mCurrentElementBeingRenamed = nullptr;
-   auto res = GetAllCanvasElementsOfRack(element);
-   for (auto re : res)
+   auto notes = GetAllNotesOfRack(element.get());
+   for (auto note : notes)
    {
-      mCanvas->RemoveElement(re);
+      mCanvas->RemoveElement(note);
    }
    //If an audio element, we'll have to do some extra disposal.
-   if (auto* audioElement = dynamic_cast<SongCanvasAudioRackElement*>(element))
-   {
-      ScheduleRackDisposal(audioElement);
-   }
-   else
-      mRackGrid->DeleteFlowElement(element);
 
-   mRackGrid->ScheduleDeletion(element);
+   mRackGrid->DeleteFlowElement(element.get());
 }

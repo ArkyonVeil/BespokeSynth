@@ -163,7 +163,11 @@ namespace isv
       ISyncVarType(ISyncVarsHandler* handler, char threadOwner)
       : ISyncVarBase(handler, threadOwner)
       {
-         static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use shared_ptr instead.");
+         //NOTE: Removed the hardcoded 'no raw pointers' limitation. Pointers are still used everywhere as of writing and they
+         //are technically compatible. But its poor practice in general.
+         //Basically, avoid if possible. SyncVariables does not auto cleanup pointers, you're on your own.
+         //-Ark
+         //static_assert(!std::is_pointer_v<T>, "Raw pointers are not supported in SyncVariables. Use shared_ptr instead.");
          static_assert(!is_unique_ptr<std::remove_cv_t<std::remove_reference_t<T>>>::value,
                        "unique_ptr is not supported in SyncVariables. Use shared_ptr instead.");
          static_assert(std::is_copy_constructible_v<T>, "Non-copyable types are not supported in SyncVariables.");
@@ -187,6 +191,7 @@ namespace isv
 
       void CommitChanges() override { committedChanges = std::move(queuedChanges); }
       void FlushCommits() override { committedChanges.clear(); };
+
 
    protected:
       std::vector<syncOperation<T>> queuedChanges;

@@ -403,7 +403,7 @@ bool FlowGrid::IsRowOverfilled(int row)
 
 
 //Please check with TryGetSlot to see if it's possible to add first, or it WILL crash.
-void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
+void FlowGrid::AddFlowElement(std::shared_ptr<FlowGridElement> newElement, bool preSetup)
 {
    newElement->SetFlowGrid(this);
 
@@ -433,7 +433,7 @@ void FlowGrid::AddFlowElement(FlowGridElement* newElement, bool preSetup)
    AddToRow(newElement, r);
 }
 
-void FlowGrid::AddToRow(FlowGridElement* element, int row)
+void FlowGrid::AddToRow(std::shared_ptr<FlowGridElement> element, int row)
 {
    while (mRows.size() <= row)
    {
@@ -444,7 +444,7 @@ void FlowGrid::AddToRow(FlowGridElement* element, int row)
    UpdateRow(row, true);
 }
 
-void FlowGrid::InsertToRow(FlowGridElement* element, int row, int index)
+void FlowGrid::InsertToRow(std::shared_ptr<FlowGridElement> element, int row, int index)
 {
    while (mRows.size() > row)
    {
@@ -455,7 +455,7 @@ void FlowGrid::InsertToRow(FlowGridElement* element, int row, int index)
    UpdateRow(row, true);
 }
 
-void FlowGrid::MoveToRow(FlowGridElement* element, int row, int index)
+void FlowGrid::MoveToRow(std::shared_ptr<FlowGridElement> element, int row, int index)
 {
    //First we find out in which row it is.
    int sourceRow = -1;
@@ -732,7 +732,7 @@ void FlowGrid::RowNotifyPostResize(int row) const
    }
 }
 
-int FlowGrid::GetRowIndexOfElement(FlowGridElement* element) const
+int FlowGrid::GetRowIndexOfElement(const std::shared_ptr<FlowGridElement>& element) const
 {
    if (element == nullptr)
       return -1;
@@ -762,12 +762,9 @@ void FlowGrid::RecalculateFlowGrid()
       UpdateRow(i, true);
    }
 }
-void FlowGrid::ScheduleDeletion(FlowGridElement* element)
-{
-   DeregisterElement(element);
-   mDisposalQueue.push_back(element); //Schedule for annihilation.
-}
-void FlowGrid::DeleteFlowElement(FlowGridElement* element)
+
+
+void FlowGrid::DeleteFlowElement(std::shared_ptr<FlowGridElement> element)
 {
    if (!element->IsDeleted())
    {
@@ -775,7 +772,7 @@ void FlowGrid::DeleteFlowElement(FlowGridElement* element)
    }
    delete element;
 }
-void FlowGrid::DeregisterElement(FlowGridElement* element)
+void FlowGrid::DeregisterElement(std::shared_ptr<FlowGridElement> element)
 {
    element->MarkAsDeleted();
    bool erased = false;
@@ -797,18 +794,6 @@ void FlowGrid::DeregisterElement(FlowGridElement* element)
    mOwner->RemoveChild(element);
    RecalculateFlowGrid();
    CheckCleanupRows();
-}
-int FlowGrid::DisposeScheduled()
-{
-   int cleans = 0;
-   while (!mDisposalQueue.empty())
-   {
-      const auto d = mDisposalQueue[mDisposalQueue.size() - 1];
-      delete d;
-      mDisposalQueue.pop_back();
-      cleans++;
-   }
-   return cleans;
 }
 
 void FlowGrid::ReturnName(FlowNameAssigment* nAssign)
@@ -863,7 +848,7 @@ void FlowGrid::InitAllFlowElements() const
 }
 
 
-void FlowGrid::SetSelectedGridElement(FlowGridElement* element)
+void FlowGrid::SetSelectedGridElement(std::shared_ptr<FlowGridElement> element)
 {
    mSelectedElement = element;
    mListener->onFlowGridNewSelection(element);

@@ -117,7 +117,7 @@ public:
    }
    void SetupCanvasElement(SongCanvasNote* element) const;
    void CanvasElementAdditionSuppressed(float posX, float posY) override;
-   std::vector<SongCanvasNote*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
+   std::vector<SongCanvasNote*> GetAllNotesOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvasNote*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
    int GetMeasureCount() const { return mMeasureCount; }
@@ -377,8 +377,8 @@ private:
    int mChunkAmount{ 10 };
 
 
-   syncVector<std::shared_ptr<SongCanvasNote>> mActiveNotes{ this, 1 };
-   syncPipe<std::shared_ptr<std::vector<SongCanvasNote>>> mQueueDisposal { this };
+   syncVector<SongCanvasNote*> mActiveNotes{ this, 1 };
+   syncPipe<SongCanvasNote*> mActiveNotesCancelPipe { this };
    syncVector<std::shared_ptr<SongCanvasNote>> mActiveNoteRemovalQueue { this };
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};
@@ -450,6 +450,7 @@ private:
    std::shared_ptr<SongCanvasMixer> mMixerControlsSelected{ nullptr };
    void UpdateSongCanvasMixerYSpacing();
    void Dispose(std::shared_ptr<SongCanvasMixer> mixer);
+   void Dispose(std::shared_ptr<SongCanvasRackElement> element);
    float const kMixerPreferredWidth{ 54 };
    float const kMixerControlsHeight{ 44 };
    float const kMixerControlsWidth{ 120 };

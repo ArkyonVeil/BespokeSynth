@@ -54,45 +54,42 @@ public:
    void SetMinRows(int rowNum) { mMinRows = rowNum; }
 
    float GetRowHeight() { return mRowYSize; }
-   void AddFlowElement(FlowGridElement* newElement, bool preSetup = false);
-   void AddToRow(FlowGridElement* element, int row);
+   void AddFlowElement(std::shared_ptr<FlowGridElement> newElement, bool preSetup = false);
+   void AddToRow(std::shared_ptr<FlowGridElement> element, int row);
    void RowNotifyPostResize(int row) const;
-   void InsertToRow(FlowGridElement* element, int row, int index);
-   void MoveToRow(FlowGridElement* element, int row, int index);
+   void InsertToRow(std::shared_ptr<FlowGridElement> element, int row, int index);
+   void MoveToRow(std::shared_ptr<FlowGridElement> element, int row, int index);
    void CheckCleanupRows();
    void UpdateRow(int index, bool updateFillState);
-   int GetRowIndexOfElement(FlowGridElement* element) const;
+   int GetRowIndexOfElement(const std::shared_ptr<FlowGridElement>& element) const;
    void RecalculateFlowGrid();
    void ReturnName(FlowNameAssigment* nAssign);
    void AddRow();
    void PopRow();
    void ResizeFlowGrid();
    void InitAllFlowElements() const; //Only called automatically after the parent module is initialized.
-   std::vector<FlowGridElement*> GetAllElements() { return mElementList; }
+   std::vector<std::shared_ptr<FlowGridElement>> GetAllElements() { return mElementList; }
 
-   //Removes and deletes the Flow Element. If the element is multithreaded (also on the audio thread) call
-   //ScheduleDeletion() first, then Delete or Cleanup in the audio thread.
-   void DeleteFlowElement(FlowGridElement* element);
-   void ScheduleDeletion(FlowGridElement* element); //Schedules a rack module for deletion. Removes it from call chains and readies it for Cleanup.
-   int DisposeScheduled(); //Deletes all modules in queue for cleanup. Returns the number of cleanings, if any.
+
+   void DeleteFlowElement(std::shared_ptr<FlowGridElement> element);
 
    void SetAllowDragAndDrop(bool setAllow) { mAllowDragAndDrop = setAllow; }
-   void SetSelectedGridElement(FlowGridElement* element);
+   void SetSelectedGridElement(std::shared_ptr<FlowGridElement> element);
    FlowNameAssigment* GetInternalNameForFlowElement(std::string name);
 
 
    virtual void SaveElements(FileStreamOut& out);
    virtual void LoadElements(FlowGridElementFactory* factory, FileStreamIn& in);
 
-   FlowGridElement* GetSelectedGridElement() const { return mSelectedElement; }
-   FlowGridElement* GetHoveredGridElement() const { return mHoveredElement; }
-   FlowGridElement* GetDraggedGridElement() const { return mDraggedElement; }
+   std::shared_ptr<FlowGridElement> GetSelectedGridElement() const { return mSelectedElement; }
+   std::shared_ptr<FlowGridElement> GetHoveredGridElement() const { return mHoveredElement; }
+   std::shared_ptr<FlowGridElement> GetDraggedGridElement() const { return mDraggedElement; }
 
    struct FlowGridRow
    {
       bool isOverfilled; //No more elements allowed to be placed inside. Already inside may still move freely.
       bool isFilled; //Currently packed, free elements cannot be moved there automatically.
-      std::vector<FlowGridElement*> elements;
+      std::vector<std::shared_ptr<FlowGridElement>> elements;
    };
    std::vector<FlowGridRow> mRows;
 
@@ -107,6 +104,7 @@ protected:
    int TryGetSlot(int targetRow);
    bool IsRowOverfilled(int row);
 
+   //TODO, possibly obsolete? Verify. -Ark
    struct FlowNameRecord
    {
       std::string name;
@@ -117,7 +115,7 @@ protected:
    std::vector<FlowNameRecord> mFlowNameRecords;
 
 private:
-   void DeregisterElement(FlowGridElement*);
+   void DeregisterElement(std::shared_ptr<FlowGridElement>);
 
    enum FlowGridDirection
    {
@@ -129,15 +127,14 @@ private:
    FlowGridDirection mSortDirection{ Left };
 
 
-   FlowGridElement* mSelectedElement{ nullptr };
-   FlowGridElement* mHoveredElement{ nullptr };
-   FlowGridElement* mDraggedElement{ nullptr };
+   std::shared_ptr<FlowGridElement> mSelectedElement{ nullptr };
+   std::shared_ptr<FlowGridElement> mHoveredElement{ nullptr };
+   std::shared_ptr<FlowGridElement> mDraggedElement{ nullptr };
 
-   FlowGridElement* mLastHoveredElement{ nullptr };
-   FlowGridElement* mLastSelectedElement{ nullptr };
+   std::shared_ptr<FlowGridElement> mLastHoveredElement{ nullptr };
+   std::shared_ptr<FlowGridElement> mLastSelectedElement{ nullptr };
    IFlowGridListener* mListener;
-   std::vector<FlowGridElement*> mElementList;
-   std::vector<FlowGridElement*> mDisposalQueue;
+   std::vector<std::shared_ptr<FlowGridElement>> mElementList;
    float mRowScalingSize[30];
 
 

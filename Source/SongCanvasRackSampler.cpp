@@ -221,7 +221,7 @@ void SongCanvasRackSampler::SetSample(Sample* sample)
    {
       if (mSCLoadingDone)
       {
-         auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
+         auto r = mSongCanvas->GetAllNotesOfRack(this);
 
          //Position of a canvas element. 0 -> measure 0. 1 -> measure max.
          for (auto e : r)
@@ -780,7 +780,7 @@ void SongCanvasRackSampler::OnTempoUpdated()
    mCachedPitch = -1;
 
    //If this happens, we need to update all of our samples, since they will no longer align with the time.
-   auto r = mSongCanvas->GetAllCanvasElementsOfRack(this);
+   auto r = mSongCanvas->GetAllNotesOfRack(this);
    for (int i = 0; i < r.size(); ++i)
    {
       UpdateSampleLength(dynamic_cast<SongCanvasNoteSampler*>(r[i]));
