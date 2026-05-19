@@ -378,6 +378,7 @@ private:
 
 
    syncVector<std::shared_ptr<SongCanvasNote>> mActiveNotes{ this, 1 };
+   syncPipe<std::shared_ptr<std::vector<SongCanvasNote>>> mQueueDisposal { this };
    syncVector<std::shared_ptr<SongCanvasNote>> mActiveNoteRemovalQueue { this };
 
    std::array<TextEntry*, MaxLayers> mLayerNameTextbox = {};

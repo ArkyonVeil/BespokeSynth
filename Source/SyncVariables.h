@@ -7,12 +7,11 @@
 //Who knew C++ multithreaded programming could be so safe.
 
 #pragma once
-#include "AbletonMoveControl.h"
-
-
-#include <vector>
 #include "SynthGlobals.h"
+#include <vector>
 #include <type_traits>
+#include <queue>
+#include <optional>
 
 /// WHAT IS THIS?
 ///
@@ -66,6 +65,20 @@
 class ISyncVarsHandler;
 namespace isv
 {
+   class ISyncVarBase;
+   class ISyncPipeBase;
+   class ISyncVarsHandler
+   {
+   public:
+      void SyncVars() const;
+      void InternalSyncVariableRegister(ISyncVarBase* var);
+      void InternalSyncVariableRegister(ISyncPipeBase* var);
+
+   private:
+      std::vector<ISyncVarBase*> mManagedVariables;
+      std::vector<ISyncPipeBase*> mManagedPipes;
+   };
+
    template <typename>
    struct is_unique_ptr : std::false_type
    {
@@ -113,11 +126,14 @@ namespace isv
    public:
       explicit ISyncPipeBase(ISyncVarsHandler* handler)
       {
-         handler->InternalSyncVariableRegister(this);
+         if (handler)
+            handler->InternalSyncVariableRegister(this);
       }
+      ISyncPipeBase() = default;//Can work unmanaged, but needs manual "pumping" via UpdatePipes to push queues along.
 
-      volatile bool mPipeDirty{ false };
+      std::atomic<bool> mNeedsUpdate{ false };
       virtual void UpdatePipes() = 0;
+      virtual bool CheckNeedsUpdate() = 0;
    };
 
    //Thread 0 = Main/UI , 1 = Audio
@@ -408,17 +424,18 @@ private:
    std::vector<T>* vec[2]{ &mMainVector, &mAudioVector };
 };
 
-
+/// Bidirectional set of pipes. Can easily, and safely transfer data from one thread to another and vise versa.
+/// Push stuff in, extract the other side.
+/// Can queue up multiple transfers. But extracts at most once per Sync.
+///
+/// TIP: If you need to move a lot of data, fill a vector and push it through.
+///
+/// TIP2: Unlike most syncVars. syncPipes work ok unmanaged.
+/// But UpdatePipes() needs to be called manually before pushing.
 template <typename T>
-class syncPipe
+class syncPipe : isv::ISyncPipeBase
 {
-   syncPipe(ISyncVarsHandler* owner)
-   {
-      mOwner = owner;
-      mOwner->Reg
-   }
-   ISyncVarsHandler* mOwner;
-
+   syncPipe() = default;
    struct pipeMessage
    {
       pipeMessage(int destination, T var)
@@ -430,14 +447,13 @@ class syncPipe
       T message;
    };
 
+public:
    //Insert a value into the pipe to be delivered async to the other thread.
    //Inserting while its full, enqueues it and is delivered after the next sync.
    void push(T value)
    {
-      push(&value, !isv::threadId());
-   }
-   void push(T value, int destination)
-   {
+      int destination = !isv::threadId();
+
       if (!mPipeFull[destination])
       {
          mPipe[destination] = value;
@@ -447,6 +463,7 @@ class syncPipe
       {
          mOutgoingQueue[destination].push_back(pipeMessage(destination, value));
          mHasOutgoingQueue[isv::threadId()] = true;
+         mNeedsUpdate = true;
       }
    }
 
@@ -495,7 +512,39 @@ class syncPipe
       mOutgoingQueue[isv::threadId()].clear();
       mHasOutgoingQueue[isv::threadId()] = false;
    }
+   //Push forward queues.
+   void UpdatePipes() override
+   {
+      char thread = isv::threadId();
+      if (auto& hasQueue = mHasOutgoingQueue[thread])
+      {
+         auto& outQueue = mOutgoingQueue[thread];
+         for (size_t i = 0; i < outQueue.size(); ++i) {
+            pipeMessage item = outQueue[i];
+            if (!mPipeFull[item.targetThread]) {
+               mPipe[item.targetThread] = item.message;
+               outQueue.erase(outQueue.begin() + i);
+               --i;
+               if (outQueue.empty())
+                  hasQueue = false;
+               mPipeFull[item.targetThread] = true;
+            }
+         }
+      }
+   }
+   bool CheckNeedsUpdate() override
+   {
+      for (int i = 0; i < kThreads; ++i)
+      {
+         if (mHasOutgoingQueue[i])
+            return false;
+      }
+      mNeedsUpdate = true;
+      return true;
+   };
 
+
+private:
    static constexpr int kThreads{ 2 }; //0 main, 1 audio.
 
    std::atomic<bool> mPipeFull[kThreads]{ false };
@@ -535,6 +584,15 @@ public:
                var->FlushCommits();
                var->hasCommits = false;
             }
+         }
+      }
+      for (const auto var : mManagedPipes)
+      {
+         //Check if pipes need management, generally they're okay. But if any pipe queues, it needs updating.
+         if (var->mNeedsUpdate)
+         {
+            var->UpdatePipes();
+            var->CheckNeedsUpdate();
          }
       }
       /// Write Change - Adds to the queue
