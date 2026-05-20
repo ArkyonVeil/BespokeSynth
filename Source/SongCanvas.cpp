@@ -2184,7 +2184,7 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
       rMixer->AddOrphanTarget(mMixerOrphanAudioTarget, mMixerOrphanSourceCoord);
       mMixerOrphanAudioTarget = nullptr;
    }
-   FeatureResize(0,0);
+   FeatureResize(0, 0);
    return rMixer;
 }
 //Returns the mixer with that index. Will not automatically create one.
