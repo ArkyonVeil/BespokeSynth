@@ -127,7 +127,7 @@ public:
    int GetNumVisibleRows() const { return MIN(mNumVisibleRows, mNumRows); }
    void SetRowOffset(int offset) { mRowOffset = ofClamp(offset, 0, mNumRows - mNumVisibleRows); }
    int GetRowOffset() const { return mRowOffset; }
-   ofVec2f Canvas::GetRowY(int row) const //Gets the Y start and Y end of a row. Relative to the canvas render box.
+   ofVec2f GetRowY(int row) const //Gets the Y start and Y end of a row. Relative to the canvas render box.
    {
       int visibleIndex = row - mRowOffset;
       if (visibleIndex < 0 || visibleIndex >= GetNumVisibleRows())

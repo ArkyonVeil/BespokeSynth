@@ -495,7 +495,7 @@ float GetStringWidth(std::string text, float size)
 }
 std::string StripNameExtension(std::string text)
 {
-   for (int i = text.size() - 1; i >= 0; --i)
+   for (int i = static_cast<int>(text.size()) - 1; i >= 0; --i)
    {
       if (text[i] == '.')
       {
@@ -531,14 +531,14 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
    }
 
    //Size is not ok
-   int stringLength;
+   size_t stringLength;
    if (smart)
    {
       int keyIndex = -1;
       //First look for a number in last 5 chars.
       //Then if number found, keep going until the number is complete.
       int searchStop = MAX(0, text.size() - 5);
-      for (int i = text.size() - 1; i >= searchStop; --i)
+      for (size_t i = text.size() - 1; i >= searchStop; --i)
       {
          if (text[i] >= '0' && text[i] < '9')
          {
@@ -558,7 +558,7 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
       if (keyIndex == -1)
       {
          bool textFound = false;
-         for (int i = text.size() - 1; i >= 0; --i)
+         for (int i = static_cast<int>(text.size()) - 1; i >= 0; --i)
          {
             char c = text[i];
             if (c == ' ' || c == '.' || c == '_' || c == '-')

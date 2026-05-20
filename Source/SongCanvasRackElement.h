@@ -217,9 +217,9 @@ public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackPulser();
    std::string GetFlowGridElementType() const override { return "partpulser"; };
-   void OnEnter(SongCanvasNote* element);
-   void OnExit(SongCanvasNote* element);
-   void OnTimeEvent(double time);
+   void OnEnter(SongCanvasNote* element) override;
+   void OnExit(SongCanvasNote* element) override;
+   void OnTimeEvent(double time) override;
    void DrawRackGraphics() override;
    void CreateUIControls() override;
    void Init() override;

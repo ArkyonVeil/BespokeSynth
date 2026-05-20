@@ -41,7 +41,7 @@ public:
    void OnClicked(float x, float y, bool right);
 
    bool MouseScrolled(float x, float y, float scrollX, float scrollY, bool isSmoothScroll, bool isInvertedScroll);
-   int GetRowCount() const { return mRows.size(); }
+   int GetRowCount() const { return static_cast<int>(mRows.size()); }
 
    void SetDimensions(float width, float mRowHeight = -1);
    float GetWidth() const { return mWidth; }
