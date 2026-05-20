@@ -48,6 +48,8 @@
 #include "FlowGrid.h"
 #include "SongCanvasRackElement.h"
 
+#include <mutex>
+
 
 class SongCanvasMixer;
 class SongCanvasNote;
@@ -464,6 +466,8 @@ private:
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
+
+   mutable std::recursive_mutex mAudioStateMutex;
 
    //Need to destroy a multithreaded object, dump it here!
    std::vector<SongCanvasMixer*> mMixerDisposalQueue{};

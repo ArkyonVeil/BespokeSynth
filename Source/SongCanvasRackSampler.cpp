@@ -246,7 +246,7 @@ void SongCanvasRackSampler::Process(double time)
 {
    //PROFILE stuff is in the Song Canvas
 
-   if (!mEnabled || mSample == nullptr)
+   if (!mEnabled || mSample == nullptr || GetMixerBuffer() == nullptr)
       return;
 
    //Skip processing if no voices are currently playing.

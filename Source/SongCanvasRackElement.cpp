@@ -310,6 +310,13 @@ void SongCanvasAudioRackElement::CreateUIControls()
 
 void SongCanvasAudioRackElement::SetMixer(SongCanvasMixer* mixer)
 {
+   if (mixer == nullptr)
+   {
+      mMixer = nullptr;
+      mMixerIndex = -1;
+      mMixerBuffer = nullptr;
+      return;
+   }
    mMixer = mixer;
    mMixerIndex = mMixer->mMixerIndex;
    mMixerBuffer = mMixer->GetBuffer();

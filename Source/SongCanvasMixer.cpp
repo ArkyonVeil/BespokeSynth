@@ -20,15 +20,31 @@ SongCanvasMixer::~SongCanvasMixer()
 }
 void SongCanvasMixer::PreDispose()
 {
-   mOwner->SetMixerOrphanTarget(mTarget, mCableOut->GetManualPosition());
-   mOwner->RemovePatchCableSource(mCableOut);
-   mOwner->RemoveUIControl(mVolumeSlider);
-   mOwner->RemoveUIControl(mPanSlider);
+   if (mIsDeleted)
+      return;
    mIsDeleted = true;
+   if (mCableOut != nullptr)
+   {
+      mOwner->SetMixerOrphanTarget(mTarget, mCableOut->GetManualPosition());
+      mOwner->RemovePatchCableSource(mCableOut);
+      mCableOut = nullptr;
+   }
+   if (mVolumeSlider != nullptr)
+   {
+      mOwner->RemoveUIControl(mVolumeSlider);
+      mVolumeSlider = nullptr;
+   }
+   if (mPanSlider != nullptr)
+   {
+      mOwner->RemoveUIControl(mPanSlider);
+      mPanSlider = nullptr;
+   }
 }
 
 void SongCanvasMixer::AddOrphanTarget(IAudioReceiver* oldTarget, ofVec2f sourceCoord)
 {
+   if (mCableOut == nullptr)
+      return;
    mCableOut->SetManualPosition(sourceCoord.x, sourceCoord.y);
    mCableOut->SetTarget(dynamic_cast<IClickable*>(oldTarget));
 }
@@ -291,7 +307,7 @@ void SongCanvasMixer::Load(FileStreamIn& in)
 }
 void SongCanvasMixer::PostRepatch(PatchCableSource* cable, bool fromUserClick)
 {
-   if (mCableOut != cable)
+   if (mIsDeleted || mCableOut == nullptr || mCableOut != cable)
       return; //Check if it's our cable first.
 
    if (mCableOut->GetTarget())
