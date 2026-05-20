@@ -346,7 +346,7 @@ void TitleBar::DrawModule()
       ofSetColor(ofColor::lerp(ofColor::black, ofColor::white, ofMap(sin(gTime / 1000 * PI * 2), -1, 1, .7f, .9f)));
    DrawTextBold("bespoke", 2, 28, 34);
 #if BESPOKE_NIGHTLY && !BESPOKE_SUPPRESS_NIGHTLY_LABEL
-   DrawTextNormal("songcanvas experimental", 90, 35, 8);
+   DrawTextNormal("songcanvas-exp", 63, 35, 8);
 #endif
 #if DEBUG
    ofFill();
