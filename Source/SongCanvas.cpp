@@ -859,7 +859,7 @@ void SongCanvas::Resize(float w, float h)
 
    w = MAX(w, getModuleMinWidth);
    h = MAX(h, GetModuleMinHeight());
-/*
+   /*
    if (TheSynth->GetResizingModule() == this)
    {
       mUserPreferredWidth = w;
