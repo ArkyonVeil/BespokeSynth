@@ -1,6 +1,6 @@
-Tag: songcanvas-exp4.2
-Title: SongCanvas Exp V4.2
+Tag: songcanvas-exp4.3
+Title: SongCanvas Exp V4.3
 
 - Experimental Release, now with all main OS versions.
-- Crashing fix pass on Samplers+Mixers
-- Resolves the vertical songcanvas resize bug
+- Resolved hanging on local mode being ticked on.
+- Mixers now squeeze together and space the panel correctly now.
