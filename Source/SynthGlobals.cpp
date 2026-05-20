@@ -531,14 +531,14 @@ std::string TruncateString(std::string text, const float maxWidth, const TextFon
    }
 
    //Size is not ok
-   size_t stringLength;
+   int stringLength;
    if (smart)
    {
       int keyIndex = -1;
       //First look for a number in last 5 chars.
       //Then if number found, keep going until the number is complete.
       int searchStop = MAX(0, text.size() - 5);
-      for (size_t i = text.size() - 1; i >= searchStop; --i)
+      for (int i = static_cast<int>(text.size()) - 1; i >= searchStop; --i)
       {
          if (text[i] >= '0' && text[i] < '9')
          {

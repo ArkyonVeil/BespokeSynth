@@ -920,9 +920,10 @@ void SongCanvas::Resize(float w, float h)
    mRackAddNewButton->SetDimensions(28, mRackGrid->GetHeight());
 
    //Mixers!
+
    {
       std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
-      mMixerDrawCompression = mMixers.empty() ? 1.0f : MIN(1.0f, (mWidth - mMixerStartingXOffset * 2) / mMixers.size() * kMixerPreferredWidth);
+      mMixerDrawCompression = mMixers.empty() ? 1.0f : MIN(1.0f, (mWidth - mMixerStartingXOffset * 2) / (mMixers.size() * kMixerPreferredWidth));
    }
 
 
@@ -1343,7 +1344,7 @@ bool SongCanvas::MouseMoved(float x, float y)
 
    mRackGrid->MouseMoved(x, y);
    /* Uncomment this to easily check mixer compression
-    * Press Shift and move your mouse around, it's handy!
+    * Press Shift and move your mouse around, it's handy!*/
    if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
    {
       if (GetKeyModifiers() & kModifier_Shift)
@@ -1352,21 +1353,20 @@ bool SongCanvas::MouseMoved(float x, float y)
          mMixerDrawCompression = MIN(1, mMixerDrawCompression);
          mFlagResizeAnimationNeeded = true;
       }
-   }*/
+   }
 
    //If there's mixers we may have to count on moving events over them.
+
    std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
-   if (!mMixers.empty())
+   float offsetY = mHeight;
+   float mixerPadding = GetMixerSpaceAvailable();
+   for (int i = 0; i < mMixers.size(); ++i)
    {
-      float offsetY = mHeight;
-      float mixerPadding = GetMixerSpaceAvailable();
-      for (int i = 0; i < mMixers.size(); ++i)
-      {
-         float mX = x - mMixerStartingXOffset - i * mixerPadding;
-         float mY = y - offsetY;
-         mMixers[i]->MouseMove(mX, mY);
-      }
+      float mX = x - mMixerStartingXOffset - i * mixerPadding;
+      float mY = y - offsetY;
+      mMixers[i]->MouseMove(mX, mY);
    }
+
    return false;
 }
 
@@ -2184,6 +2184,7 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
       rMixer->AddOrphanTarget(mMixerOrphanAudioTarget, mMixerOrphanSourceCoord);
       mMixerOrphanAudioTarget = nullptr;
    }
+   FeatureResize(0,0);
    return rMixer;
 }
 //Returns the mixer with that index. Will not automatically create one.
@@ -2306,15 +2307,16 @@ void SongCanvas::FilesDropped(std::vector<std::string> files, int x, int y)
 void SongCanvas::UpdateSongCanvasMixerYSpacing()
 {
    std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
-   float target;
+   float target = 16;
    if (!mMixers.empty())
    {
-      target = 32;
+      for (int i = 0; i < mMixers.size(); ++i)
+      {
+         if (!mMixers[i]->mIsDeleted)
+            target = 32;
+      }
    }
-   else
-   {
-      target = 16;
-   }
+
 
    if (MixerControlsEnabled())
    {
