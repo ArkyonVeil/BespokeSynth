@@ -444,7 +444,7 @@ void SongCanvas::DrawModule()
 
    bool sortMixers = false;
    {
-      std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+      std::lock_guard lock(mAudioStateMutex);
       sortMixers = mScheduleMixerSort;
       mScheduleMixerSort = false;
    }
@@ -707,7 +707,7 @@ void SongCanvas::DrawModule()
    ofPushStyle();
    //Mixers
    {
-      std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+      std::lock_guard lock(mAudioStateMutex);
       float offsetY = mHeight;
       float mixerPadding = GetMixerSpaceAvailable();
       float startOffset = mMixerStartingXOffset * 0.2f + mMixerStartingXOffset * 0.8f * GetMixerCompression();
@@ -760,7 +760,7 @@ void SongCanvas::DrawModule()
 
       if (mMixerControlsDrawHeightTarget == mMixerControlsDrawHeight)
       {
-         std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+         std::lock_guard lock(mAudioStateMutex);
          if (GetSelectedMixer() != nullptr)
             GetSelectedMixer()->DrawMixerControls(controlXOffset, controlYOffset);
       }
@@ -804,7 +804,7 @@ void SongCanvas::DrawModule()
 }
 void SongCanvas::CanvasUpdated(Canvas* canvas)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (mCanvas == canvas)
    {
       auto elms = mCanvas->GetElements();
@@ -922,7 +922,7 @@ void SongCanvas::Resize(float w, float h)
    //Mixers!
 
    {
-      std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+      std::lock_guard lock(mAudioStateMutex);
       mMixerDrawCompression = mMixers.empty() ? 1.0f : MIN(1.0f, (mWidth - mMixerStartingXOffset * 2) / (mMixers.size() * kMixerPreferredWidth));
    }
 
@@ -1321,7 +1321,7 @@ void SongCanvas::OnClicked(float x, float y, bool right)
    mRackGrid->OnClicked(x, y, right);
 
    //If there's mixers we may have to count on moving events over them.
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (!mMixers.empty())
    {
       float offsetY = mHeight;
@@ -1357,7 +1357,7 @@ bool SongCanvas::MouseMoved(float x, float y)
 
    //If there's mixers we may have to count on moving events over them.
 
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    float offsetY = mHeight;
    float mixerPadding = GetMixerSpaceAvailable();
    for (int i = 0; i < mMixers.size(); ++i)
@@ -1392,7 +1392,7 @@ void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 //Incoming event from a note bring removed from the base Canvas
 void SongCanvas::ElementRemoved(CanvasElement* element)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    SongCanvasNote* sElement = dynamic_cast<SongCanvasNote*>(element);
    //If any of them are playing, we send notes off.
    for (int i = 0; i < mActiveElements.size(); ++i)
@@ -1472,7 +1472,7 @@ void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 
 void SongCanvas::OnTransportAdvanced(float amount)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (!mLocalMode || (mLocalMode && mLocalSynced && mOnEndMeasure == enumOEMLoop))
       mTime = TheTransport->GetMeasureTime(gTime);
    else
@@ -1979,7 +1979,7 @@ void SongCanvas::SetNewRackDropdownContext(SongCanvasRackElement* element)
 
 void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool autoSetup)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (autoSetup)
    {
       mRackGrid->AddFlowElement(element);
@@ -2003,7 +2003,7 @@ void SongCanvas::AddNewRackPart(SongCanvasRackElement* element, bool autoSetup)
 
 void SongCanvas::DeleteRackElement(SongCanvasRackElement* element)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (element == mCurrentElementBeingRenamed)
       mCurrentElementBeingRenamed = nullptr;
    auto res = GetAllCanvasElementsOfRack(element);
@@ -2114,7 +2114,7 @@ void SongCanvas::Process(double time)
 {
    PROFILER(SongCanvas);
 
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
 
    if (!mEnabled)
       return;
@@ -2159,7 +2159,7 @@ void SongCanvas::Process(double time)
 //Gets the mixer in that index. If no mixer of that index exists, one is created automatically.
 SongCanvasMixer* SongCanvas::GetMixer(int index)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    assert(index >= 0); //No negative mixers please.
    assert(index <= 99); //Keep it sane please.
 
@@ -2190,7 +2190,7 @@ SongCanvasMixer* SongCanvas::GetMixer(int index)
 //Returns the mixer with that index. Will not automatically create one.
 SongCanvasMixer* SongCanvas::GetMixerRef(int index) const
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    for (auto mixer : mMixers)
    {
       if (!mixer->mIsDeleted && mixer->mMixerIndex == index)
@@ -2201,12 +2201,12 @@ SongCanvasMixer* SongCanvas::GetMixerRef(int index) const
 
 void SongCanvas::SortMixers(int reserveIndex)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    std::sort(mMixers.begin(), mMixers.end(), [](SongCanvasMixer* a, SongCanvasMixer* b)
              {
                 return a->mMixerIndex < b->mMixerIndex;
              });
-   std::vector<int> mixUsers(mMixers.size(), 0);
+   std::vector mixUsers(mMixers.size(), 0);
 
    if (reserveIndex != -1)
    {
@@ -2256,7 +2256,7 @@ void SongCanvas::SortMixers(int reserveIndex)
 
 void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    //Mixers are currently responsible for knowing if the cable belongs to them.
    for (auto m : mMixers)
    {
@@ -2266,7 +2266,7 @@ void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)
 
 void SongCanvas::SetMixerControlsState(bool active, int mixerIndex)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (!active)
    {
       mMixerControlsSelected = nullptr;
@@ -2306,7 +2306,7 @@ void SongCanvas::FilesDropped(std::vector<std::string> files, int x, int y)
 
 void SongCanvas::UpdateSongCanvasMixerYSpacing()
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    float target = 16;
    if (!mMixers.empty())
    {
@@ -2334,7 +2334,7 @@ void SongCanvas::UpdateSongCanvasMixerYSpacing()
 }
 void SongCanvas::ScheduleMixerDisposal(SongCanvasMixer* mixer)
 {
-   std::lock_guard<std::recursive_mutex> lock(mAudioStateMutex);
+   std::lock_guard lock(mAudioStateMutex);
    if (mixer == nullptr || mixer->mIsDeleted)
       return;
    if (mMixerControlsSelected == mixer)
