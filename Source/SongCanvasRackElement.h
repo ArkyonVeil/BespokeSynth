@@ -16,7 +16,7 @@ class PatchCableSource;
 class SongCanvasRackFactory : public FlowGridElementFactory
 {
 public:
-   ~SongCanvasRackFactory() = default;
+   ~SongCanvasRackFactory() override = default;
    explicit SongCanvasRackFactory(SongCanvas* songCanvas)
    {
       mSongCanvas = songCanvas;

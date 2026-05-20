@@ -57,7 +57,7 @@ FlowGrid::~FlowGrid()
 }
 void FlowGrid::CreateUIControls()
 {
-   for (int i = mRows.size(); i < mMinRows; i++)
+   for (size_t i = mRows.size(); i < mMinRows; i++)
       AddRow();
 }
 
@@ -93,7 +93,7 @@ void FlowGrid::OnClicked(float x, float y, bool right)
       mStartDragMouse = ofVec2f(x, y);
       mRackPartDragGhostRect = mSelectedElement->GetRectRelativeToGrid();
       mPressed = true;
-      mRowCountOnDragStart = mRows.size();
+      mRowCountOnDragStart = static_cast<int>(mRows.size());
    }
    else
    {
@@ -182,7 +182,7 @@ bool FlowGrid::MouseMoved(float x, float y)
 
       //Go through the rows and find to the most likely place to snap to.
       int rowSnap = MAX(0, floor(y / (mRows.size() * mRowYSize + mRowYBorderOffset * 2) * mRows.size()));
-      rowSnap = MIN(mRows.size() - 1, rowSnap);
+      rowSnap = MIN(static_cast<int>(mRows.size()) - 1, rowSnap);
       auto rowObj = mRows[rowSnap];
 
       if (rowObj.isOverfilled)
@@ -227,7 +227,7 @@ bool FlowGrid::MouseMoved(float x, float y)
             break;
          }
       }
-      mSnapDragIndex = CLAMP(mSnapDragIndex, 0, mRows[rowSnap].elements.size());
+      mSnapDragIndex = CLAMP(mSnapDragIndex, 0, static_cast<int>(mRows[rowSnap].elements.size()));
       mDragSnapIndicatorPos = ofVec2f(xSnapPos, mRowYBorderOffset + rowSnap * mRowYSize);
    }
 
@@ -382,7 +382,7 @@ int FlowGrid::TryGetSlot(int targetRow = -1)
    if (mRows.size() == -1 || mRows.size() < mMaxRows)
    {
       //We can make one there.
-      return mRows.size();
+      return static_cast<int>(mRows.size());
    }
    if (nonMaxed != -1)
    {
@@ -545,7 +545,7 @@ void FlowGrid::CheckCleanupRows()
 //Updates cached data, and visuals. Does not trigger a resize.
 void FlowGrid::UpdateRow(int index, bool updateFillState)
 {
-   int const rowCount = mRows.size();
+   int const rowCount = static_cast<int>(mRows.size());
    if (rowCount <= index || index < 0)
       return; //Invalid request.
 

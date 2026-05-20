@@ -26,7 +26,7 @@ public:
 class FlowGridElementFactory
 {
 public:
-   ~FlowGridElementFactory() = default;
+   virtual ~FlowGridElementFactory() = default;
    virtual FlowGridElement* Create(std::string typeName) = 0;
 };
 

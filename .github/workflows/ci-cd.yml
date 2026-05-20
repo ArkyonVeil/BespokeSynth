@@ -74,19 +74,18 @@ jobs:
         if: matrix.platform == 'macos'
         run: |
           set -e
-          brew install python@3.10
           npm install -g appdmg
+          wget https://www.python.org/ftp/python/3.10.0/python-3.10.0post2-macos11.pkg
+          sudo installer -pkg python-3.10.0post2-macos11.pkg -target /
 
       - name: Configure macOS build
         if: matrix.platform == 'macos'
         run: |
           set -e
-          PYTHON_ROOT="$(brew --prefix python@3.10)"
-          echo "Using Python root: $PYTHON_ROOT"
           cmake -Bbuild \
             -GXcode \
             -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
-            -DBESPOKE_PYTHON_ROOT="$PYTHON_ROOT" \
+            -DBESPOKE_PYTHON_ROOT='/Library/Frameworks/Python.framework/Versions/3.10' \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
             -DBESPOKE_NIGHTLY=True
@@ -118,14 +117,19 @@ jobs:
           set -e
           cmake --build build --config Release --target nightly-package
 
-      - name: Package Windows artifact
+      - name: Package Windows artifact - copy
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -e
+          rm -rf windows_nightly_artefact || true
+          cp -R build/Source/BespokeSynth_artefacts/Release windows_nightly_artefact
+
+      - name: Package Windows artifact - compress
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path "build/nightly" -Force | Out-Null
-          Remove-Item -LiteralPath "windows_nightly_artefact" -Recurse -Force -ErrorAction SilentlyContinue
-          robocopy.exe /E /SL "build\Source\BespokeSynth_artefacts\Release" "windows_nightly_artefact"
-          Remove-Item -LiteralPath "build/nightly/BespokeSynth-Windows.zip" -Force -ErrorAction SilentlyContinue
+          mkdir build/nightly
           Compress-Archive -Path "windows_nightly_artefact/*" -DestinationPath "build/nightly/BespokeSynth-Windows.zip"
 
       - name: Package Linux artifact
