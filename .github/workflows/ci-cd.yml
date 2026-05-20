@@ -11,12 +11,12 @@ on:
       releaseTitle:
         description: Release title
         required: true
-        default: BespokeSynth alpha build
+        default: BespokeSynth Experimental
         type: string
       releaseNotes:
         description: Release notes
         required: true
-        default: "Manual alpha build. Fill this in before running the workflow."
+        default: "text"
         type: string
 
 permissions:
@@ -271,6 +271,6 @@ jobs:
             releases/*.zip
             releases/*.dmg
             releases/*.gz
-          draft: false
+          draft: true
           prerelease: false
           overwrite_files: true
