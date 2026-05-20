@@ -2,22 +2,6 @@ name: Build And Release
 
 on:
   workflow_dispatch:
-    inputs:
-      releaseTag:
-        description: Release tag
-        required: true
-        default: Nightly
-        type: string
-      releaseTitle:
-        description: Release title
-        required: true
-        default: BespokeSynth Experimental
-        type: string
-      releaseNotes:
-        description: Release notes
-        required: true
-        default: "text"
-        type: string
 
 permissions:
   contents: write
@@ -231,15 +215,49 @@ jobs:
         with:
           fetch-depth: 5
 
+      - name: Read release template
+        id: release_template
+        run: |
+          set -euo pipefail
+          template="RELEASE_TEMPLATE.md"
+          tag_line="$(sed -n '1p' "$template")"
+          title_line="$(sed -n '2p' "$template")"
+
+          case "$tag_line" in
+            "Tag: "*) ;;
+            *)
+              echo "RELEASE_TEMPLATE.md line 1 must start with 'Tag: '"
+              exit 1
+              ;;
+          esac
+
+          case "$title_line" in
+            "Title: "*) ;;
+            *)
+              echo "RELEASE_TEMPLATE.md line 2 must start with 'Title: '"
+              exit 1
+              ;;
+          esac
+
+          tag="${tag_line#Tag: }"
+          title="${title_line#Title: }"
+
+          if [ -z "$tag" ] || [ -z "$title" ]; then
+            echo "RELEASE_TEMPLATE.md tag and title must not be empty"
+            exit 1
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "title=$title"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
       - name: Prepare release files
-        env:
-          RELEASE_TITLE: ${{ inputs.releaseTitle }}
-          RELEASE_NOTES: ${{ inputs.releaseNotes }}
         run: |
           set -euo pipefail
           short_hash="$(git rev-parse --short=7 HEAD)"
@@ -254,7 +272,9 @@ jobs:
             mv -- "$f" "${base}_${short_hash}_$(date +%F).${ext}"
           done
 
-          printf '%s\n\n%s\n\n<pre>\n' "$RELEASE_TITLE" "$RELEASE_NOTES" > releases/ReleaseNotes.md
+          printf '%s\n\n' "${{ steps.release_template.outputs.title }}" > releases/ReleaseNotes.md
+          tail -n +4 RELEASE_TEMPLATE.md >> releases/ReleaseNotes.md
+          printf '\n\n<pre>\n' >> releases/ReleaseNotes.md
           git log -5 --pretty=format:'%h : %s - %an' >> releases/ReleaseNotes.md
           printf '\n</pre>\n' >> releases/ReleaseNotes.md
 
@@ -263,8 +283,8 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.releaseTag }}
-          name: ${{ inputs.releaseTitle }}
+          tag_name: ${{ steps.release_template.outputs.tag }}
+          name: ${{ steps.release_template.outputs.title }}
           target_commitish: ${{ github.sha }}
           body_path: releases/ReleaseNotes.md
           files: |
