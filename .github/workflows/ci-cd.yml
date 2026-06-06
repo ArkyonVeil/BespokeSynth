@@ -78,6 +78,32 @@ jobs:
           wget https://www.python.org/ftp/python/3.10.0/python-3.10.0post2-macos11.pkg
           sudo installer -pkg python-3.10.0post2-macos11.pkg -target /
 
+      - name: Download and extract ASIO SDK (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -e
+          curl -L "https://www.steinberg.net/asiosdk" -o asiosdk.zip
+          unzip -q asiosdk.zip -d asiosdk_extracted
+          ASIO_H=$(find asiosdk_extracted -name 'asio.h' | head -1)
+          ASIO_SDK_PATH=$(dirname "$ASIO_H")
+          while [ ! -d "$ASIO_SDK_PATH/common" ] && [ "$ASIO_SDK_PATH" != "." ]; do
+            ASIO_SDK_PATH=$(dirname "$ASIO_SDK_PATH")
+          done
+          echo "ASIO_SDK_PATH=$(pwd)/$ASIO_SDK_PATH" >> "$GITHUB_ENV"
+
+      - name: Checkout VST2 SDK (Windows)
+        if: matrix.platform == 'windows'
+        uses: actions/checkout@v4
+        with:
+          repository: Xaymar/vst2sdk
+          path: vst2sdk
+
+      - name: Set VST2 SDK path (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: echo "VST2_SDK_PATH=$(pwd)/vst2sdk" >> "$GITHUB_ENV"
+
       - name: Configure macOS build
         if: matrix.platform == 'macos'
         run: |
@@ -99,7 +125,9 @@ jobs:
             -A x64 \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
-            -DBESPOKE_NIGHTLY=True
+            -DBESPOKE_NIGHTLY=True \
+            -DBESPOKE_ASIO_SDK_LOCATION="${ASIO_SDK_PATH}" \
+            -DBESPOKE_VST2_SDK_LOCATION="${VST2_SDK_PATH}"
 
       - name: Configure Linux build
         if: matrix.platform == 'linux'
