@@ -92,17 +92,19 @@ jobs:
           done
           echo "ASIO_SDK_PATH=$(pwd)/$ASIO_SDK_PATH" >> "$GITHUB_ENV"
 
-      - name: Checkout VST2 SDK (Windows)
-        if: matrix.platform == 'windows'
-        uses: actions/checkout@v4
-        with:
-          repository: Xaymar/vst2sdk
-          path: vst2sdk
-
-      - name: Set VST2 SDK path (Windows)
+      - name: Download and extract VST2 SDK (Windows)
         if: matrix.platform == 'windows'
         shell: bash
-        run: echo "VST2_SDK_PATH=$(pwd)/vst2sdk" >> "$GITHUB_ENV"
+        run: |
+          set -e
+          curl -L "https://archive.org/download/VST2SDK/vstsdk2_4.zip" -o vst2sdk.zip
+          unzip -q vst2sdk.zip -d vst2sdk_extracted
+          AEFFECT_H=$(find vst2sdk_extracted -name 'aeffect.h' | head -1)
+          VST2_SDK_PATH=$(dirname "$AEFFECT_H")
+          while [ ! -d "$VST2_SDK_PATH/pluginterfaces" ] && [ "$VST2_SDK_PATH" != "." ]; do
+            VST2_SDK_PATH=$(dirname "$VST2_SDK_PATH")
+          done
+          echo "VST2_SDK_PATH=$(pwd)/$VST2_SDK_PATH" >> "$GITHUB_ENV"
 
       - name: Configure macOS build
         if: matrix.platform == 'macos'
