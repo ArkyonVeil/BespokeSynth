@@ -86,7 +86,7 @@ public:
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;
    SongCanvasNote* ConvertLegacyElement(SongCanvasNote* element) const;
-   int GetModuleSaveStateRev() const override { return 9; }
+   int GetModuleSaveStateRev() const override { return 10; }
 
    //Input
    bool MouseMoved(float x, float y) override;
@@ -143,8 +143,8 @@ public:
    float GetModuleMinHeight()
    {
       float base = 100 + seqLayers.size() * MinRowSize + mRackGrid->GetHeight() + mBottomOffsetSize - 16;
-      if (mUserPreferredHeight > 0)
-         return MAX(base, mUserPreferredHeight);
+      //if (mUserPreferredHeight > 0)
+      //   return MAX(base, mUserPreferredHeight);
       return base;
    }
    bool IsRackActive(SongCanvasRackElement* rackPart) const; //True if there's a part on the canvas with the same rack that is currently playing.

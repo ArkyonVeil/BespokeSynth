@@ -862,9 +862,9 @@ void SongCanvas::Resize(float w, float h)
    /*
    if (TheSynth->GetResizingModule() == this)
    {
-      mUserPreferredWidth = w;
-      mUserPreferredHeight = h;
    }*/
+   mUserPreferredWidth = w;
+   mUserPreferredHeight = h;
 
    if (mMeasureSize == 0)
    {
@@ -1759,6 +1759,11 @@ void SongCanvas::SaveState(FileStreamOut& out)
    out << mCanvasElementIndex;
 
    out << mBottomOffsetTarget;
+
+   out << mWidth;
+   out << mHeight;
+   out << mUserPreferredWidth;
+   out << mUserPreferredHeight;
 }
 void SongCanvas::LoadState(FileStreamIn& in, int rev)
 {
@@ -1896,6 +1901,16 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
       in >> mBottomOffsetTarget;
       mBottomOffsetSize = mBottomOffsetTarget;
    }
+
+   if (rev >= 10)
+   {
+      in >> mWidth;
+      in >> mHeight;
+
+      in >> mUserPreferredWidth;
+      in >> mUserPreferredHeight;
+   }
+
    UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    SortMixers();
 
