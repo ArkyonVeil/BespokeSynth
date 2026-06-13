@@ -46,6 +46,7 @@ public:
    virtual ~ICanvasListener() {}
    virtual void CanvasUpdated(Canvas* canvas) = 0;
    virtual void ElementRemoved(CanvasElement* element) {}
+   virtual void CanvasElementClicked(CanvasElement* element) {}
    virtual void CanvasElementAdditionSuppressed(float posX, float posY){};
 
    //Called just before the placement of an element. Used as argument for element factory setup.
@@ -121,6 +122,7 @@ public:
    float GetCursorPos() const { return mCursorPos; }
    CanvasElement* CreateElement(int col, int row) { return mElementCreator(this, col, row); }
    CanvasElement* CreateElement(int col, int row, int args) { return mElementCreatorWArgs(this, col, row, args); }
+   CanvasElement* GetElementHovered() const { return mCurrentHoveredElement; };
    CanvasCoord GetCoordAt(int x, int y) const;
    CanvasCoord GetCoordHovered() const { return mHoverCoord; }; //-1,-1 if not hovered.
    void SetNumVisibleRows(int rows) { mNumVisibleRows = rows; }
@@ -219,6 +221,7 @@ private:
    ofVec2f mDragZoomStartDimensions;
    HighlightEnd mHighlightEnd{ HighlightEnd::kHighlightEnd_None };
    CanvasElement* mHighlightEndElement{ nullptr };
+   CanvasElement* mCurrentHoveredElement{ nullptr };
    HighlightEnd mDragEnd{ HighlightEnd::kHighlightEnd_None };
    int mMajorColumnInterval{ -1 };
    bool mHasDuplicatedThisDrag{ false };

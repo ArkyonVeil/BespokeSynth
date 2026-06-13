@@ -49,6 +49,7 @@ public:
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
    virtual void DrawRackGraphics() = 0;
+   virtual bool NoteOverlapSustain() { return false; } //If overlapping/next to another of the same rack, skip on-exit
 
 
    void SaveState(FileStreamOut& out) override;
@@ -56,7 +57,7 @@ public:
    virtual void OnLoadFinish(){}; //Runs after the Song Canvas is fully initialized. Normally this shouldn't be needed, but Ark -> Idiot
 
    //Canvas stuff
-   virtual void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect){};
+   virtual void DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect){};
    virtual void SetupCanvasPart(SongCanvasNote* element){};
    virtual void DeletedCanvasPart(SongCanvasNote* element){};
    virtual float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) { return -1; }
@@ -193,9 +194,10 @@ public:
    void OnExit(SongCanvasNote* element) override;
    void DrawRackGraphics() override;
    void OnPostResize() override;
+   bool NoteOverlapSustain() override { return true; };
 
    void SetupCanvasPart(SongCanvasNote* element) override;
-   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
+   void DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect) override;
 
    void HandleRightClickDropdown(int optionValue) override;
    std::vector<DropdownListElement> GetRightClickOptions() override;
@@ -231,7 +233,7 @@ public:
    void SetInterval(NoteInterval interval) { mPulserInterval = interval; }
 
    void SetupCanvasPart(SongCanvasNote* element) override;
-   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
+   void DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect) override;
 
    bool mOnePulseMode{ false };
    void HandleRightClickDropdown(int optionValue) override;

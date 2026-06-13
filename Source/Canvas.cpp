@@ -128,7 +128,7 @@ void Canvas::Render()
 
    if (GetKeyModifiers() & kModifier_Shift) //We're pressing shift which allows the placement of elements. Let's draw a subtle guide.
    {
-      if (mHoverCoord.col >= 0 && mAllowElementPlacement && !mClick && mElementPlaceHintSizeMultiplier != 0) //Valid and allowed.
+      if (mHoverCoord.col >= 0 && mAllowElementPlacement && !mClick && mElementPlaceHintSizeMultiplier != 0 && mCurrentHoveredElement == nullptr) //Valid and allowed.
       {
          ofPushStyle();
          ofVec2f lXV = GetColumnX(mHoverCoord.col);
@@ -271,6 +271,7 @@ void Canvas::OnClicked(float x, float y, bool right)
          {
             SelectElement(mElements[i]);
             clickedElement = true;
+            mListener->CanvasElementClicked(mElements[i]);
             if (mClickedElement)
                mClickedElementStartMousePos.set(TheSynth->GetRawMouseX(), TheSynth->GetRawMouseY());
 
@@ -427,6 +428,17 @@ bool Canvas::MouseMoved(float x, float y)
    if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
    {
       mHoverCoord = GetCoordAt(x, y);
+
+      mCurrentHoveredElement = nullptr;
+      for (int i = static_cast<int>(mElements.size()) - 1; i >= 0; --i)
+      {
+         //Probably not very fast for HUGE canvas, but it's fine.
+         if (IsOnElement(mElements[i], x, y))
+         {
+            mCurrentHoveredElement = mElements[i];
+            break;
+         }
+      }
 
       if (mClick)
       {
@@ -642,7 +654,11 @@ void Canvas::KeyPressed(int key, bool isRepeat)
          for (auto element : mElements)
          {
             if (element->GetHighlighted())
+            {
+               if (mCurrentHoveredElement == element)
+                  mCurrentHoveredElement = nullptr;
                toRemove.push_back(element);
+            }
          }
          for (auto element : toRemove)
          {

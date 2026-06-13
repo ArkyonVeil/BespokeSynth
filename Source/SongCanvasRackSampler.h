@@ -24,7 +24,7 @@ public:
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
    void OnEnter(SongCanvasNote* element) override;
    void OnExit(SongCanvasNote* element) override;
-   int GetPitchFromCanvasElement(SongCanvasNote* element);
+   int GetPitchFromNote(SongCanvasNote* element);
    int GetPitchFromCanvasElementSize(float size);
    float GetCanvasElementSizeFromPitch(int notePitch);
    void LoadFileSample();
@@ -34,7 +34,7 @@ public:
    bool MouseMoved(float x, float y) override;
    void SetSample(Sample* sample);
    float GetSampleLengthForCanvasInPitchBase();
-   void PlaySample(int notePitch = 48);
+   int PlaySample(int notePitch = 48);
    void OnPostResize() override;
    void OnClicked(float x, float y, bool right) override;
    void SongCanvasOptionsUpdated() override;
@@ -54,7 +54,7 @@ public:
 
    //Canvas Stuff
    void SetupCanvasPart(SongCanvasNote* element) override;
-   void DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect) override;
+   void DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect) override;
    float GetNotePosQuantizationOverride(SongCanvasNote* element, float input, int context) override;
    int GetRackNoteFactoryArgs() override { return 1; };
 
@@ -138,6 +138,10 @@ private:
    int mCachedPitch{ -1 };
    float mCachedSize{ -1 };
 
+   SongCanvasNote* mVoiceNoteMap[kNumVoices];
+   double mVoiceNoteTime[kNumVoices];
+   int mActiveSampleVoices;
+
    float mExpandPropertiesWidth{ 0 };
    ofVec2f mExpandPropertiesTrianglePos{ 0, 0 };
    ChannelBuffer mWriteBuffer;
@@ -154,6 +158,8 @@ public:
    using SongCanvasNote::SongCanvasNote; //Inherit the constructors. Nothing else needed here.
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
+
+   CanvasElement* CreateDuplicate() const override;
 
    int mPitch{ 48 };
 };

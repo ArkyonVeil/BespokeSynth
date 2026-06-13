@@ -13,7 +13,7 @@ public:
 
    CanvasElement* CreateDuplicate() const override;
 
-   SongCanvasRackElement* GetRackElement() { return mRackPart; }
+   SongCanvasRackElement* GetRackElement() const { return mRackPart; }
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in) override;
    bool IsResizable() const override { return mAllowResizing; };

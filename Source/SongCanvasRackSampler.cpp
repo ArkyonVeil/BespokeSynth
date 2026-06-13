@@ -59,16 +59,29 @@ void SongCanvasRackSampler::OnEnter(SongCanvasNote* element)
       if (!mSample->IsSampleLoading())
       {
          Excite(1);
-         PlaySample(GetPitchFromCanvasElement(element));
+         int voice = PlaySample(GetPitchFromNote(element));
+         mVoiceNoteMap[voice] = element;
+         mVoiceNoteTime[voice] = NextBufferTime(mSongCanvas);
       }
    }
 }
 void SongCanvasRackSampler::OnExit(SongCanvasNote* element)
 {
-   //TODO
+   int i = 0;
+   for (auto& note : mVoiceNoteMap)
+   {
+      if (note == element)
+      {
+         mPolyMgr.Stop(mVoiceNoteTime[i], dynamic_cast<SongCanvasNoteSampler*>(element)->mPitch, i);
+         note = nullptr;
+         mVoiceNoteTime[i] = 0;
+         break;
+      }
+      i++;
+   }
 }
 
-int SongCanvasRackSampler::GetPitchFromCanvasElement(SongCanvasNote* element)
+int SongCanvasRackSampler::GetPitchFromNote(SongCanvasNote* element)
 {
    if (!element)
       return 48;
@@ -237,10 +250,10 @@ float SongCanvasRackSampler::GetSampleLengthForCanvasInPitchBase()
    return mSample->LengthInSeconds() / (TheTransport->MsPerBar() / 1000) / mSongCanvas->GetMeasureCount();
 }
 
-void SongCanvasRackSampler::PlaySample(int notePitch)
+int SongCanvasRackSampler::PlaySample(int notePitch)
 {
    NoteMessage note(NextBufferTime(mSongCanvas), notePitch, 127);
-   mPolyMgr.Start(note.time, note.pitch, note.velocity / 127.0f, note.voiceIdx, note.modulation);
+   return mPolyMgr.Start(note.time, note.pitch, note.velocity / 127.0f, note.voiceIdx, note.modulation);
 }
 void SongCanvasRackSampler::Process(double time)
 {
@@ -607,9 +620,9 @@ void SongCanvasRackSampler::SetupCanvasPart(SongCanvasNote* element)
       element->SetEnd(element->GetStart() + sampleLength);
    }
 }
-void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
+void SongCanvasRackSampler::DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect)
 {
-   SongCanvasAudioRackElement::DrawCanvasPartGraphics(element, rect);
+   SongCanvasAudioRackElement::DrawCanvasNoteGraphics(element, rect);
 
    if (mSample)
    {
@@ -625,7 +638,7 @@ void SongCanvasRackSampler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRe
          if (ds == CanvasElementDragOperation::kLeftDrag || ds == CanvasElementDragOperation::kRightDrag)
          {
             float fontSize = 8;
-            int pitch = GetPitchFromCanvasElement(element);
+            int pitch = GetPitchFromNote(element);
             std::string sizeText;
             bool renderAll = false;
             float allMaxWidth;
@@ -1080,4 +1093,15 @@ void SongCanvasNoteSampler::LoadState(FileStreamIn& in)
 {
    SongCanvasNote::LoadState(in);
    in >> mPitch;
+}
+CanvasElement* SongCanvasNoteSampler::CreateDuplicate() const
+{
+   SongCanvasNoteSampler* element = new SongCanvasNoteSampler(mCanvas);
+   element->mCol = mCol;
+   element->mRow = mRow;
+   element->mOffset = mOffset;
+   element->mLength = mLength;
+   element->mPitch = mPitch;
+   element->SetupBase(GetRackElement());
+   return element;
 }

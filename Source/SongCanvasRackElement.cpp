@@ -430,6 +430,11 @@ void SongCanvasRackEnabler::HandleRightClickDropdown(int optionValue)
       {
          SetColor(ofColor(255, 255, 255));
       }
+      auto nts = mSongCanvas->GetAllCanvasElementsOfRack(this);
+      for (auto n : nts)
+      {
+         SetupCanvasPart(n);
+      }
    }
 }
 std::vector<DropdownListElement> SongCanvasRackEnabler::GetRightClickOptions()
@@ -471,7 +476,7 @@ void SongCanvasRackEnabler::SetupCanvasPart(SongCanvasNote* element)
       element->mTextDrawYOffset = 0;
    }
 }
-void SongCanvasRackEnabler::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
+void SongCanvasRackEnabler::DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect)
 {
    if (mEnablerInverted)
    {
@@ -608,7 +613,7 @@ void SongCanvasRackPulser::SetupCanvasPart(SongCanvasNote* element)
       MAX(0, element->mCurrentColor.b - 30));
    }
 }
-void SongCanvasRackPulser::DrawCanvasPartGraphics(SongCanvasNote* element, ofRectangle rect)
+void SongCanvasRackPulser::DrawCanvasNoteGraphics(SongCanvasNote* element, ofRectangle rect)
 {
    if (mOnePulseMode)
    {

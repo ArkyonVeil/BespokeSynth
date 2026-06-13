@@ -120,8 +120,10 @@ public:
    std::vector<SongCanvasNote*> GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const;
    std::vector<SongCanvasNote*> GetAllCanvasElementsOfLayer(int layerIndex) const;
    void UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax) override;
+   void OnReset();
    int GetMeasureCount() const { return mMeasureCount; }
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
+   void CanvasElementClicked(CanvasElement* element) override;
 
    //Racks
    void SetRackElementRenameState(SongCanvasRackElement* element, bool renaming);
@@ -158,6 +160,7 @@ public:
 
    //Transport
    void OnTransportAdvanced(float amount) override;
+   bool CheckNoteOverlap(SongCanvasNote* note) const;
    void OnTimeEvent(double time) override;
 
    //Audio
@@ -167,6 +170,7 @@ public:
    void SortMixers(int reserveIndex = -1); //Sorts and cleans up unused mixers. Optionally reserves an empty mixer to prevent it from being cleaned up.
    float GetMixerSpaceAvailable() const { return kMixerPreferredWidth * mMixerDrawCompression; };
    float GetMixerCompression() const { return mMixerDrawCompression; }
+   void Poll() override;
 
    //Animation
    float RescaleAnimationSpeedDelta() { return ofGetDeltaTime() * 96 * mDeltaAnimSpeedMultiplier; }
@@ -463,6 +467,8 @@ private:
    int mHighlightHintMixerId{ -1 };
    float mMixerDrawCompression{ 1.0f }; //0, width 0, 1
    float mLastTempo = -1;
+   SongCanvasNote* mLastClickedNote{ nullptr };
+   double mLastClickedNoteTime = 0;
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};
@@ -475,4 +481,6 @@ private:
 
    //Expert variables (Unused)
    bool expertPanelEnabled{ false };
+
+   float debugTimeZeroTest = 999;
 };

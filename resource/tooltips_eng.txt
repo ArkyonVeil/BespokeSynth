@@ -2193,7 +2193,7 @@ velocitytoduration~use a note's velocity to set its duration
 ~max duration~duration (in measures) corresponding to the maximum velocity value
 
 songcanvas~DAW style, traditional pattern sequencer. activate/deactivate modules, trigger pulses, play samples and more in a timeline canvas.
-~canvas~select a part in the rack and place it on the canvas. parts will activate their rack elements when their timing is reached\n\n-shift-click to place a new part\n\n-ctrl-click-drag a part corner freely without snapping\n-alt-click-drag a part to move it without snapping\n-ctrl-alt-drag for fully free tweaking.\n\n-shift-scrollwheel to zoom in/out
+~canvas~select a part in the rack and place it on the canvas. parts will activate their rack elements when their timing is reached\n\n-shift-click to place a new part\n\n-ctrl-click-drag a part corner freely without snapping\n-alt-click-drag a part to move it without snapping\n-ctrl-alt-drag for fully free tweaking.\n-double-click a canvas part to quickly select its rack.\n\n-shift-scrollwheel to zoom in/out
 ~reset~sets the time to the first measure
 ~add~add a new pattern to the rack
 ~interval~set the rack pattern's interval

@@ -1092,6 +1092,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    {
       mCanvas->SetNumCols(TheTransport->CountInStandardMeasure(mCanvasInterval) * mMeasureCount);
    }
+   float oldViewDiff = mCanvas->mViewEnd - mCanvas->mViewStart;
    if (mAutoScaleMeasureCount && !overrideAutoFit)
    {
       mCanvas->mViewEnd = MIN(mMeasureCount, oldViewEnd * mMeasureCount / oldMeasureCount);
@@ -1100,6 +1101,12 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
    {
       mCanvas->mViewEnd = MIN(mMeasureCount, mCanvas->mViewEnd);
    }
+   //Keep the viewport in bounds.
+   if (mCanvas->mViewStart >= mCanvas->mViewEnd)
+   {
+      mCanvas->mViewStart = MAX(0, mCanvas->mViewEnd - oldViewDiff);
+   }
+
    mPartCanvasDirty = true;
    if (loopMaxed)
    { //If its already maxed, we sync it.
@@ -1406,6 +1413,19 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
    mPartCanvasDirty = true;
    //Then we flag the Canvas as dirty, so we don't stress the DAW too much with pointless regenerations.
 }
+void SongCanvas::CanvasElementClicked(CanvasElement* element)
+{
+   auto* note = dynamic_cast<SongCanvasNote*>(element);
+   if (mLastClickedNote == note)
+   {
+      if (ofGetGlobalTime() - mLastClickedNoteTime < 0.4f)
+      {
+         mRackGrid->SetSelectedGridElement(note->GetRackElement());
+      }
+   }
+   mLastClickedNoteTime = ofGetGlobalTime();
+   mLastClickedNote = note;
+}
 
 //Gets all the canvas elements which have said rack as a parent.
 std::vector<SongCanvasNote*> SongCanvas::GetAllCanvasElementsOfRack(const SongCanvasRackElement* element) const
@@ -1460,7 +1480,7 @@ void SongCanvas::OnElementLoaded(FlowGridElement* element)
 }
 void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
 {
-   if (newLoopMin == mCanvas->mViewStart && newLoopMax == mCanvas->mViewEnd)
+   if (newLoopMin == 0 && newLoopMax == mCanvas->GetLength())
    {
       mCanvasTimeline->SetBaseColour(ofColor(25, 25, 25));
    }
@@ -1470,9 +1490,19 @@ void SongCanvas::UserUpdatedCanvasTimeline(float newLoopMin, float newLoopMax)
    }
 }
 
+void SongCanvas::OnReset()
+{
+   for (auto el : mActiveElements)
+   {
+      el->GetRackElement()->OnExit(el);
+   }
+   mActiveElements.clear();
+}
+
 void SongCanvas::OnTransportAdvanced(float amount)
 {
    std::lock_guard lock(mAudioStateMutex);
+
    if (!mLocalMode || (mLocalMode && mLocalSynced && mOnEndMeasure == enumOEMLoop))
       mTime = TheTransport->GetMeasureTime(gTime);
    else
@@ -1480,6 +1510,12 @@ void SongCanvas::OnTransportAdvanced(float amount)
       if (!mLocalStopped)
          mTime += amount;
    }
+   if (mTime - amount <= mCanvas->mLoopStart)
+   {
+      OnReset();
+      //Reset
+   }
+
    //First check if we have any cleanup to do.
    if (mPartCanvasDirty)
    {
@@ -1572,6 +1608,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
                else
                {
                   cL[i]->GetRackElement()->OnExit(cL[i]);
+
                   for (int mAE = 0; mAE < mActiveElements.size(); ++mAE)
                   {
                      if (mActiveElements[mAE] == cL[i])
@@ -1588,7 +1625,12 @@ void SongCanvas::OnTransportAdvanced(float amount)
          {
             if (mActiveElements[i]->GetStart() > mCanvasRelativeTime || mActiveElements[i]->GetEnd() < mCanvasRelativeTime)
             {
-               mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
+               bool overlapSustain = mActiveElements[i]->GetRackElement()->NoteOverlapSustain();
+               bool canExit = true;
+               if (overlapSustain)
+                  canExit = !CheckNoteOverlap(mActiveElements[i]); //If overlapping, we still dispose, but we skip the exit call.
+               if (canExit)
+                  mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
                mActiveElements.erase(mActiveElements.begin() + i);
                i--;
             }
@@ -1606,6 +1648,36 @@ void SongCanvas::OnTransportAdvanced(float amount)
       }
    }
 }
+
+bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note) const
+{
+   auto rack = note->GetRackElement();
+   //First check if any of the activeElements are of the same type.
+   for (auto el : mActiveElements)
+   {
+      if (el->GetRackElement() == rack && el != note)
+         return true;
+   }
+   float matchTime = note->mCol + note->mOffset + note->mLength;
+
+   //If not, check to see if there's any connected note elements at the end.
+   int readChunkNum = floor(matchTime / mCanvas->GetLength() * mChunkAmount);
+   if (readChunkNum < 0)
+      readChunkNum = 0;
+   auto& cL = mCanvasChunkList[readChunkNum];
+
+   for (auto el : cL)
+   {
+      if (el->GetRackElement() == rack)
+      {
+         if (static_cast<float>(el->mCol) + el->mOffset == matchTime)
+            return true;
+      }
+   }
+
+   return false;
+}
+
 void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY)
 {
    if (mRackAddNewButton == nullptr)
@@ -1949,6 +2021,7 @@ SongCanvasNote* SongCanvas::ConvertLegacyElement(SongCanvasNote* element) const
 ///RACK MANAGEMENT///
 /////////////////////
 
+
 void SongCanvas::SetRackElementRenameState(SongCanvasRackElement* element, bool renaming)
 {
    if (element == nullptr)
@@ -2267,6 +2340,16 @@ void SongCanvas::SortMixers(int reserveIndex)
 
    //Now set the footer size depending on the number of mixers.
    UpdateSongCanvasMixerYSpacing();
+}
+void SongCanvas::Poll()
+{
+   if (TheSynth->IsAudioPaused())
+   {
+      if (!mLocalMode)
+         mCanvasRelativeTime = (mTime - mMeasureStart + 0.02f) / mMeasureCount;
+      else
+         mCanvasRelativeTime = (mTime + 0.02f) / mMeasureCount;
+   }
 }
 
 void SongCanvas::PostRepatch(PatchCableSource* cableSource, bool fromUserClick)

@@ -40,9 +40,16 @@ CanvasElement* SongCanvasNote::Create(Canvas* canvas, int col, int row, int args
    }
 }
 
+//Default duplicator, override for new effects.
+//Note: Replacing this with serialization style, save/load would be better (since it would reuse save/load code), but I dunno how it works yet <>P.
 CanvasElement* SongCanvasNote::CreateDuplicate() const
 {
-   SongCanvasNote* element = new SongCanvasNote(mCanvas, mCol, mRow, mOffset, mLength / 4);
+   SongCanvasNote* element = new SongCanvasNote(mCanvas);
+   element->mCol = mCol;
+   element->mRow = mRow;
+   element->mOffset = mOffset;
+   element->mLength = mLength;
+   element->SetupBase(mRackPart);
    return element;
 }
 
@@ -59,26 +66,42 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
    {
       float addedTextYOffset = 0;
       bool isActive = mSongCanvas->IsEnabled() && mSongCanvas->IsLayerActive(mRow);
+      bool isHovered = mCanvas->GetElementHovered() == this;
+      float colourMul = 1;
       int eDiv = 1; //Enabled Divisor
+      if (isHovered)
+         colourMul += 0.15f;
+      if (!isActive)
+         colourMul -= 0.5f;
+      auto colA1 = ofColor(mCurrentColor.r * colourMul, mCurrentColor.g * colourMul, mCurrentColor.b * colourMul);
+      auto colA2 = ofColor(mCurrentColorGrad.r * colourMul, mCurrentColorGrad.g * colourMul, mCurrentColorGrad.b * colourMul);
       if (isActive)
-         ofSetColorGradient(mCurrentColorGrad, mCurrentColor, ofVec2f(rect.width / 2, rect.y + rect.height * 0.66), ofVec2f(rect.width / 2, rect.y + rect.height));
+         ofSetColorGradient(colA2, colA1, ofVec2f(rect.width / 2, rect.y + rect.height * 0.66), ofVec2f(rect.width / 2, rect.y + rect.height));
       else
       {
          eDiv = 2;
-         auto colA1 = ofColor(mCurrentColor.r / 2, mCurrentColor.g / 2, mCurrentColor.b / 2);
-         auto colA2 = ofColor(mCurrentColorGrad.r / 2, mCurrentColorGrad.g / 2, mCurrentColorGrad.b / 2);
          ofSetColorGradient(colA2, colA1, ofVec2f(ofLerp(rect.getMinX(), rect.getMaxX(), .5f), rect.y), ofVec2f(rect.getMaxX(), rect.y));
       }
       //ofSetColor(mCurrentColor);
       ofRect(rect, 2);
 
       //Draw unique rack based graphics for the canvas element
-      mRackPart->DrawCanvasPartGraphics(this, rect);
+      mRackPart->DrawCanvasNoteGraphics(this, rect);
 
       if (isActive)
          ofSetColor(ofColor::white);
       else
          ofSetColor(ofColor(125, 125, 125));
+
+      if (isHovered && !mHighlighted)
+      { /*
+         ofPushStyle();
+         ofSetColor(ofColor(255,255,255,40));
+         ofNoFill();
+         ofSetLineWidth(1);
+         ofRect(rect,2);
+         ofPopStyle();*/
+      }
 
 
       //If the name differs, redo the size calcs.
