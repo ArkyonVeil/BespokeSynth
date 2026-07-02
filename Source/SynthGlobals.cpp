@@ -162,7 +162,7 @@ void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, DrawAudio
       int numChannels = MIN(settings.maxChannels, buffer->NumActiveChannels());
       for (int i = 0; i < numChannels; ++i)
       {
-         DrawAudioBuffer(width, height / numChannels, buffer->GetChannel(i), settings.start, MIN(settings.end, buffer->BufferSize()), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, buffer->BufferSize());
+         DrawAudioBuffer(width, height / numChannels, buffer->GetChannel(i), settings.start, MIN(settings.end, buffer->BufferSize()), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, buffer->BufferSize(), settings.drawBackground);
          ofTranslate(0, height / numChannels);
       }
    }
@@ -172,7 +172,7 @@ void DrawAudioBuffer(float width, float height, ChannelBuffer* buffer, DrawAudio
 void DrawAudioBuffer(float width, float height, const float* buffer, int bufferSize, DrawAudioBufferSettings settings)
 {
    ofPushMatrix();
-   DrawAudioBuffer(width, height, buffer, settings.start, MIN(settings.end, bufferSize), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, bufferSize);
+   DrawAudioBuffer(width, height, buffer, settings.start, MIN(settings.end, bufferSize), settings.pos, settings.volume, settings.color, settings.wrapAroundFrom, settings.wraparoundTo, bufferSize, settings.drawBackground);
    ofPopMatrix();
 }
 

@@ -25,7 +25,11 @@ SongCanvasRackSampler::SongCanvasRackSampler(const std::string& partName, SongCa
    mSampleDisplayNameWidth = mSampleDisplayNameWidthDefault;
    mDrawAudioBufferSettings.maxChannels = 1;
 
-   mPolyMgr.Init(kVoiceType_Sampler, &mVoiceParams);
+   mPolyMgr.Init([](IDrawableModule* owner)
+                 {
+                    return std::unique_ptr<IMidiVoice>(std::make_unique<SampleVoice>(owner));
+                 },
+                 &mVoiceParams);
 }
 SongCanvasRackSampler::~SongCanvasRackSampler()
 {

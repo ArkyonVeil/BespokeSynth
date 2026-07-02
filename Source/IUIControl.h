@@ -44,6 +44,13 @@ enum AnchorDirection
    kAnchor_Below_Padded
 };
 
+enum class SetValueMethod
+{
+   Direct,
+   Increment,
+   Modulator
+};
+
 class IUIControl : public IClickable
 {
 public:
@@ -102,6 +109,7 @@ public:
    virtual bool ShouldSerializeForSnapshot() const { return false; }
    virtual IModulator* GetModulator() { return nullptr; }
    virtual bool ShouldDisplayAsInactive() const { return false; }
+   virtual ofVec2f GetTooltipOffset() { return { 0, 0 }; }
    void SetControlVisualizer(IControlVisualizer* visualizer) { mControlVisualizer = visualizer; }
    IControlVisualizer* GetControlVisualizer() const { return mControlVisualizer; }
    virtual std::string& GetDynamicTooltip() { return mDynamicTooltip; };

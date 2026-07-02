@@ -259,58 +259,58 @@ void ClickButton::SetIconAlignment(ButtonIconAlignment alignment)
    {
       case ButtonIconAlignment::kTopLeft: //<--Default
          mIconOffsetX = 0;
-      mIconOffsetY = 0;
-      mIconOffsetMulX = 0;
-      mIconOffsetMulY = 0;
-      break;
+         mIconOffsetY = 0;
+         mIconOffsetMulX = 0;
+         mIconOffsetMulY = 0;
+         break;
       case ButtonIconAlignment::kTopMiddle:
          mIconOffsetX = -10;
-      mIconOffsetY = 0;
-      mIconOffsetMulX = 0.5f;
-      mIconOffsetMulY = 0;
-      break;
+         mIconOffsetY = 0;
+         mIconOffsetMulX = 0.5f;
+         mIconOffsetMulY = 0;
+         break;
       case ButtonIconAlignment::kTopRight:
          mIconOffsetX = -20;
-      mIconOffsetY = 0;
-      mIconOffsetMulX = 1;
-      mIconOffsetMulY = 0;
-      break;
+         mIconOffsetY = 0;
+         mIconOffsetMulX = 1;
+         mIconOffsetMulY = 0;
+         break;
       case ButtonIconAlignment::kCenterLeft:
          mIconOffsetX = 0;
-      mIconOffsetY = -10;
-      mIconOffsetMulX = 0;
-      mIconOffsetMulY = 0.5f;
-      break;
+         mIconOffsetY = -10;
+         mIconOffsetMulX = 0;
+         mIconOffsetMulY = 0.5f;
+         break;
       case ButtonIconAlignment::kCenter:
          mIconOffsetX = -10;
-      mIconOffsetY = -10;
-      mIconOffsetMulX = 0.5f;
-      mIconOffsetMulY = 0.5f;
-      break;
+         mIconOffsetY = -10;
+         mIconOffsetMulX = 0.5f;
+         mIconOffsetMulY = 0.5f;
+         break;
       case ButtonIconAlignment::kCenterRight:
          mIconOffsetX = -20;
-      mIconOffsetY = -10;
-      mIconOffsetMulX = 1;
-      mIconOffsetMulY = 0.5f;
-      break;
+         mIconOffsetY = -10;
+         mIconOffsetMulX = 1;
+         mIconOffsetMulY = 0.5f;
+         break;
       case ButtonIconAlignment::kBottomLeft:
          mIconOffsetX = 0;
-      mIconOffsetY = -20;
-      mIconOffsetMulX = 0;
-      mIconOffsetMulY = 1;
-      break;
+         mIconOffsetY = -20;
+         mIconOffsetMulX = 0;
+         mIconOffsetMulY = 1;
+         break;
       case ButtonIconAlignment::kBottomMid:
          mIconOffsetX = -10;
-      mIconOffsetY = -20;
-      mIconOffsetMulX = 0.5f;
-      mIconOffsetMulY = 1;
-      break;
+         mIconOffsetY = -20;
+         mIconOffsetMulX = 0.5f;
+         mIconOffsetMulY = 1;
+         break;
       case ButtonIconAlignment::kBottomRight:
          mIconOffsetX = -20;
-      mIconOffsetY = -20;
-      mIconOffsetMulX = 1;
-      mIconOffsetMulY = 1;
-      break;
+         mIconOffsetY = -20;
+         mIconOffsetMulX = 1;
+         mIconOffsetMulY = 1;
+         break;
       default:;
    }
 }
