@@ -65,7 +65,7 @@ public:
    void SetDisableColumnSnapping(bool disable) { mDisableControlSnapping = disable; };
 
    //IUIControl
-   void SetFromMidiCC(float slider, double time, bool setViaModulator) override {}
+   void SetFromMidiCC(float slider, double time, SetValueMethod setValueMethod) override {}
    void SetValue(float value, double time, bool forceUpdate = false) override {}
    void KeyPressed(int key, bool isRepeat) override {}
    void SaveState(FileStreamOut& out) override;

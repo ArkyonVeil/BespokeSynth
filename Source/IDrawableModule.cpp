@@ -79,6 +79,7 @@ void IDrawableModule::CreateUIControls()
    assert(mUIControlsCreated == false);
    mUIControlsCreated = true;
    mEnabledCheckbox = new Checkbox(this, "enabled", 3, -TitleBarHeight() - 2, &mEnabled);
+   mEnabledCheckbox->SetIsRandomizable(false);
 
    ConnectionType type = kConnectionType_Special;
    if (dynamic_cast<IAudioSource*>(this))
@@ -161,6 +162,9 @@ void IDrawableModule::Init()
 
 void IDrawableModule::BasePoll()
 {
+   if (mDeleted)
+      return;
+
    Poll();
    for (int i = 0; i < mUIControls.size(); ++i)
       mUIControls[i]->Poll();
@@ -934,6 +938,12 @@ void IDrawableModule::AddModuleDecorator(IModuleDecorator* decorator)
 void IDrawableModule::RemoveModuleDecorator(IModuleDecorator* decorator)
 {
    mModuleDecorators.remove(decorator);
+}
+
+void IDrawableModule::RandomizeModule()
+{
+   for (auto* control : GetUIControls())
+      control->Randomize();
 }
 
 void IDrawableModule::KeyPressed(int key, bool isRepeat)

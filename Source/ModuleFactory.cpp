@@ -281,6 +281,9 @@
 #include "TapTempo.h"
 #include "ZeroCrossRate.h"
 #include "SessionOrganizer.h"
+#include "AudioSyncer.h"
+#include "ChordKeyboard.h"
+#include "TapeLooper.h"
 #include "PulseRouter.h"
 #include "SongCanvas.h"
 #include "SongCanvasRackElement.h"
@@ -521,6 +524,9 @@ ModuleFactory::ModuleFactory()
    REGISTER(SongCanvas, songcanvas, kModuleCategory_Other);
    REGISTER(ZeroCrossRate, zerocrossrate, kModuleCategory_Modulator);
    REGISTER(SessionOrganizer, sessionorganizer, kModuleCategory_Other);
+   REGISTER(AudioSyncer, audiosyncer, kModuleCategory_Audio);
+   REGISTER(ChordKeyboard, chordkeyboard, kModuleCategory_Note);
+   REGISTER(TapeLooper, tapelooper, kModuleCategory_Audio);
 
    //REGISTER_EXPERIMENTAL(MidiPlayer, midiplayer, kModuleCategory_Instrument);
    REGISTER_HIDDEN(Autotalent, autotalent, kModuleCategory_Audio);
@@ -543,7 +549,6 @@ ModuleFactory::ModuleFactory()
    REGISTER_HIDDEN(FFTtoAdditive, ffttoadditive, kModuleCategory_Audio);
    REGISTER_HIDDEN(SlowLayers, slowlayers, kModuleCategory_Audio);
    REGISTER_HIDDEN(ClipLauncher, cliplauncher, kModuleCategory_Synth);
-
    REGISTER_HIDDEN(SongCanvasRackEnabler, partenabler, kModuleCategory_Other);
    REGISTER_HIDDEN(SongCanvasRackPulser, partpulser, kModuleCategory_Pulse);
    REGISTER_HIDDEN(SongCanvasRackSampler, partsampler, kModuleCategory_Synth);

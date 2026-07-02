@@ -64,6 +64,8 @@ target_sources(BespokeSynth PRIVATE
     AudioSend.h
     AudioSplitter.cpp
     AudioSplitter.h
+    AudioSyncer.cpp
+    AudioSyncer.h
     AudioToCV.cpp
     AudioToCV.h
     AudioToPulse.cpp
@@ -114,6 +116,8 @@ target_sources(BespokeSynth PRIVATE
     ChordDisplayer.h
     ChordHolder.cpp
     ChordHolder.h
+    ChordKeyboard.cpp
+    ChordKeyboard.h
     Chorder.cpp
     Chorder.h
     CircleSequencer.cpp
@@ -158,6 +162,8 @@ target_sources(BespokeSynth PRIVATE
     DelayEffect.h
     DistortionEffect.cpp
     DistortionEffect.h
+    DJFilterEffect.cpp
+    DJFilterEffect.h
     DopplerShift.cpp
     DopplerShift.h
     DotGrid.cpp
@@ -718,6 +724,8 @@ target_sources(BespokeSynth PRIVATE
     SynthGlobals.h
     TakeRecorder.cpp
     TakeRecorder.h
+    TapeLooper.cpp
+    TapeLooper.h
     TapTempo.cpp
     TapTempo.h
     TextEntry.cpp

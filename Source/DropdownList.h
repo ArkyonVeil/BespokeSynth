@@ -145,7 +145,7 @@ public:
    void OnClicked(float x, float y, bool right) override;
 
    //IUIControl
-   void SetFromMidiCC(float slider, double time, bool setViaModulator) override;
+   void SetFromMidiCC(float slider, double time, SetValueMethod setValueMethod) override;
    float GetValueForMidiCC(float slider) const override;
    void SetValue(float value, double time, bool forceUpdate = false) override;
    float GetValue() const override;

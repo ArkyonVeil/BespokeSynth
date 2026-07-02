@@ -52,7 +52,7 @@ public:
    virtual void Delete() { mIsDeleted = true; }
    void AddRemoteController() { ++mRemoteControlCount; }
    void RemoveRemoteController() { --mRemoteControlCount; }
-   virtual void SetFromMidiCC(float slider, double time, bool setViaModulator) = 0;
+   virtual void SetFromMidiCC(float slider, double time, SetValueMethod setValueMethod) = 0;
    virtual float GetValueForMidiCC(float slider) const { return 0; }
    virtual void SetValue(float value, double time, bool forceUpdate = false) = 0;
    virtual void SetValueDirect(float value, double time) { SetValue(value, time); } //override if you need special control here
@@ -102,11 +102,14 @@ public:
    virtual bool ShouldSerializeForSnapshot() const { return false; }
    virtual IModulator* GetModulator() { return nullptr; }
    virtual bool ShouldDisplayAsInactive() const { return false; }
-   virtual ofVec2f GetTooltipOffset() { return { 0, 0 }; }
    void SetControlVisualizer(IControlVisualizer* visualizer) { mControlVisualizer = visualizer; }
    IControlVisualizer* GetControlVisualizer() const { return mControlVisualizer; }
    virtual std::string& GetDynamicTooltip() { return mDynamicTooltip; };
    virtual bool DisplayBasicTooltip() { return true; }
+   virtual void Randomize();
+   bool IsRandomizable() const { return mIsRandomizable; }
+   void SetIsRandomizable(bool randomizable) { mIsRandomizable = randomizable; }
+   bool IsRandomizeControl();
 
    static void SetNewManualHoverViaTab(int direction);
    static void SetNewManualHoverViaArrow(ofVec2f direction);
@@ -131,6 +134,7 @@ protected:
    bool mSnapshotHighlight{ false };
    bool mIsDeleted{ false };
    IControlVisualizer* mControlVisualizer{ nullptr };
+   bool mIsRandomizable{ true };
    std::string mDynamicTooltip;
 
    static IUIControl* sLastHoveredUIControl;

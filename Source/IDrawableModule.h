@@ -181,6 +181,7 @@ public:
    virtual bool ShouldSuppressAutomaticOutputCable() { return false; }
    void AddModuleDecorator(IModuleDecorator* decorator);
    void RemoveModuleDecorator(IModuleDecorator* decorator);
+   virtual void RandomizeModule();
 
    virtual void CheckboxUpdated(Checkbox* checkbox, double time) {}
 

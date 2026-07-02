@@ -14,6 +14,7 @@
 #include "EffectFactory.h"
 #include "ModuleContainer.h"
 #include "Minimap.h"
+#include "LockFreeQueue.h"
 #include <thread>
 
 #ifdef BESPOKE_LINUX
@@ -53,6 +54,17 @@ enum LogEventType
    kLogEventType_Verbose,
    kLogEventType_Warning,
    kLogEventType_Error
+};
+
+enum class KeyModifierCombo
+{
+   FineTune,
+   GridSnap,
+   GridSnapCenter,
+   AdjustMinMax,
+   AdjustControlFocus,
+   AdjustSmooth,
+   Randomize,
 };
 
 class ConsoleListener : public IDrawableModule, public ITextEntryListener
@@ -175,6 +187,8 @@ public:
    ModuleContainer* GetUIContainer() { return &mUILayerModuleContainer; }
    bool ShouldShowGridSnap() const;
    bool MouseMovedSignificantlySincePressed() const { return mMouseMovedSignificantlySincePressed; }
+   bool IsKeyModifierComboHeld(KeyModifierCombo combo) const;
+   IDrawableModule* GetHoveredRandomizeModule() const;
 
    void ZoomView(float zoomAmount, bool fromMouse);
    void SetZoomLevel(float zoomLevel);
@@ -385,6 +399,7 @@ private:
 
    struct LogEventItem
    {
+      LogEventItem() {}
       LogEventItem(double _time, std::string _text, LogEventType _type)
       : time(_time)
       , text(_text)
@@ -396,6 +411,7 @@ private:
    };
    std::list<LogEventItem> mEvents;
    std::list<std::string> mErrors;
+   LockFreeQueue<LogEventItem> mMultithreadEventQueue;
 
    NamedMutex mAudioThreadMutex;
    static std::thread::id sMainThreadId;

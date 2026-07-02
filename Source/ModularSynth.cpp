@@ -258,6 +258,7 @@ void ModularSynth::Setup(juce::AudioDeviceManager* globalAudioDeviceManager, juc
    juce::File(ofToDataPath("scripts")).createDirectory();
    juce::File(ofToDataPath("internal")).createDirectory();
    juce::File(ofToDataPath("vst")).createDirectory();
+   juce::File(ofToDataPath("trackorganizer")).createDirectory();
 
    SynthInit();
 
@@ -399,7 +400,7 @@ void ModularSynth::Poll()
       }
       else if (gHoveredUIControl != nullptr && gHoveredUIControl->IsMouseDown())
       {
-         if (GetKeyModifiers() == kModifier_Shift)
+         if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
             desiredCursor = MouseCursor::CrosshairCursor;
          else if (gHoveredUIControl->GetModulator() != nullptr && gHoveredUIControl->GetModulator()->Active())
             desiredCursor = MouseCursor::UpDownLeftRightResizeCursor;
@@ -418,7 +419,7 @@ void ModularSynth::Poll()
       {
          desiredCursor = MouseCursor::DraggingHandCursor;
       }
-      else if (GetKeyModifiers() == kModifier_Shift)
+      else if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
       {
          desiredCursor = MouseCursor::PointingHandCursor;
       }
@@ -457,6 +458,10 @@ void ModularSynth::Poll()
       ArrangeAudioSourceDependencies();
       mArrangeDependenciesWhenLoadCompletes = false;
    }
+
+   LogEventItem logEvent;
+   while (mMultithreadEventQueue.consume(logEvent))
+      LogEvent(logEvent.text, logEvent.type);
 
    if (gHoveredUIControl != nullptr && gHoveredUIControl->IsShowing() == false)
       gHoveredUIControl = nullptr;
@@ -696,7 +701,7 @@ void ModularSynth::Draw()
    {
       ofSetColor(255, 255, 255, (1 - (gTime - mLastClapboardTime) / 100) * 255);
       ofFill();
-      ofRect(0, 0, ofGetWidth(), ofGetHeight());
+      ofRect(0, 0, ofGetWidth() / gDrawScale, ofGetHeight() / gDrawScale);
    }
 
    ofPopMatrix();
@@ -1140,7 +1145,7 @@ void ModularSynth::KeyPressed(int key, bool isRepeat)
    {
       if (key == OF_KEY_DOWN || key == OF_KEY_UP || key == OF_KEY_LEFT || key == OF_KEY_RIGHT)
       {
-         if (GetKeyModifiers() != kModifier_Command)
+         if (!IsKeyModifierComboHeld(KeyModifierCombo::AdjustControlFocus))
          {
             float inc;
             if (key == OF_KEY_LEFT)
@@ -1152,7 +1157,7 @@ void ModularSynth::KeyPressed(int key, bool isRepeat)
                inc = -1;
             else
                inc = 1;
-            if (GetKeyModifiers() & kModifier_Shift)
+            if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
                inc *= .01f;
             gHoveredUIControl->Increment(inc);
          }
@@ -1250,7 +1255,7 @@ void ModularSynth::KeyPressed(int key, bool isRepeat)
 
    if (key == OF_KEY_LEFT || key == OF_KEY_RIGHT || key == OF_KEY_UP || key == OF_KEY_DOWN)
    {
-      if (GetKeyModifiers() == kModifier_Command)
+      if (IsKeyModifierComboHeld(KeyModifierCombo::AdjustControlFocus))
       {
          ofVec2f dir;
          if (key == OF_KEY_LEFT)
@@ -1352,7 +1357,36 @@ bool ModularSynth::IsMouseButtonHeld(int button) const
 
 bool ModularSynth::ShouldShowGridSnap() const
 {
-   return (mMoveModule || (!mGroupSelectedModules.empty() && IsMouseButtonHeld(1))) && (GetKeyModifiers() & kModifier_Command);
+   return (mMoveModule || (!mGroupSelectedModules.empty() && IsMouseButtonHeld(1))) && (IsKeyModifierComboHeld(KeyModifierCombo::GridSnap) || IsKeyModifierComboHeld(KeyModifierCombo::GridSnapCenter));
+}
+
+bool ModularSynth::IsKeyModifierComboHeld(KeyModifierCombo combo) const
+{
+   if (combo == KeyModifierCombo::FineTune)
+      return GetKeyModifiers() == kModifier_Shift;
+   if (combo == KeyModifierCombo::GridSnap)
+      return GetKeyModifiers() == kModifier_Command;
+   if (combo == KeyModifierCombo::GridSnapCenter)
+      return GetKeyModifiers() == (kModifier_Command | kModifier_Alt);
+   if (combo == KeyModifierCombo::AdjustMinMax)
+      return GetKeyModifiers() == kModifier_Command;
+   if (combo == KeyModifierCombo::AdjustControlFocus)
+      return GetKeyModifiers() == kModifier_Command;
+   if (combo == KeyModifierCombo::AdjustSmooth)
+      return GetKeyModifiers() == kModifier_Alt;
+   if (combo == KeyModifierCombo::Randomize)
+      return GetKeyModifiers() == (kModifier_Shift | kModifier_Command);
+   return false;
+}
+
+IDrawableModule* ModularSynth::GetHoveredRandomizeModule() const
+{
+   if (IsKeyModifierComboHeld(KeyModifierCombo::Randomize))
+   {
+      if (gHoveredModule && gHoveredUIControl == nullptr)
+         return gHoveredModule;
+   }
+   return nullptr;
 }
 
 void ModularSynth::SetGroupSelectedModules(std::list<IDrawableModule*> modules)
@@ -1421,7 +1455,7 @@ void ModularSynth::MouseMoved(int intX, int intY)
       {
          newX = round(newX / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get();
          newY = round((newY - mMoveModule->TitleBarHeight()) / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get() + mMoveModule->TitleBarHeight();
-         if (GetKeyModifiers() & kModifier_Shift) // Snap to center of the module
+         if (IsKeyModifierComboHeld(KeyModifierCombo::GridSnapCenter)) // Snap to center of the module
          {
             newX -= std::fmod(mMoveModule->GetRect().width / 2, UserPrefs.grid_snap_size.Get());
             newY -= std::fmod(mMoveModule->GetRect().height / 2, UserPrefs.grid_snap_size.Get());
@@ -1742,7 +1776,7 @@ void ModularSynth::MouseDragged(int intX, int intY, int button, const juce::Mous
       {
          newX = round(newX / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get();
          newY = round((newY - mLastClickedModule->TitleBarHeight()) / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get() + mLastClickedModule->TitleBarHeight();
-         if (GetKeyModifiers() & kModifier_Shift) // Snap to center of the module
+         if (IsKeyModifierComboHeld(KeyModifierCombo::GridSnapCenter)) // Snap to center of the module
          {
             newX -= std::fmod(mLastClickedModule->GetRect().width / 2, UserPrefs.grid_snap_size.Get());
             newY -= std::fmod(mLastClickedModule->GetRect().height / 2, UserPrefs.grid_snap_size.Get());
@@ -1767,7 +1801,7 @@ void ModularSynth::MouseDragged(int intX, int intY, int button, const juce::Mous
       {
          newX = round(newX / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get();
          newY = round((newY - mMoveModule->TitleBarHeight()) / UserPrefs.grid_snap_size.Get()) * UserPrefs.grid_snap_size.Get() + mMoveModule->TitleBarHeight();
-         if (GetKeyModifiers() & kModifier_Shift) // Snap to center of the module
+         if (IsKeyModifierComboHeld(KeyModifierCombo::GridSnapCenter)) // Snap to center of the module
          {
             newX -= std::fmod(mMoveModule->GetRect().width / 2, UserPrefs.grid_snap_size.Get());
             newY -= std::fmod(mMoveModule->GetRect().height / 2, UserPrefs.grid_snap_size.Get());
@@ -1839,6 +1873,18 @@ void ModularSynth::MousePressed(int intX, int intY, int button, const juce::Mous
          gBindToUIControl = nullptr;
       else
          gBindToUIControl = gHoveredUIControl;
+      return;
+   }
+
+   if (gHoveredUIControl != nullptr && IsKeyModifierComboHeld(KeyModifierCombo::Randomize))
+   {
+      gHoveredUIControl->Randomize();
+      return;
+   }
+
+   if (IDrawableModule* randomizeModule = GetHoveredRandomizeModule())
+   {
+      randomizeModule->RandomizeModule();
       return;
    }
 
@@ -2025,7 +2071,7 @@ void ModularSynth::MouseScrolled(float xScroll, float yScroll, bool isSmoothScro
          }
          float val = textEntry->GetValue();
          float change = yScroll > 0 ? 1 : -1;
-         if (GetKeyModifiers() & kModifier_Shift)
+         if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
             change *= .01f;
          float min, max;
          textEntry->GetRange(min, max);
@@ -2043,13 +2089,13 @@ void ModularSynth::MouseScrolled(float xScroll, float yScroll, bool isSmoothScro
       if (dropDownList)
       {
          auto increment = (yScroll > 0 ? 1. : -1.) / dropDownList->GetNumValues();
-         if (GetKeyModifiers() & kModifier_Shift)
+         if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
             increment *= 3 * UserPrefs.scroll_multiplier_vertical.Get();
          if (gHoveredUIControl->InvertScrollDirection())
             increment *= -1;
          auto value = dropDownList->GetMidiValue();
          value += increment;
-         dropDownList->SetFromMidiCC(value, NextBufferTime(false), false);
+         dropDownList->SetFromMidiCC(value, NextBufferTime(false), SetValueMethod::Increment);
          return;
       }
 
@@ -2060,7 +2106,7 @@ void ModularSynth::MouseScrolled(float xScroll, float yScroll, bool isSmoothScro
          movementScale = 200.0f / w;
       }
 
-      if (GetKeyModifiers() & kModifier_Shift)
+      if (IsKeyModifierComboHeld(KeyModifierCombo::FineTune))
          movementScale *= .01f;
 
       if (clickButton)
@@ -2087,7 +2133,7 @@ void ModularSynth::MouseScrolled(float xScroll, float yScroll, bool isSmoothScro
       else
          val += change;
       val = ofClamp(val, 0, 1);
-      gHoveredUIControl->SetFromMidiCC(val, NextBufferTime(false), false);
+      gHoveredUIControl->SetFromMidiCC(val, NextBufferTime(false), SetValueMethod::Increment);
 
       gHoveredUIControl->NotifyMouseScrolled(GetMouseX(&mModuleContainer), GetMouseY(&mModuleContainer), xScroll, yScroll, isSmoothScroll, isInvertedScroll);
    }
@@ -2376,7 +2422,7 @@ void ModularSynth::AudioOut(float* const* output, int bufferSize, int nChannels)
             for (int i = 0; i < bufferSize; ++i)
             {
                float sample = sin(GetPhaseInc(440) * i) * (1 - ((gTime - mLastClapboardTime) / 100));
-               output[ch][i] = sample;
+               mOutputBuffers[ch][i] = sample;
             }
          }
       }
@@ -2424,9 +2470,9 @@ void ModularSynth::AudioIn(const float* const* input, int bufferSize, int nChann
    int oversampling = UserPrefs.oversampling.Get();
 
    assert(bufferSize * oversampling == mIOBufferSize);
-   assert(nChannels == (int)mInputBuffers.size());
 
-   for (int i = 0; i < nChannels; ++i)
+   int channelsToProcess = MIN(nChannels, (int)mInputBuffers.size());
+   for (int i = 0; i < channelsToProcess; ++i)
    {
       if (oversampling == 1)
       {
@@ -3054,19 +3100,23 @@ void ModularSynth::ClearHeldSample()
 
 void ModularSynth::LogEvent(std::string event, LogEventType type)
 {
-   if (type == kLogEventType_Warning)
+   if (IsMainThread())
    {
-      !ofLog() << "warning: " << event;
-   }
-   else if (type == kLogEventType_Error)
-   {
-      !ofLog() << "error: " << event;
-      mErrors.push_back(event);
-   }
+      if (type == kLogEventType_Warning)
+         !ofLog() << "warning: " << event;
+      if (type == kLogEventType_Error)
+         !ofLog() << "error: " << event;
 
-   mEvents.push_back(LogEventItem(gTime, event, type));
-   if (mEvents.size() > 30)
-      mEvents.pop_front();
+      if (type == kLogEventType_Error)
+         mErrors.push_back(event);
+      mEvents.push_back(LogEventItem(gTime, event, type));
+      if (mEvents.size() > 30)
+         mEvents.pop_front();
+   }
+   else
+   {
+      mMultithreadEventQueue.produce(LogEventItem(gTime, event, type));
+   }
 }
 
 IDrawableModule* ModularSynth::DuplicateModule(IDrawableModule* module)

@@ -41,6 +41,7 @@ ClickButton::ClickButton(IButtonListener* owner, const char* label, int x, int y
    (dynamic_cast<IDrawableModule*>(owner))->AddUIControl(this);
    SetParent(dynamic_cast<IClickable*>(owner));
    SetShouldSaveState(false);
+   SetIsRandomizable(false);
    TextTruncationSettings truncationDefaults;
    //truncationDefaults.perCharPadding = 0.25f;
    SetTextTruncationSettings(truncationDefaults);
@@ -251,7 +252,6 @@ bool ClickButton::MouseMoved(float x, float y)
    CheckHover(x, y);
    return false;
 }
-
 void ClickButton::SetIconAlignment(ButtonIconAlignment alignment)
 {
    //Generally icons have bounds in the x20 y20 range
@@ -259,62 +259,62 @@ void ClickButton::SetIconAlignment(ButtonIconAlignment alignment)
    {
       case ButtonIconAlignment::kTopLeft: //<--Default
          mIconOffsetX = 0;
-         mIconOffsetY = 0;
-         mIconOffsetMulX = 0;
-         mIconOffsetMulY = 0;
-         break;
+      mIconOffsetY = 0;
+      mIconOffsetMulX = 0;
+      mIconOffsetMulY = 0;
+      break;
       case ButtonIconAlignment::kTopMiddle:
          mIconOffsetX = -10;
-         mIconOffsetY = 0;
-         mIconOffsetMulX = 0.5f;
-         mIconOffsetMulY = 0;
-         break;
+      mIconOffsetY = 0;
+      mIconOffsetMulX = 0.5f;
+      mIconOffsetMulY = 0;
+      break;
       case ButtonIconAlignment::kTopRight:
          mIconOffsetX = -20;
-         mIconOffsetY = 0;
-         mIconOffsetMulX = 1;
-         mIconOffsetMulY = 0;
-         break;
+      mIconOffsetY = 0;
+      mIconOffsetMulX = 1;
+      mIconOffsetMulY = 0;
+      break;
       case ButtonIconAlignment::kCenterLeft:
          mIconOffsetX = 0;
-         mIconOffsetY = -10;
-         mIconOffsetMulX = 0;
-         mIconOffsetMulY = 0.5f;
-         break;
+      mIconOffsetY = -10;
+      mIconOffsetMulX = 0;
+      mIconOffsetMulY = 0.5f;
+      break;
       case ButtonIconAlignment::kCenter:
          mIconOffsetX = -10;
-         mIconOffsetY = -10;
-         mIconOffsetMulX = 0.5f;
-         mIconOffsetMulY = 0.5f;
-         break;
+      mIconOffsetY = -10;
+      mIconOffsetMulX = 0.5f;
+      mIconOffsetMulY = 0.5f;
+      break;
       case ButtonIconAlignment::kCenterRight:
          mIconOffsetX = -20;
-         mIconOffsetY = -10;
-         mIconOffsetMulX = 1;
-         mIconOffsetMulY = 0.5f;
-         break;
+      mIconOffsetY = -10;
+      mIconOffsetMulX = 1;
+      mIconOffsetMulY = 0.5f;
+      break;
       case ButtonIconAlignment::kBottomLeft:
          mIconOffsetX = 0;
-         mIconOffsetY = -20;
-         mIconOffsetMulX = 0;
-         mIconOffsetMulY = 1;
-         break;
+      mIconOffsetY = -20;
+      mIconOffsetMulX = 0;
+      mIconOffsetMulY = 1;
+      break;
       case ButtonIconAlignment::kBottomMid:
          mIconOffsetX = -10;
-         mIconOffsetY = -20;
-         mIconOffsetMulX = 0.5f;
-         mIconOffsetMulY = 1;
-         break;
+      mIconOffsetY = -20;
+      mIconOffsetMulX = 0.5f;
+      mIconOffsetMulY = 1;
+      break;
       case ButtonIconAlignment::kBottomRight:
          mIconOffsetX = -20;
-         mIconOffsetY = -20;
-         mIconOffsetMulX = 1;
-         mIconOffsetMulY = 1;
-         break;
+      mIconOffsetY = -20;
+      mIconOffsetMulX = 1;
+      mIconOffsetMulY = 1;
+      break;
       default:;
    }
 }
-void ClickButton::SetFromMidiCC(float slider, double time, bool setViaModulator)
+void ClickButton::SetFromMidiCC(float slider, double time, SetValueMethod setValueMethod)
 {
    if (slider > 0)
       DoClick(time);
