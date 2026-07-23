@@ -42,9 +42,9 @@ public:
 
    void CreateUIControls() override;
    void UpdatePartNameData();
-   virtual void OnEnter(SongCanvasNote* element) = 0;
+   virtual void OnEnter(SongCanvasNote* element, double time) = 0;
    virtual void OnProcessTransport(){};
-   virtual void OnExit(SongCanvasNote* element) = 0;
+   virtual void OnExit(SongCanvasNote* element, double time) = 0;
    float GetPreferredWidth() const override;
    virtual void HandleRightClickDropdown(int optionValue){};
    virtual std::vector<DropdownListElement> GetRightClickOptions() { return {}; };
@@ -190,8 +190,8 @@ public:
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackEnabler("Part", nullptr); };
    bool mEnablerInverted{ false };
-   void OnEnter(SongCanvasNote* element) override;
-   void OnExit(SongCanvasNote* element) override;
+   void OnEnter(SongCanvasNote* element, double time) override;
+   void OnExit(SongCanvasNote* element, double time) override;
    void DrawRackGraphics() override;
    void OnPostResize() override;
    bool NoteOverlapSustain() override { return true; };
@@ -219,8 +219,8 @@ public:
    SongCanvasRackPulser(const std::string& partName, SongCanvas* songCanvas);
    ~SongCanvasRackPulser();
    std::string GetFlowGridElementType() const override { return "partpulser"; };
-   void OnEnter(SongCanvasNote* element) override;
-   void OnExit(SongCanvasNote* element) override;
+   void OnEnter(SongCanvasNote* element, double time) override;
+   void OnExit(SongCanvasNote* element, double time) override;
    void OnTimeEvent(double time) override;
    void DrawRackGraphics() override;
    void CreateUIControls() override;
@@ -267,8 +267,8 @@ public:
    std::string GetFlowGridElementType() const override { return "partmodenvelope"; };
    static IDrawableModule* Create() { return new SongCanvasRackModEnvelope("Part", nullptr); }
    SongCanvasRackModEnvelope(const std::string& partName, SongCanvas* songCanvas);
-   void OnEnter(SongCanvasNote* element) override{};
-   void OnExit(SongCanvasNote* element) override{};
+   void OnEnter(SongCanvasNote* element, double time) override{};
+   void OnExit(SongCanvasNote* element, double time) override{};
 
    void SetupCanvasPart(SongCanvasNote* element) override;
 
@@ -298,8 +298,8 @@ public:
 
 private:
    PatchCableSource* mKeyerCable{ nullptr };
-   void OnEnter(SongCanvasNote* element) override{};
-   void OnExit(SongCanvasNote* element) override{};
+   void OnEnter(SongCanvasNote* element, double time) override{};
+   void OnExit(SongCanvasNote* element, double time) override{};
    void DrawRackGraphics() override;
    void SaveState(FileStreamOut& out) override;
    void LoadState(FileStreamIn& in, int rev) override;

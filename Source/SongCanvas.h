@@ -162,6 +162,7 @@ public:
    void OnTransportAdvanced(float amount) override;
    bool CheckNoteOverlap(SongCanvasNote* note) const;
    void OnTimeEvent(double time) override;
+   double GetEventTime(double lookAheadTime, double lookAheadPos, double eventPos) const;
 
    //Audio
    void Process(double time) override;
@@ -298,6 +299,7 @@ private:
 
    static constexpr int MaxLayers = 101; //Further increasing this may cause crashes.
    float mTime{ 0 };
+   float mLastTime{ 0 };
    double mCanvasRelativeTime{ 0 };
    bool mPartCanvasDirty{ false }; //If true, the Canvas will regenerate next tick.
    double mFlashRackStartTime{ 0 };
@@ -469,6 +471,9 @@ private:
    float mLastTempo = -1;
    SongCanvasNote* mLastClickedNote{ nullptr };
    double mLastClickedNoteTime = 0;
+
+   bool mResetNextBuffer{ false };
+   bool mLoopQueued{ false };
 
    std::vector<SongCanvasMixer*> mMixers{};
    std::vector<SongCanvasAudioRackElement*> mAudioRacks{};

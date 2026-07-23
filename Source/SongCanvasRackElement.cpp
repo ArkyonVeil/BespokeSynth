@@ -383,10 +383,8 @@ void SongCanvasRackEnabler::CreateUIControls()
 }
 
 
-void SongCanvasRackEnabler::OnEnter(SongCanvasNote* element)
+void SongCanvasRackEnabler::OnEnter(SongCanvasNote* element, double time)
 {
-   double time = NextBufferTime(mSongCanvas);
-
    mEnablerCable->AddHistoryEvent(time, true, 0);
 
    Excite(1);
@@ -400,9 +398,8 @@ void SongCanvasRackEnabler::OnEnter(SongCanvasNote* element)
       }
    }
 }
-void SongCanvasRackEnabler::OnExit(SongCanvasNote* element)
+void SongCanvasRackEnabler::OnExit(SongCanvasNote* element, double time)
 {
-   double time = NextBufferTime(mSongCanvas);
    mEnablerCable->AddHistoryEvent(time, false, 0);
 
    SetExciteWiggle(0);
@@ -552,7 +549,7 @@ void SongCanvasRackPulser::OnPostResize()
    }
 }
 
-void SongCanvasRackPulser::OnEnter(SongCanvasNote* element)
+void SongCanvasRackPulser::OnEnter(SongCanvasNote* element, double time)
 {
    if (mOnePulseMode)
    {
@@ -565,7 +562,7 @@ void SongCanvasRackPulser::OnEnter(SongCanvasNote* element)
          receiver->OnPulse(time, 1, 0);
    }
 }
-void SongCanvasRackPulser::OnExit(SongCanvasNote* element)
+void SongCanvasRackPulser::OnExit(SongCanvasNote* element, double time)
 {
 }
 

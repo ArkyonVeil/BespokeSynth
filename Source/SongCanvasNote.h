@@ -23,7 +23,6 @@ public:
    float DragQuantizationOverride(float input, int context) override;
 
    int GetRackParentId() const { return mRackParentID; }
-   //float GetMinLength() override { return 0.25f; }
 
    //Added offsets to the current ones.
    float mTextDrawXOffset = 2;
@@ -31,6 +30,10 @@ public:
 
    ofColor mCurrentColor;
    ofColor mCurrentColorGrad;
+
+protected:
+   bool CanDragSnapToZero() override { return false; };
+   NoteInterval GetMinLengthIntervals() override { return kInterval_64n; };
 
 private:
    void DrawContents(bool clamp, bool wrapped, ofVec2f offset) override;

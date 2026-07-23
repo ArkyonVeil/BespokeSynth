@@ -63,6 +63,7 @@ void CanvasTimeline::Render()
    float startX = ofMap(mCanvas->mLoopStart, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
    float endX = ofMap(mCanvas->mLoopEnd, mCanvas->mViewStart, mCanvas->mViewEnd, 0, mWidth);
 
+
    if (mClick && (mHoverMode == HoverMode::kStart || mHoverMode == HoverMode::kMiddle))
       startX += mDragOffset.x;
    if (mClick && (mHoverMode == HoverMode::kEnd || mHoverMode == HoverMode::kMiddle))
@@ -98,7 +99,7 @@ void CanvasTimeline::Render()
       ofRect(startX, 0, endX - startX, mDrawHeight / 2, 0);
    else
    {
-      ofRect(MAX(startX, 0), 0, MIN(mWidth, endX - startX), mDrawHeight / 2, 0);
+      ofRect(MAX(startX, 0), 0, CLAMP(endX - MAX(0, startX), 0, mWidth), mDrawHeight / 2, 0);
    }
    if (!shiftPreview)
    {
@@ -116,7 +117,10 @@ void CanvasTimeline::Render()
          ofSetColor(mCornerBaseColour);
       ofFill();
       if (startX >= 0 || mClick)
-         DrawTriangle(startX, 1);
+      {
+         if (startX <= mWidth)
+            DrawTriangle(startX, 1);
+      }
       else
       {
          ofSetLineWidth(2);
@@ -138,7 +142,10 @@ void CanvasTimeline::Render()
          ofSetColor(mCornerBaseColour);
       ofFill();
       if (endX <= mWidth || mClick) //Probably best to make this a variable.
-         DrawTriangle(endX, -1);
+      {
+         if (endX >= 0)
+            DrawTriangle(endX, -1);
+      }
       else
       {
          ofSetLineWidth(2);

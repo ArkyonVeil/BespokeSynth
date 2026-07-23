@@ -96,6 +96,8 @@ protected:
    ofRectangle GetRectAtDestination(bool clamp, bool wrapped, ofVec2f dragOffset) const;
    float GetStart(int col, float offset) const;
    float GetEnd(int col, float offset, float length) const;
+   virtual NoteInterval GetMinLengthIntervals() { return kInterval_None; }
+   virtual bool CanDragSnapToZero() { return true; };
 
    Canvas* mCanvas{ nullptr };
    bool mHighlighted{ false };

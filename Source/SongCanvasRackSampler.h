@@ -22,8 +22,8 @@ public:
    std::string GetFlowGridElementType() const override { return "partsampler"; };
    void CreateUIControls() override;
    static IDrawableModule* Create() { return new SongCanvasRackSampler("Part", nullptr); };
-   void OnEnter(SongCanvasNote* element) override;
-   void OnExit(SongCanvasNote* element) override;
+   void OnEnter(SongCanvasNote* element, double time) override;
+   void OnExit(SongCanvasNote* element, double time) override;
    int GetPitchFromNote(SongCanvasNote* element);
    int GetPitchFromCanvasElementSize(float size);
    float GetCanvasElementSizeFromPitch(int notePitch);

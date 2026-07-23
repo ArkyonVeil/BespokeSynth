@@ -56,7 +56,7 @@ void SongCanvasRackSampler::CreateUIControls()
    mADSRDisplay->SetHoldCableWhileHidden(true);
 }
 
-void SongCanvasRackSampler::OnEnter(SongCanvasNote* element)
+void SongCanvasRackSampler::OnEnter(SongCanvasNote* element, double time)
 {
    if (mSample)
    {
@@ -69,7 +69,7 @@ void SongCanvasRackSampler::OnEnter(SongCanvasNote* element)
       }
    }
 }
-void SongCanvasRackSampler::OnExit(SongCanvasNote* element)
+void SongCanvasRackSampler::OnExit(SongCanvasNote* element, double time)
 {
    int i = 0;
    for (auto& note : mVoiceNoteMap)

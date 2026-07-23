@@ -228,7 +228,7 @@ bool FlowGrid::MouseMoved(float x, float y)
          }
       }
       mSnapDragIndex = CLAMP(mSnapDragIndex, 0, static_cast<int>(mRows[rowSnap].elements.size()));
-      mDragSnapIndicatorPos = ofVec2f(xSnapPos, mRowYBorderOffset + rowSnap * mRowYSize);
+      mDragSnapIndicatorPos = ofVec2f(xSnapPos, mRowYBorderOffset + rowSnap * mRowYSize + mElementYSpacing * rowSnap);
    }
 
    return false;
@@ -622,7 +622,7 @@ void FlowGrid::UpdateRow(int index, bool updateFillState)
    //Note Spacing is treated as a module with min 0, compact 4.
    //We'll start by setting aside the space we'll dedicate for the selected module. Usually preferredSize, but exceptions may apply.
    float priorityModuleRatio = MIN(1, (maxRowSize - totalMinWidth) / (hoveredPreferredWidth + selectedPreferredWidth));
-   float ratio;
+   float ratio = 0;
    float spaceSize;
    int formula = 1;
    //Now we need to know which formula we'll apply for compression.

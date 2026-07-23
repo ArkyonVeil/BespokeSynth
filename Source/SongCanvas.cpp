@@ -241,7 +241,7 @@ void SongCanvas::CreateUIControls()
 void SongCanvas::Init()
 {
    IDrawableModule::Init();
-   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(0, true), true);
+   mTransportListenerInfo = TheTransport->AddListener(this, kInterval_64n, OffsetInfo(gBufferSizeMs, true), true);
    TheTransport->AddAudioPoller(this);
 
    //Parts
@@ -1123,7 +1123,7 @@ void SongCanvas::ReloadMeasures(bool overrideAutoFit)
       }
       UserUpdatedCanvasTimeline(mCanvas->mLoopStart, mCanvas->mLoopEnd);
    }
-   mCanvas->SetElementPlacementHintSize((mCanvas->GetNumCols() / mMeasureCount));
+   mCanvas->SetElementPlacementHintSize(mCanvas->GetNumCols() / mMeasureCount);
    mTransportSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureSlider->SetExtents(mMeasureStart, mMeasureStart + mMeasureCount);
    mMeasureCountTextbox->UpdateDisplayString();
@@ -1245,7 +1245,10 @@ void SongCanvas::ButtonClicked(ClickButton* button, double time)
    {
       if (!mLocalMode)
       {
-         TheTransport->SetMeasureTime(mCanvas->mLoopStart);
+         mResetNextBuffer = true;
+
+         //TheTransport->SetMeasureTime(mCanvas->mLoopStart);
+
          if (mResetButtonAlsoStops)
          {
             TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
@@ -1406,7 +1409,7 @@ void SongCanvas::ElementRemoved(CanvasElement* element)
    {
       if (mActiveElements[i] == sElement)
       {
-         sElement->GetRackElement()->OnExit(sElement);
+         sElement->GetRackElement()->OnExit(sElement, gTime);
          mActiveElements.erase(mActiveElements.begin() + i);
       }
    }
@@ -1494,27 +1497,44 @@ void SongCanvas::OnReset()
 {
    for (auto el : mActiveElements)
    {
-      el->GetRackElement()->OnExit(el);
+      el->GetRackElement()->OnExit(el, gTime);
    }
    mActiveElements.clear();
 }
 
 void SongCanvas::OnTransportAdvanced(float amount)
 {
+   if (mResetNextBuffer)
+   {
+      TheTransport->SetQueuedMeasure(gTime, mCanvas->mLoopStart);
+      mResetNextBuffer = false;
+   }
+
    std::lock_guard lock(mAudioStateMutex);
 
+   double lookaheadBufferMs = gBufferSizeMs * 2;
+   double lookAheadTime;
+   double extendedLookaheadTime = TheTransport->GetMeasureTime(gTime + gBufferSizeMs * 5);
    if (!mLocalMode || (mLocalMode && mLocalSynced && mOnEndMeasure == enumOEMLoop))
+   {
       mTime = TheTransport->GetMeasureTime(gTime);
+      lookAheadTime = TheTransport->GetMeasureTime(gTime + lookaheadBufferMs);
+   }
    else
    {
       if (!mLocalStopped)
+      {
          mTime += amount;
+      }
+      lookAheadTime = std::fmod(mTime - mCanvas->mLoopStart + amount * 2, mCanvas->mLoopEnd) + mCanvas->mLoopStart;
    }
-   if (mTime - amount <= mCanvas->mLoopStart)
+
+   if (mLastTime > mTime || mTime == 0)
    {
-      OnReset();
-      //Reset
+      mLoopQueued = false;
    }
+
+   mLastTime = mTime;
 
    //First check if we have any cleanup to do.
    if (mPartCanvasDirty)
@@ -1523,7 +1543,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
       mPartCanvasDirty = false;
    }
 
-   //The 0.02f refers to a small nudge to help it activate modules at points where they can activate notes at the exact same time more reliably.
+
    if (!mLocalMode) //Global Time ops
    {
 
@@ -1531,48 +1551,47 @@ void SongCanvas::OnTransportAdvanced(float amount)
       if (mCanvas->mLoopEnd == mCanvas->GetLength() && mCanvas->mLoopStart == 0)
          timelineLoopActive = false;
 
+      bool tryQueueLoop = false;
+      bool tryStop = false;
       if (timelineLoopActive)
       {
-         if (mTime > mCanvas->mLoopEnd)
+         if (extendedLookaheadTime > mCanvas->mLoopEnd)
          {
-            mTime = mCanvas->mLoopStart;
-            TheTransport->SetMeasureTime(mTime);
+            tryQueueLoop = true;
          }
       }
       else if (mOnEndMeasure == EnumOnEndMeasure::enumOEMLoop)
       {
-         if (mTime > mCanvas->GetLength())
+         if (extendedLookaheadTime > mCanvas->GetLength())
          {
-            mTime = mCanvas->mLoopStart;
-            TheTransport->SetMeasureTime(mTime);
+            tryQueueLoop = true;
          }
       }
       else if (mOnEndMeasure == EnumOnEndMeasure::enumOEMStop)
       {
-         if (mTime > mCanvas->GetLength())
+         if (extendedLookaheadTime > mCanvas->GetLength())
          {
-            mTime = mCanvas->mLoopStart;
-            TheTransport->SetMeasureTime(mTime);
-            TheSynth->SetAudioPaused(!TheSynth->IsAudioPaused());
+            tryStop = true;
+            tryQueueLoop = true;
          }
       }
-      mCanvasRelativeTime = (mTime - mMeasureStart + 0.02f) / mMeasureCount;
+      if (tryQueueLoop && !mLoopQueued)
+      {
+         TheTransport->SetQueuedMeasure(gTime, mCanvas->mLoopStart);
+         mLoopQueued = true;
+         if (tryStop && !TheSynth->IsAudioPaused())
+            TheSynth->SetAudioPaused(true);
+      }
+      if (lookAheadTime < mCanvas->GetLength())
+         lookAheadTime = mCanvas->mLoopStart + fmod(lookAheadTime - mCanvas->mLoopStart, mCanvas->mLoopEnd - mCanvas->mLoopStart);
+      mCanvasRelativeTime = (lookAheadTime - mMeasureStart) / mMeasureCount;
    }
    else //Local time Ops
    {
       if (mOnEndMeasure == EnumOnEndMeasure::enumOEMLoop)
       {
-         if (mLocalSynced)
-         {
-            mTime = mCanvas->mLoopStart + std::fmod(mTime, mCanvas->mLoopEnd - mCanvas->mLoopStart);
-         }
-         else
-         {
-            if (mTime > mCanvas->mLoopEnd)
-            {
-               mTime = mCanvas->mLoopStart;
-            }
-         }
+         lookAheadTime = mCanvas->mLoopStart + std::fmod(mTime - mCanvas->mLoopStart + amount * 2, mCanvas->mLoopEnd - mCanvas->mLoopStart);
+         mTime = mCanvas->mLoopStart + std::fmod(mTime - mCanvas->mLoopStart, mCanvas->mLoopEnd - mCanvas->mLoopStart);
       }
       else if (mOnEndMeasure == EnumOnEndMeasure::enumOEMStop)
       {
@@ -1582,7 +1601,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
             mLocalStopped = true;
          }
       }
-      mCanvasRelativeTime = (mTime + 0.02f) / mMeasureCount;
+      mCanvasRelativeTime = lookAheadTime / mMeasureCount;
    }
    if (IsEnabled())
    {
@@ -1596,18 +1615,20 @@ void SongCanvas::OnTransportAdvanced(float amount)
          //Process the chunk, activating/processing as needed.
          for (int i = 0; i < cL.size(); ++i)
          {
-            if (cL[i]->GetStart() < mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
+            if (cL[i]->GetStart() <= mCanvasRelativeTime && cL[i]->GetEnd() > mCanvasRelativeTime)
             {
                if (!IsCanvasElementActive(cL[i]) & seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
                {
+                  double evTime = GetEventTime(lookAheadTime, mCanvasRelativeTime, cL[i]->GetStart());
                   mActiveElements.push_back(cL[i]);
-                  cL[i]->GetRackElement()->OnEnter(cL[i]);
+                  cL[i]->GetRackElement()->OnEnter(cL[i], evTime);
                }
                if (seqLayers[cL[i]->mRow].enabled & cL[i]->GetRackElement()->IsRackEnabled())
                   cL[i]->GetRackElement()->OnProcessTransport();
                else
                {
-                  cL[i]->GetRackElement()->OnExit(cL[i]);
+                  double evTime = GetEventTime(lookAheadTime, mCanvasRelativeTime, cL[i]->GetEnd());
+                  cL[i]->GetRackElement()->OnExit(cL[i], evTime);
 
                   for (int mAE = 0; mAE < mActiveElements.size(); ++mAE)
                   {
@@ -1630,7 +1651,10 @@ void SongCanvas::OnTransportAdvanced(float amount)
                if (overlapSustain)
                   canExit = !CheckNoteOverlap(mActiveElements[i]); //If overlapping, we still dispose, but we skip the exit call.
                if (canExit)
-                  mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
+               {
+                  double evTime = GetEventTime(lookAheadTime, mCanvasRelativeTime, mActiveElements[i]->GetEnd());
+                  mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i], evTime);
+               }
                mActiveElements.erase(mActiveElements.begin() + i);
                i--;
             }
@@ -1642,11 +1666,23 @@ void SongCanvas::OnTransportAdvanced(float amount)
       //If we're disabled, clean up.
       for (int i = 0; i < mActiveElements.size(); ++i)
       {
-         mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i]);
+         double evTime = GetEventTime(lookAheadTime, mCanvasRelativeTime, mActiveElements[i]->GetEnd());
+         mActiveElements[i]->GetRackElement()->OnExit(mActiveElements[i], evTime);
          mActiveElements.erase(mActiveElements.begin() + i);
          i--;
       }
    }
+}
+
+double SongCanvas::GetEventTime(double lookAheadTime, double lookAheadPos, double eventPos) const
+{
+   double cursorAdvanceSinceEvent = lookAheadPos - eventPos;
+   if (cursorAdvanceSinceEvent < 0)
+      cursorAdvanceSinceEvent += 1;
+   double time = lookAheadTime - cursorAdvanceSinceEvent * TheTransport->MsPerBar() * mMeasureCount;
+   if (time < gTime)
+      time = gTime;
+   return time;
 }
 
 bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note) const
@@ -1661,9 +1697,8 @@ bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note) const
    float matchTime = note->mCol + note->mOffset + note->mLength;
 
    //If not, check to see if there's any connected note elements at the end.
-   int readChunkNum = floor(matchTime / mCanvas->GetLength() * mChunkAmount);
-   if (readChunkNum < 0)
-      readChunkNum = 0;
+   int readChunkNum = floor(matchTime / mCanvas->GetNumCols() * mChunkAmount);
+   readChunkNum = CLAMP(readChunkNum, 0, mChunkAmount);
    auto& cL = mCanvasChunkList[readChunkNum];
 
    for (auto el : cL)
@@ -1989,13 +2024,15 @@ void SongCanvas::LoadState(FileStreamIn& in, int rev)
 
    mReloadMeasureLoadFlag = true;
    SetEnabled(enableState);
-   Resize(mWidth, mHeight);
 
    for (auto elm : mRackGrid->GetAllElements())
    {
       auto rack = dynamic_cast<SongCanvasRackElement*>(elm);
       rack->OnLoadFinish();
    }
+
+   SetUpFromSaveData();
+
    mIsLoading = false;
 }
 

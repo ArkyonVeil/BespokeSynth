@@ -153,7 +153,7 @@ public:
       mLoopEndMeasure = -1;
       mQueuedMeasure = -1;
    }
-   void SetQueuedMeasure(double time, int measure);
+   void SetQueuedMeasure(double time, double measure);
    bool IsPastQueuedMeasureJump(double time) const;
    double GetMeasureFraction(NoteInterval interval);
    int GetStepsPerMeasure(ITimeListener* listener);
@@ -229,8 +229,8 @@ private:
    FloatSlider* mTempoSlider{ nullptr };
    int mLoopStartMeasure{ -1 };
    int mLoopEndMeasure{ -1 };
-   int mQueuedMeasure{ -1 };
-   int mJumpFromMeasure{ -1 };
+   double mQueuedMeasure{ -1 };
+   double mJumpFromMeasure{ -1 };
    bool mWantSetRandomTempo{ false };
    float mNudgeFactor{ 0 };
    double mSeekMsAfterJump{ 0.0 };

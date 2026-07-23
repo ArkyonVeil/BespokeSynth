@@ -135,11 +135,11 @@ void Transport::Advance(double ms)
 
    double oldMeasureTime = mMeasureTime;
    mMeasureTime += amount;
-   if (int(mMeasureTime) != int(oldMeasureTime) && mMeasureTime >= mJumpFromMeasure)
+   if (oldMeasureTime < mJumpFromMeasure && mMeasureTime >= mJumpFromMeasure)
    {
       if (mQueuedMeasure != -1)
       {
-         SetMeasure(mQueuedMeasure);
+         mMeasureTime = mQueuedMeasure + (mMeasureTime - mJumpFromMeasure);
 
          if (mSeekMsAfterJump != 0.0)
          {
@@ -275,11 +275,6 @@ void Transport::DrawModule()
 
 void Transport::Reset(bool timeSensitive /*= false*/)
 {
-   if (mLoopEndMeasure != -1)
-      mMeasureTime = mLoopEndMeasure - .0001f;
-   else
-      mMeasureTime = .9999f;
-
    if (timeSensitive) //try to line up downbeat with when user actually gave this input
       mSeekMsAfterJump = gBufferSizeMs;
 
@@ -575,13 +570,13 @@ double Transport::GetMeasureTime(double time) const
    return measureTime;
 }
 
-void Transport::SetQueuedMeasure(double time, int measure)
+void Transport::SetQueuedMeasure(double time, double measure)
 {
    mQueuedMeasure = -1; //clear
    if (mLoopEndMeasure != -1)
       mJumpFromMeasure = mLoopEndMeasure;
-   else
-      mJumpFromMeasure = GetMeasure(time) + 1;
+   else //Need to give sufficient lookahead time for controllers to prepare.
+      mJumpFromMeasure = round(GetMeasureTimeInternal(time + 4 * gBufferSizeMs) * 64) / 64.0;
    mQueuedMeasure = measure;
 }
 
