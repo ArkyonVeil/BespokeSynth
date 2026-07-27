@@ -72,25 +72,6 @@ jobs:
           fetch-depth: 1
           submodules: recursive
 
-      - name: Install ccache (macOS)
-        if: matrix.platform == 'macos'
-        run: brew install ccache
-
-      - name: Install sccache (Windows)
-        if: matrix.platform == 'windows'
-        shell: bash
-        run: choco install sccache -y
-
-      - name: Restore compiler cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.ccache
-            ~/AppData/Local/sccache
-          key: compiler-cache-${{ matrix.name }}-${{ github.sha }}
-          restore-keys: |
-            compiler-cache-${{ matrix.name }}-
-
       - name: Install Linux dependencies
         if: matrix.platform == 'linux'
         run: |
@@ -133,6 +114,12 @@ jobs:
           npm install -g appdmg
           wget https://www.python.org/ftp/python/3.10.0/python-3.10.0post2-macos11.pkg
           sudo installer -pkg python-3.10.0post2-macos11.pkg -target /
+
+      - name: Set up compiler cache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.name }}
+          variant: ${{ matrix.platform == 'windows' && 'sccache' || 'ccache' }}
 
       - name: Download and extract ASIO SDK (Windows)
         if: matrix.platform == 'windows'
@@ -265,7 +252,6 @@ jobs:
               ninja-build \
               xcb \
               libgtk-3-dev \
-              libwebkit2gtk-4.0 \
               libwebkit2gtk-4.0-dev \
               libcurl4-openssl-dev \
               alsa \
@@ -389,6 +375,4 @@ jobs:
             releases/*.zip
             releases/*.dmg
             releases/*.gz
-          draft: false
-          prerelease: false
           overwrite_files: true
