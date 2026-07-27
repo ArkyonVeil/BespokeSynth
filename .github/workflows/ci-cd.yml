@@ -389,6 +389,6 @@ jobs:
             releases/*.zip
             releases/*.dmg
             releases/*.gz
-          draft: true
+          draft: false
           prerelease: false
           overwrite_files: true
