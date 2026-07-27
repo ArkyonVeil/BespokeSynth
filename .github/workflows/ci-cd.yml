@@ -119,8 +119,10 @@ jobs:
       - name: Set up compiler cache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.name }}
+          key: ${{ matrix.name }}-${{ github.ref_name }}
+          restore-keys: ${{ matrix.name }}-
           variant: ${{ matrix.platform == 'windows' && 'sccache' || 'ccache' }}
+          max-size: 500M
 
       - name: Download and extract ASIO SDK (Windows)
         if: matrix.platform == 'windows'
