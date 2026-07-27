@@ -112,6 +112,7 @@ jobs:
         run: |
           set -e
           npm install -g appdmg
+          brew install ninja
           wget https://www.python.org/ftp/python/3.10.0/python-3.10.0post2-macos11.pkg
           sudo installer -pkg python-3.10.0post2-macos11.pkg -target /
 
@@ -154,7 +155,7 @@ jobs:
         run: |
           set -e
           cmake -Bbuild \
-            -GXcode \
+            -GNinja \
             -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
             -DBESPOKE_PYTHON_ROOT='/Library/Frameworks/Python.framework/Versions/3.10' \
             -DCMAKE_BUILD_TYPE=Release \
@@ -169,7 +170,7 @@ jobs:
         run: |
           set -e
           cmake -Bbuild \
-            -A x64 \
+            -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
             -DBESPOKE_NIGHTLY=True \
