@@ -5,6 +5,7 @@ on:
     types: [closed]
     branches:
       - songcanvas-main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,7 +14,7 @@ jobs:
   check-release:
     name: Release Existence Check
     runs-on: ubuntu-22.04
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
