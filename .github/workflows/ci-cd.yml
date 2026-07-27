@@ -141,7 +141,14 @@ jobs:
         shell: bash
         run: |
           set -e
-          curl -L "https://archive.org/download/VST2SDK/vstsdk2_4.zip" -o vst2sdk.zip
+          for attempt in 1 2 3; do
+            curl -L --retry 3 --retry-delay 5 \
+              "https://archive.org/download/VST2SDK/vstsdk2_4.zip" -o vst2sdk.zip
+            unzip -t vst2sdk.zip > /dev/null 2>&1 && break
+            echo "Attempt $attempt: downloaded file is not a valid zip, retrying..."
+            rm -f vst2sdk.zip
+            sleep 10
+          done
           unzip -q vst2sdk.zip -d vst2sdk_extracted
           AEFFECT_H=$(find vst2sdk_extracted -name 'aeffect.h' | head -1)
           VST2_SDK_PATH=$(dirname "$AEFFECT_H")
