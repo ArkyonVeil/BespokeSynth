@@ -123,6 +123,7 @@ jobs:
           restore-keys: ${{ matrix.name }}-
           variant: ${{ matrix.platform == 'windows' && 'sccache' || 'ccache' }}
           max-size: 500M
+          append-timestamp: false
 
       - name: Download and extract ASIO SDK (Windows)
         if: matrix.platform == 'windows'
