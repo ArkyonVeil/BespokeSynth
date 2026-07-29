@@ -1,14 +1,51 @@
 name: Build And Release
 
 on:
+  pull_request:
+    types: [closed]
+    branches:
+      - songcanvas-main
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  check-release:
+    name: Release Existence Check
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Read tag from template
+        id: read_tag
+        run: |
+          tag_line="$(sed -n '1p' RELEASE_TEMPLATE.md)"
+          tag="${tag_line#Tag: }"
+          if [ -z "$tag" ]; then
+            echo "Could not read tag from RELEASE_TEMPLATE.md line 1"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if release already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.read_tag.outputs.tag }}"
+          if gh release view "$tag" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "Release '$tag' already exists. Aborting."
+            exit 1
+          fi
+          echo "Release '$tag' does not exist. Proceeding."
+
   build:
     name: Build (${{ matrix.name }})
+    needs: check-release
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
@@ -32,7 +69,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 5
+          fetch-depth: 1
           submodules: recursive
 
       - name: Install Linux dependencies
@@ -41,6 +78,7 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y \
+              ccache \
               devscripts \
               libxcb-cursor-dev \
               libxcb-keysyms1-dev \
@@ -50,7 +88,6 @@ jobs:
               ninja-build \
               xcb \
               libgtk-3-dev \
-              libwebkit2gtk-4.0 \
               libwebkit2gtk-4.0-dev \
               libcurl4-openssl-dev \
               alsa \
@@ -75,8 +112,18 @@ jobs:
         run: |
           set -e
           npm install -g appdmg
+          brew install ninja
           wget https://www.python.org/ftp/python/3.10.0/python-3.10.0post2-macos11.pkg
           sudo installer -pkg python-3.10.0post2-macos11.pkg -target /
+
+      - name: Set up compiler cache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.name }}-${{ github.ref_name }}
+          restore-keys: ${{ matrix.name }}-
+          variant: ${{ matrix.platform == 'windows' && 'sccache' || 'ccache' }}
+          max-size: 500M
+          append-timestamp: false
 
       - name: Download and extract ASIO SDK (Windows)
         if: matrix.platform == 'windows'
@@ -97,7 +144,14 @@ jobs:
         shell: bash
         run: |
           set -e
-          curl -L "https://archive.org/download/VST2SDK/vstsdk2_4.zip" -o vst2sdk.zip
+          for attempt in 1 2 3; do
+            curl -L --retry 3 --retry-delay 5 \
+              "https://archive.org/download/VST2SDK/vstsdk2_4.zip" -o vst2sdk.zip
+            unzip -t vst2sdk.zip > /dev/null 2>&1 && break
+            echo "Attempt $attempt: downloaded file is not a valid zip, retrying..."
+            rm -f vst2sdk.zip
+            sleep 10
+          done
           unzip -q vst2sdk.zip -d vst2sdk_extracted
           AEFFECT_H=$(find vst2sdk_extracted -name 'aeffect.h' | head -1)
           VST2_SDK_PATH=$(dirname "$AEFFECT_H")
@@ -111,12 +165,20 @@ jobs:
         run: |
           set -e
           cmake -Bbuild \
-            -GXcode \
+            -GNinja \
             -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
             -DBESPOKE_PYTHON_ROOT='/Library/Frameworks/Python.framework/Versions/3.10' \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
-            -DBESPOKE_NIGHTLY=True
+            -DBESPOKE_NIGHTLY=True \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Set up MSVC environment (Windows)
+        if: matrix.platform == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Configure Windows build
         if: matrix.platform == 'windows'
@@ -124,12 +186,14 @@ jobs:
         run: |
           set -e
           cmake -Bbuild \
-            -A x64 \
+            -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
             -DBESPOKE_NIGHTLY=True \
             -DBESPOKE_ASIO_SDK_LOCATION="${ASIO_SDK_PATH}" \
-            -DBESPOKE_VST2_SDK_LOCATION="${VST2_SDK_PATH}"
+            -DBESPOKE_VST2_SDK_LOCATION="${VST2_SDK_PATH}" \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
       - name: Configure Linux build
         if: matrix.platform == 'linux'
@@ -139,7 +203,9 @@ jobs:
             -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBESPOKE_PORTABLE=True \
-            -DBESPOKE_NIGHTLY=True
+            -DBESPOKE_NIGHTLY=True \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build nightly package
         shell: bash
@@ -178,14 +244,15 @@ jobs:
 
   code-formatting:
     name: Code Formatting
+    needs: check-release
     runs-on: ubuntu-22.04
-    timeout-minutes: 120
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 5
+          fetch-depth: 1
           submodules: recursive
 
       - name: Install Linux dependencies
@@ -202,7 +269,6 @@ jobs:
               ninja-build \
               xcb \
               libgtk-3-dev \
-              libwebkit2gtk-4.0 \
               libwebkit2gtk-4.0-dev \
               libcurl4-openssl-dev \
               alsa \
@@ -238,7 +304,7 @@ jobs:
 
   release:
     name: Release
-    runs-on: macos-14
+    runs-on: ubuntu-22.04
     needs:
       - build
       - code-formatting
@@ -247,7 +313,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 5
+          fetch-depth: 1
 
       - name: Read release template
         id: release_template
@@ -306,16 +372,17 @@ jobs:
             mv -- "$f" "${base}_${short_hash}_$(date +%F).${ext}"
           done
 
-          printf '%s\n\n' "${{ steps.release_template.outputs.title }}" > releases/ReleaseNotes.md
-          tail -n +4 RELEASE_TEMPLATE.md >> releases/ReleaseNotes.md
-          printf '\n\n<pre>\n' >> releases/ReleaseNotes.md
-          git log -5 --pretty=format:'%h : %s - %an' >> releases/ReleaseNotes.md
-          printf '\n</pre>\n' >> releases/ReleaseNotes.md
+          image_url="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/RELEASE_IMAGE.png"
+          {
+            echo "![]($image_url)"
+            echo ""
+            tail -n +3 RELEASE_TEMPLATE.md
+          } > releases/ReleaseNotes.md
 
           ls -alFh releases
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.2
         with:
           tag_name: ${{ steps.release_template.outputs.tag }}
           name: ${{ steps.release_template.outputs.title }}
@@ -325,6 +392,4 @@ jobs:
             releases/*.zip
             releases/*.dmg
             releases/*.gz
-          draft: true
-          prerelease: false
           overwrite_files: true
