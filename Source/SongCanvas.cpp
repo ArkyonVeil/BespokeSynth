@@ -840,8 +840,8 @@ void SongCanvas::CanvasUpdated(Canvas* canvas)
 }
 void SongCanvas::FeatureResize(int extraW, int extraH)
 {
-   float h = mHeight;
    float w = mWidth;
+   float h = mHeight;
    Resize(w + extraW, h + extraH);
 }
 int SongCanvas::GetElementFactoryArgs()
@@ -1692,7 +1692,8 @@ bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note) const
    for (auto el : mActiveElements)
    {
       if (el->GetRackElement() == rack && el != note)
-         return true;
+         if (el->GetStart() < note->GetEnd() && el->GetEnd() > note->GetStart())
+            return true;
    }
    float matchTime = note->mCol + note->mOffset + note->mLength;
 
