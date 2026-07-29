@@ -1,4 +1,4 @@
-![screenshot](artsyBespoke.png)
+![screenshot](ArtsyBespoke.png)
 
 Welcome to the SongCanvas fork of BespokeSynth!  It includes numerous fixes, improvements as well as a massive new module, the SongCanvas. A powerful DAW built directly into the highly modular synth that is Bespoke.
 
