@@ -1,8 +1,15 @@
-[![Build Status](https://dev.azure.com/awwbees/BespokeSynth/_apis/build/status/BespokeSynth.BespokeSynth?branchName=main)](https://dev.azure.com/awwbees/BespokeSynth/_build/latest?definitionId=1&branchName=main)
+![screenshot](artsyBespoke.png)
+
+Welcome to the SongCanvas fork of BespokeSynth!  It includes numerous fixes, improvements as well as a massive new module, the SongCanvas. A powerful DAW built directly into the highly modular synth that is Bespoke.
+
+Check out the [releases](https://github.com/ArkyonVeil/BespokeSynth/releases)!
+
+*BespokeSynth by @awwbees, further credit to respective contributors.*
+
+*SongCanvas by @ArkyonVeil, build assistance by @r4dal*
+
+## Bespoke Synth (Original Readme)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
-
-
-# Bespoke Synth
 
 A software modular synth that I've been building for myself since 2011, and now you can use it!
 
@@ -13,23 +20,23 @@ You can find the most recent builds for Mac/Windows/Linux at http://bespokesynth
 Join the [Bespoke Discord](https://discord.gg/YdTMkvvpZZ) for support and to discuss with the community.
 
 
-## Documentation
+### Documentation
 
 * [Official documentation](https://www.bespokesynth.com/docs/)
 * [Searchable, community-written documentation](https://github.com/BespokeSynth/BespokeSynthDocs/wiki)
 
 
-## Screenshot
+### Screenshot
 
 ![screenshot](screenshot-1.png)
 
 
-## Basic Overview/Tutorial Video
+### Basic Overview/Tutorial Video
 
 [![Bespoke Overview](https://img.youtube.com/vi/SYBc8X2IxqM/0.jpg)](https://www.youtube.com/watch?v=SYBc8X2IxqM)
 * https://youtu.be/SYBc8X2IxqM
 
-### Quick Reference
+#### Quick Reference
 
 ![quick reference](bespoke_quick_reference.png)
 
@@ -43,22 +50,23 @@ Join the [Bespoke Discord](https://discord.gg/YdTMkvvpZZ) for support and to dis
 * Works on Windows, Mac, and Linux
 
 
-### License
+#### License
 
 [GNU GPL v3](LICENSE)
 
 
-### Releases
+#### Releases
 
 Sign up here to receive an email whenever I put out a new release: http://bespokesynth.substack.com/
 
 
-### Contributing
+#### Contributing
+
 
 [See our contributing guidelines](CONTRIBUTING.md)
 
 
-### Building
+#### Building
 
 Building Bespoke from source is easy and fun! The basic cmake prescription gives you a completed
 executable which is ready to run on your system in many cases. If your system does not have `cmake` installed already you must do so.
