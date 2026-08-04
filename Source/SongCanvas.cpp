@@ -1723,7 +1723,7 @@ bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note, double relativeCanvasTim
          if (noteStartTime >= otherStartTime && noteStartTime <= otherEndTime)
             return true; //Left hand overlap
          if (noteEndTime >= otherStartTime && noteEndTime <= otherEndTime)
-            return true;//right hand overlap
+            return true; //right hand overlap
 
          //No overlap? Let's check if its within our relativeCanvasTime
          if (relativeCanvasTime >= otherStartTime && relativeCanvasTime <= otherEndTime)

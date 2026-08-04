@@ -39,7 +39,7 @@ public:
    } //Make it dance
    void SetExciteWiggle(float excitePower) { mExciteWiggle = excitePower; } //Make it do a base level of dancing, handy for long events.
    void SetExciteConstant(float excitePower) { mExciteConstant = excitePower; }
-   float GetExciteValue() const { return mExcitePower;};
+   float GetExciteValue() const { return mExcitePower; };
 
    void CreateUIControls() override;
    void UpdatePartNameData();

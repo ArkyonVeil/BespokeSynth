@@ -98,20 +98,20 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
 
       if (isPlaying)
       {
-         if (mRenderActivateHighlight<=0)
+         if (mRenderActivateHighlight <= 0)
          {
             mGlobalTimeActivated = SC_ANIMATE_SIN_VALUE - 7.0f;
             mRenderActivateHighlight = 0.8f;
          }
       }
 
-      if (mRenderActivateHighlight>0)
+      if (mRenderActivateHighlight > 0)
       {
-         mRenderActivateHighlight -= ofGetDeltaTime()*2.0f;
+         mRenderActivateHighlight -= ofGetDeltaTime() * 2.0f;
 
          if (isPlaying)
          {
-            mRenderActivateHighlight = MAX(0.5f,mRenderActivateHighlight);
+            mRenderActivateHighlight = MAX(0.5f, mRenderActivateHighlight);
          }
 
          mSongCanvas->RequestPostCanvasDrawCall(this);
@@ -127,7 +127,6 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
          ofRect(rect,2);
          ofPopStyle();*/
       }
-
 
 
       //If the name differs, redo the size calcs.
@@ -189,13 +188,13 @@ void SongCanvasNote::LateDraw() const
 {
    ofPushStyle();
 
-   float boostCol = 1.0f + mRenderActivateHighlight*0.4f;
-   ofColor colPlay = ofColor(MIN(255,mCurrentColor.r*boostCol),MIN(255,mCurrentColor.g*boostCol),MIN(255,mCurrentColor.b*boostCol));
+   float boostCol = 1.0f + mRenderActivateHighlight * 0.4f;
+   ofColor colPlay = ofColor(MIN(255, mCurrentColor.r * boostCol), MIN(255, mCurrentColor.g * boostCol), MIN(255, mCurrentColor.b * boostCol));
    float rackExcite = mRackPart->GetExciteValue();
    ofSetColor(colPlay);
    ofNoFill();
-   float lWidth = (0.5f+ abs(sin((SC_ANIMATE_SIN_VALUE-mGlobalTimeActivated)*0.1f))+ rackExcite*1.3f)*mRenderActivateHighlight;
-   ofSetLineWidth(MIN(3,lWidth));
+   float lWidth = (0.5f + abs(sin((SC_ANIMATE_SIN_VALUE - mGlobalTimeActivated) * 0.1f)) + rackExcite * 1.3f) * mRenderActivateHighlight;
+   ofSetLineWidth(MIN(3, lWidth));
 
    auto canvasPos = mCanvas->GetPosition(true);
    ofRectangle bounceRect = mBufferedRect;

@@ -49,7 +49,7 @@ private:
    int mRackParentID;
    bool mAllowResizing{ true };
 
-   float mRenderActivateHighlight { 0.0f };
-   double mGlobalTimeActivated {0};
+   float mRenderActivateHighlight{ 0.0f };
+   double mGlobalTimeActivated{ 0 };
    ofRectangle mBufferedRect;
 };
