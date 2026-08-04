@@ -50,6 +50,7 @@
 
 #include <mutex>
 
+#define SC_ANIMATE_SIN_VALUE ofGetGlobalTimeSeconds() * 12
 
 class SongCanvasMixer;
 class SongCanvasNote;
@@ -123,6 +124,7 @@ public:
    void OnReset();
    int GetMeasureCount() const { return mMeasureCount; }
    bool IsLayerActive(int layerId) const { return seqLayers[layerId].enabled; }
+   bool IsCanvasElementActive(SongCanvasNote* element) const;
    void CanvasElementClicked(CanvasElement* element) override;
 
    //Racks
@@ -160,7 +162,8 @@ public:
 
    //Transport
    void OnTransportAdvanced(float amount) override;
-   bool CheckNoteOverlap(SongCanvasNote* note) const;
+   bool CheckNoteOverlap(SongCanvasNote* note, double relativeCanvasTime) const;
+   std::vector<SongCanvasNote*> GetNotesAtTime(double relativeCanvasTime) const;
    void OnTimeEvent(double time) override;
    double GetEventTime(double lookAheadTime, double lookAheadPos, double eventPos) const;
 
@@ -232,6 +235,10 @@ public:
    static std::array<ofColor, 6> ESPrideColours;
    static std::array<ofColor, 4> ESTransColours;
 
+   void RequestPostCanvasDrawCall(SongCanvasNote* note)
+   {
+      mPostCanvasDrawRequests.push_back(note);
+   }
 
    //Part Public Configs
    enum class EnumSamplerAudioPreviewMode
@@ -266,7 +273,6 @@ private:
    void AddNewLayer(int index, SongCanvasLayer layer);
    void DeleteLayer(int index);
    void MoveLayerTo(int oldIndex, int newIndex);
-   bool IsCanvasElementActive(SongCanvasNote* element) const;
    void ElementRemoved(CanvasElement* element) override;
    void ReloadHeader();
 
@@ -392,6 +398,7 @@ private:
 
    std::vector<SongCanvasLayer> seqLayers{};
    std::vector<SongCanvasLayer> layerBuffer{}; //The reason for this is clumsy <>3
+   std::vector<SongCanvasNote*> mPostCanvasDrawRequests{};
 
    ClickButton* mRackAddNewButton{ nullptr };
 

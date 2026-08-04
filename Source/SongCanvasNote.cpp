@@ -62,10 +62,12 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
    float fullHeight = rect.height;
    rect.height *= 0.95;
    rect.y += (fullHeight - rect.height) * .5f;
+   mBufferedRect = rect;
    if (rect.width > 0)
    {
       float addedTextYOffset = 0;
       bool isActive = mSongCanvas->IsEnabled() && mSongCanvas->IsLayerActive(mRow);
+      bool isPlaying = isActive && mSongCanvas->IsCanvasElementActive(this);
       bool isHovered = mCanvas->GetElementHovered() == this;
       float colourMul = 1;
       int eDiv = 1; //Enabled Divisor
@@ -93,6 +95,29 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
       else
          ofSetColor(ofColor(125, 125, 125));
 
+
+      if (isPlaying)
+      {
+         if (mRenderActivateHighlight<=0)
+         {
+            mGlobalTimeActivated = SC_ANIMATE_SIN_VALUE - 7.0f;
+            mRenderActivateHighlight = 0.8f;
+         }
+      }
+
+      if (mRenderActivateHighlight>0)
+      {
+         mRenderActivateHighlight -= ofGetDeltaTime()*2.0f;
+
+         if (isPlaying)
+         {
+            mRenderActivateHighlight = MAX(0.5f,mRenderActivateHighlight);
+         }
+
+         mSongCanvas->RequestPostCanvasDrawCall(this);
+      }
+
+
       if (isHovered && !mHighlighted)
       { /*
          ofPushStyle();
@@ -102,6 +127,7 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
          ofRect(rect,2);
          ofPopStyle();*/
       }
+
 
 
       //If the name differs, redo the size calcs.
@@ -155,6 +181,27 @@ void SongCanvasNote::DrawContents(bool clamp, bool wrapped, ofVec2f offset)
       }
    }
 
+
+   ofPopStyle();
+}
+
+void SongCanvasNote::LateDraw() const
+{
+   ofPushStyle();
+
+   float boostCol = 1.0f + mRenderActivateHighlight*0.4f;
+   ofColor colPlay = ofColor(MIN(255,mCurrentColor.r*boostCol),MIN(255,mCurrentColor.g*boostCol),MIN(255,mCurrentColor.b*boostCol));
+   float rackExcite = mRackPart->GetExciteValue();
+   ofSetColor(colPlay);
+   ofNoFill();
+   float lWidth = (0.5f+ abs(sin((SC_ANIMATE_SIN_VALUE-mGlobalTimeActivated)*0.1f))+ rackExcite*1.3f)*mRenderActivateHighlight;
+   ofSetLineWidth(MIN(3,lWidth));
+
+   auto canvasPos = mCanvas->GetPosition(true);
+   ofRectangle bounceRect = mBufferedRect;
+   bounceRect.x += canvasPos.x;
+   bounceRect.y += canvasPos.y;
+   ofRect(bounceRect.grow(0.75f), 2);
 
    ofPopStyle();
 }

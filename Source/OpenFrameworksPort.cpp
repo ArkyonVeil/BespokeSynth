@@ -476,7 +476,7 @@ float ofGetDeltaTime()
 }
 
 //Returns the global time in seconds.
-double ofGetGlobalTime()
+double ofGetGlobalTimeSeconds()
 {
    return TheSynth->GetGlobalTime();
 }

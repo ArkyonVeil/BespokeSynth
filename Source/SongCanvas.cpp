@@ -503,6 +503,11 @@ void SongCanvas::DrawModule()
 
 
    mCanvas->Draw();
+   for (auto i : mPostCanvasDrawRequests)
+   {
+      i->LateDraw();
+   }
+   mPostCanvasDrawRequests.clear();
 
    ofSetColor(ofColor(255, 255, 255));
    //DrawTextNormal("viewCompression: "+ofToString(viewCompression), mCanvas->GetRect(true).x+4, mCanvas->GetRect(true).y+16);
@@ -692,8 +697,8 @@ void SongCanvas::DrawModule()
    //Draw the rack
    if (mFlashRackStartTime > 0)
    {
-      mRackGrid->SetBackgroundColour(255, 255, 255, CLAMP(40 + sin(ofGetGlobalTime() * 10) * 30, 0, 255));
-      if (mFlashRackStartTime + 1 < ofGetGlobalTime())
+      mRackGrid->SetBackgroundColour(255, 255, 255, CLAMP(40 + sin(ofGetGlobalTimeSeconds() * 12) * 30, 0, 255));
+      if (mFlashRackStartTime + 1 < ofGetGlobalTimeSeconds())
       {
          mFlashRackStartTime = 0;
          mRackGrid->SetBackgroundColour(0, 0, 0, 75);
@@ -1024,9 +1029,9 @@ void SongCanvas::MoveLayerTo(int oldIndex, int newIndex)
 
 bool SongCanvas::IsCanvasElementActive(SongCanvasNote* element) const
 {
-   for (int i = 0; i < mActiveElements.size(); ++i)
+   for (auto mActiveElement : mActiveElements)
    {
-      if (mActiveElements[i] == element)
+      if (mActiveElement == element)
          return true;
    }
    return false;
@@ -1397,7 +1402,7 @@ void SongCanvas::SetupCanvasElement(SongCanvasNote* element) const
 }
 void SongCanvas::CanvasElementAdditionSuppressed(float posX, float posY)
 {
-   mFlashRackStartTime = ofGetGlobalTime();
+   mFlashRackStartTime = ofGetGlobalTimeSeconds();
 }
 //Incoming event from a note bring removed from the base Canvas
 void SongCanvas::ElementRemoved(CanvasElement* element)
@@ -1421,12 +1426,12 @@ void SongCanvas::CanvasElementClicked(CanvasElement* element)
    auto* note = dynamic_cast<SongCanvasNote*>(element);
    if (mLastClickedNote == note)
    {
-      if (ofGetGlobalTime() - mLastClickedNoteTime < 0.4f)
+      if (ofGetGlobalTimeSeconds() - mLastClickedNoteTime < 0.4f)
       {
          mRackGrid->SetSelectedGridElement(note->GetRackElement());
       }
    }
-   mLastClickedNoteTime = ofGetGlobalTime();
+   mLastClickedNoteTime = ofGetGlobalTimeSeconds();
    mLastClickedNote = note;
 }
 
@@ -1649,7 +1654,7 @@ void SongCanvas::OnTransportAdvanced(float amount)
                bool overlapSustain = mActiveElements[i]->GetRackElement()->NoteOverlapSustain();
                bool canExit = true;
                if (overlapSustain)
-                  canExit = !CheckNoteOverlap(mActiveElements[i]); //If overlapping, we still dispose, but we skip the exit call.
+                  canExit = !CheckNoteOverlap(mActiveElements[i], mCanvasRelativeTime); //If overlapping, we still dispose, but we skip the exit call.
                if (canExit)
                {
                   double evTime = GetEventTime(lookAheadTime, mCanvasRelativeTime, mActiveElements[i]->GetEnd());
@@ -1685,33 +1690,56 @@ double SongCanvas::GetEventTime(double lookAheadTime, double lookAheadPos, doubl
    return time;
 }
 
-bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note) const
+bool SongCanvas::CheckNoteOverlap(SongCanvasNote* note, double relativeCanvasTime) const
 {
+   //Returns true if it finds a note that either overlaps with ours or is of the same rack.
+   //Otherwise false.
+
+   //First let's identify the rack in question.
    auto rack = note->GetRackElement();
-   //First check if any of the activeElements are of the same type.
-   for (auto el : mActiveElements)
-   {
-      if (el->GetRackElement() == rack && el != note)
-         if (el->GetStart() < note->GetEnd() && el->GetEnd() > note->GetStart())
-            return true;
-   }
-   float matchTime = note->mCol + note->mOffset + note->mLength;
 
-   //If not, check to see if there's any connected note elements at the end.
-   int readChunkNum = floor(matchTime / mCanvas->GetNumCols() * mChunkAmount);
-   readChunkNum = CLAMP(readChunkNum, 0, mChunkAmount);
-   auto& cL = mCanvasChunkList[readChunkNum];
+   //Now let's see if there's anything in that spot that overlaps with us / bridges to us.
+   auto notes = GetNotesAtTime(relativeCanvasTime);
 
-   for (auto el : cL)
+   if (notes.empty())
+      return false;
+   //Let's prep our times
+   float noteStartTime = note->GetStart();
+   float noteEndTime = note->GetEnd();
+
+   //Anything that shares our rack?
+   for (const auto& n : notes)
    {
-      if (el->GetRackElement() == rack)
+      //Not us
+      if (n == note)
+         continue;
+
+      if (n->GetRackElement() == rack)
       {
-         if (static_cast<float>(el->mCol) + el->mOffset == matchTime)
+         //Let's check the first condition, direct overlap
+         float otherStartTime = n->GetStart();
+         float otherEndTime = n->GetEnd();
+
+         if (noteStartTime >= otherStartTime && noteStartTime <= otherEndTime)
+            return true; //Left hand overlap
+         if (noteEndTime >= otherStartTime && noteEndTime <= otherEndTime)
+            return true;//right hand overlap
+
+         //No overlap? Let's check if its within our relativeCanvasTime
+         if (relativeCanvasTime >= otherStartTime && relativeCanvasTime <= otherEndTime)
             return true;
       }
    }
 
    return false;
+}
+
+//Returns all the notes present during this time, from chunk storage.
+std::vector<SongCanvasNote*> SongCanvas::GetNotesAtTime(double relativeCanvasTime) const
+{
+   int readChunkNum = floor(relativeCanvasTime * mChunkAmount);
+   readChunkNum = CLAMP(readChunkNum, 0, mChunkAmount);
+   return mCanvasChunkList[readChunkNum];
 }
 
 void SongCanvas::onFlowGridResize(float newBoundsX, float newBoundsY, float oldBoundsX, float oldBoundsY)

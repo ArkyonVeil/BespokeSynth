@@ -204,7 +204,7 @@ void SongCanvasRackElement::DrawModule()
    ofSetColor(ofColor::white);
    if (mExciteWiggle > 0) //Make the outline bounce for extra visual satisfaction.
    {
-      float excConst = mExciteWiggle + sin(ofGetGlobalTime() * 12) * 0.2F;
+      float excConst = mExciteWiggle + sin(SC_ANIMATE_SIN_VALUE) * 0.2F;
       if (mExcitePower < excConst)
          mExcitePower = excConst;
    }
