@@ -1043,7 +1043,7 @@ void SongCanvasRackSampler::RackSampleButton::Draw()
 
    if (sampleDropNotice)
    {
-      ofSetColor(255, 255, 255, 45 + sinf(ofGetGlobalTime() * 7) * 40);
+      ofSetColor(255, 255, 255, 45 + sinf(ofGetGlobalTimeSeconds() * 7) * 40);
       ofFill();
       ofRect(0, 0, mRect.width, mRect.height);
    }
