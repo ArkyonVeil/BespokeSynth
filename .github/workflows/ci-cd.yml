@@ -225,8 +225,11 @@ jobs:
           fi
           echo "DMG source: $DMG_PATH"
 
+          WORK_DIR=$(mktemp -d)
+          hdiutil convert "$DMG_PATH" -format UDRW -o "$WORK_DIR/rw.dmg"
+
           MOUNT_DIR=$(mktemp -d)
-          hdiutil attach "$DMG_PATH" -mountpoint "$MOUNT_DIR" -nobrowse -quiet
+          hdiutil attach "$WORK_DIR/rw.dmg" -mountpoint "$MOUNT_DIR" -nobrowse -quiet
 
           APP_SRC=$(find "$MOUNT_DIR" -maxdepth 1 -name '*.app' | head -1)
           if [ -z "$APP_SRC" ]; then
@@ -235,21 +238,16 @@ jobs:
             exit 1
           fi
 
-          WORK_DIR=$(mktemp -d)
-          cp -R "$APP_SRC" "$WORK_DIR/"
-          APP_PATH="$WORK_DIR/$(basename "$APP_SRC")"
+          echo "Ad-hoc signature of $APP_SRC"
+          codesign --deep --force --verbose --sign - "$APP_SRC"
+
+          echo "Signature verification"
+          codesign --verify --deep --strict --verbose=2 "$APP_SRC"
 
           hdiutil detach "$MOUNT_DIR" -quiet
 
-          echo "Ad-hoc signature of $APP_PATH"
-          codesign --deep --force --verbose --sign - "$APP_PATH"
-
-          echo "Signature verification"
-          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-
           rm -f "$DMG_PATH"
-          hdiutil create -volname "BespokeSynth" -srcfolder "$WORK_DIR" \
-            -ov -format UDZO "$DMG_PATH"
+          hdiutil convert "$WORK_DIR/rw.dmg" -format UDZO -o "$DMG_PATH"
 
           rm -rf "$MOUNT_DIR" "$WORK_DIR"
 
